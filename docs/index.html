@@ -4523,7 +4523,6 @@ window.addEventListener("beforeunload", () => {
   try { localStorage.setItem(STORE_KEY, JSON.stringify(State)); } catch (e) {}
 });
 
-
 /* ===== enregistrement du service worker (PWA) ===== */
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   navigator.serviceWorker.register("./sw.js").then(reg => {

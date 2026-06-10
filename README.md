@@ -11,8 +11,28 @@ Le fichier à utiliser et à partager : **`dist/horizon-budget.html`**
 - **Android** : ouvrez le fichier dans Chrome, menu ⋮ → « Ajouter à l'écran d'accueil ».
 - **Partager** : envoyez simplement le fichier `horizon-budget.html`. Il contient toute l'application — aucune installation, aucun compte.
 
-### Hébergement (facultatif, pour l'installer comme une app)
-Déposez `dist/horizon-budget.html` sur n'importe quel hébergeur statique (Netlify Drop, GitHub Pages…) et ouvrez l'URL depuis le téléphone.
+### 📲 Version « vraie app » iPhone/Android (PWA via GitHub Pages)
+
+Le dossier `docs/` contient la version installable (icône, plein écran, hors-ligne, mises à jour auto).
+
+**Première publication (une seule fois) :**
+```bash
+./deploy.sh
+```
+Le script vous connecte à GitHub (code à saisir dans le navigateur), crée le dépôt public
+`horizon-budget`, active GitHub Pages et publie. URL : `https://<votre-compte>.github.io/horizon-budget/`
+
+**Installer sur iPhone** : ouvrir l'URL dans Safari → Partager → « Sur l'écran d'accueil ».
+**Android** : Chrome → ⋮ → « Ajouter à l'écran d'accueil ».
+
+**Publier une mise à jour :**
+```bash
+./deploy.sh "description du changement"
+```
+Les téléphones reçoivent la nouvelle version automatiquement à la prochaine ouverture (aucune réinstallation).
+
+Note : le dépôt est public (exigence GitHub Pages gratuit) — il ne contient que le **code** de
+l'app, jamais vos données (qui restent sur vos appareils + chiffrées dans votre Supabase).
 
 ## 🔒 Données
 
@@ -50,8 +70,11 @@ Optionnelle, gratuite, chiffrée de bout en bout :
 ## 🛠️ Développement
 
 ```
-src/            sources modulaires (CSS + 19 modules JS, vanilla, zéro dépendance)
-build.py        assemble le tout en dist/horizon-budget.html
+src/            sources modulaires (CSS + 21 modules JS, vanilla, zéro dépendance)
+assets/         icônes, manifest PWA, service worker
+build.py        assemble dist/horizon-budget.html (autonome) + docs/ (PWA)
+deploy.sh       build + commit + push + GitHub Pages
+tools/gh        GitHub CLI embarqué (non versionné)
 ```
 
 Modifier un fichier de `src/`, puis :
