@@ -36,17 +36,24 @@ pwa_head = """<link rel="manifest" href="manifest.webmanifest">
 pwa_js = """
 /* ===== enregistrement du service worker (PWA) ===== */
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  let _swWaiting = null;
+  function _offerUpdate(w) {
+    if (!w) return;
+    function check() {
+      if (w.state === "installed" && navigator.serviceWorker.controller) {
+        _swWaiting = w;
+        if (typeof toast === "function")
+          toast("✨ Nouvelle version disponible", { action: "Mettre à jour", onAction: () => { _swWaiting && _swWaiting.postMessage("skipWaiting"); }, ms: 120000 });
+      }
+    }
+    if (w.state === "installed") { check(); return; }
+    w.addEventListener("statechange", check);
+  }
   navigator.serviceWorker.register("./sw.js").then(reg => {
-    reg.addEventListener("updatefound", () => {
-      const w = reg.installing;
-      if (!w) return;
-      w.addEventListener("statechange", () => {
-        if (w.state === "activated" && navigator.serviceWorker.controller && typeof toast === "function") {
-          toast("✨ Nouvelle version installée", { action: "Recharger", onAction: () => location.reload(), ms: 9000 });
-        }
-      });
-    });
+    if (reg.waiting) _offerUpdate(reg.waiting);
+    reg.addEventListener("updatefound", () => _offerUpdate(reg.installing));
   }).catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (_swWaiting) { _swWaiting = null; location.reload(); } });
 }
 """
 pwa_html = html.replace("<title>", pwa_head + "<title>")

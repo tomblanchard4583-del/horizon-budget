@@ -299,7 +299,7 @@ const Sync = (() => {
   /* ---------- planification ---------- */
   function schedulePush() {
     clearTimeout(_pushTimer);
-    _pushTimer = setTimeout(pushNow, 1200);
+    _pushTimer = setTimeout(() => { _pushTimer = null; pushNow(); }, 600);
   }
   function startLoop() {
     clearInterval(_pollTimer);
@@ -314,7 +314,10 @@ const Sync = (() => {
     _base = buildBase();
     window.addEventListener("online", () => { setStatus("connecting"); pushNow(); poll(); });
     window.addEventListener("offline", () => setStatus("offline"));
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") poll(); });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") poll();
+      else if (State.sync.enabled && _pushTimer !== null) { clearTimeout(_pushTimer); _pushTimer = null; pushNow(); }
+    });
     if (State.sync.enabled && State.sync.url && State.sync.room) {
       setStatus("connecting");
       startLoop();

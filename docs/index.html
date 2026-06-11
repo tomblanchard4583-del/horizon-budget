@@ -4174,7 +4174,7 @@ const Sync = (() => {
   /* ---------- planification ---------- */
   function schedulePush() {
     clearTimeout(_pushTimer);
-    _pushTimer = setTimeout(pushNow, 1200);
+    _pushTimer = setTimeout(() => { _pushTimer = null; pushNow(); }, 600);
   }
   function startLoop() {
     clearInterval(_pollTimer);
@@ -4189,7 +4189,10 @@ const Sync = (() => {
     _base = buildBase();
     window.addEventListener("online", () => { setStatus("connecting"); pushNow(); poll(); });
     window.addEventListener("offline", () => setStatus("offline"));
-    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") poll(); });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") poll();
+      else if (State.sync.enabled && _pushTimer !== null) { clearTimeout(_pushTimer); _pushTimer = null; pushNow(); }
+    });
     if (State.sync.enabled && State.sync.url && State.sync.room) {
       setStatus("connecting");
       startLoop();
@@ -4798,17 +4801,24 @@ window.addEventListener("beforeunload", () => {
 
 /* ===== enregistrement du service worker (PWA) ===== */
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  let _swWaiting = null;
+  function _offerUpdate(w) {
+    if (!w) return;
+    function check() {
+      if (w.state === "installed" && navigator.serviceWorker.controller) {
+        _swWaiting = w;
+        if (typeof toast === "function")
+          toast("✨ Nouvelle version disponible", { action: "Mettre à jour", onAction: () => { _swWaiting && _swWaiting.postMessage("skipWaiting"); }, ms: 120000 });
+      }
+    }
+    if (w.state === "installed") { check(); return; }
+    w.addEventListener("statechange", check);
+  }
   navigator.serviceWorker.register("./sw.js").then(reg => {
-    reg.addEventListener("updatefound", () => {
-      const w = reg.installing;
-      if (!w) return;
-      w.addEventListener("statechange", () => {
-        if (w.state === "activated" && navigator.serviceWorker.controller && typeof toast === "function") {
-          toast("✨ Nouvelle version installée", { action: "Recharger", onAction: () => location.reload(), ms: 9000 });
-        }
-      });
-    });
+    if (reg.waiting) _offerUpdate(reg.waiting);
+    reg.addEventListener("updatefound", () => _offerUpdate(reg.installing));
   }).catch(() => {});
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (_swWaiting) { _swWaiting = null; location.reload(); } });
 }
 </script>
 </body>
