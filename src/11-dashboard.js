@@ -93,11 +93,17 @@ function viewDashboard(root) {
       el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("goals") }, "Gérer →")),
     el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:14px" },
       b.goals.slice(0, 4).map(g => {
-        const pct = g.target ? clamp((+g.current || 0) / g.target, 0, 1) : 0;
+        const current = +g.current || 0;
+        const pct = g.target ? clamp(current / g.target, 0, 1) : 0;
+        const done = g.target > 0 && current >= g.target;
+        const eta = done ? null : goalEta(b, g);
         return el("div", {},
           el("div", { class: "flex small mb8" }, el("span", {}, `${g.emoji || "🎯"} ${g.name}`), el("span", { class: "spacer" }),
-            el("b", { class: "mono" }, fmtMoney(+g.current || 0, cur, { dec: 0 }) + " / " + fmtMoney(g.target, cur, { dec: 0 }))),
-          el("div", { class: "pbar" }, el("i", { style: `width:${pct * 100}%; background:${g.color || "var(--accent)"}` }))
+            el("b", { class: "mono" }, fmtMoney(current, cur, { dec: 0 }) + " / " + fmtMoney(g.target, cur, { dec: 0 }))),
+          el("div", { class: "pbar" }, el("i", { style: `width:${pct * 100}%; background:${g.color || "var(--accent)"}` })),
+          el("div", { class: "xs muted", style: "margin-top:5px" },
+            done ? "Objectif atteint"
+              : `Reste ${fmtMoney(Math.max(0, (g.target || 0) - current), cur, { dec: 0 })}` + (eta ? ` · atteint vers ${fmtYm(eta).toLowerCase()}` : ""))
         );
       })
     )

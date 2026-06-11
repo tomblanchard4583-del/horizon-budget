@@ -35,7 +35,7 @@ function chartBox(height, draw) {
     if (!w) return;
     box.innerHTML = "";
     const svg = draw(w, height);
-    if (animed || !Juice.on()) $$(".j-line,.j-area,.j-fade,.j-slice,.j-bar", svg).forEach(n => n.removeAttribute("class"));
+    if (animed || !Juice.on()) $$(".j-line,.j-area,.j-fade,.j-slice,.j-bar", svg).forEach(n => n.classList.remove("j-line", "j-area", "j-fade", "j-slice", "j-bar"));
     animed = true;
     box.append(svg);
   };
@@ -48,7 +48,7 @@ function chartBox(height, draw) {
   return box;
 }
 
-function attachTip(box, svg, plot, count, idxToTip, idxToX) {
+function attachTip(box, svg, plot, count, idxToTip, idxToX, onIdx, onLeave) {
   const tip = el("div", { class: "chart-tip", style: "opacity:0" });
   box.append(tip);
   const guide = svgEl("line", { y1: plot.top, y2: plot.top + plot.h, stroke: "var(--tx3)", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 });
@@ -64,8 +64,9 @@ function attachTip(box, svg, plot, count, idxToTip, idxToX) {
     tip.style.opacity = 1;
     tip.style.left = clamp(cx, 70, r.width - 70) + "px";
     tip.style.top = plot.top + 14 + "px";
+    onIdx && onIdx(idx);
   };
-  const leave = () => { tip.style.opacity = 0; guide.setAttribute("opacity", 0); };
+  const leave = () => { tip.style.opacity = 0; guide.setAttribute("opacity", 0); onLeave && onLeave(); };
   box.addEventListener("mousemove", move);
   box.addEventListener("touchstart", move, { passive: true });
   box.addEventListener("touchmove", move, { passive: true });
@@ -126,6 +127,13 @@ function chartLine(opts) {
       svg.append(t);
     }
 
+    // points de survol : un par série, positionnés sur le mois pointé
+    const dots = opts.series.map(s => {
+      const c = svgEl("circle", { r: 4, fill: s.color, stroke: "var(--panel)", "stroke-width": 1.5, opacity: 0, class: "chart-dot" });
+      svg.append(c);
+      return c;
+    });
+
     attachTipWrapper(svg, plot, opts, X);
     return svg;
 
@@ -140,7 +148,13 @@ function chartLine(opts) {
           }
           for (const m of (opts.markers || []).filter(m => m.idx === idx)) html += `<div class="t-row">${m.emoji || "📌"} ${esc(m.label)}</div>`;
           return html;
-        }, X);
+        }, X,
+        idx => dots.forEach((d, k) => {
+          d.setAttribute("cx", X(idx));
+          d.setAttribute("cy", Y(opts.series[k].values[idx]));
+          d.setAttribute("opacity", 1);
+        }),
+        () => dots.forEach(d => d.setAttribute("opacity", 0)));
       });
     }
   });
@@ -168,8 +182,8 @@ function chartBars(opts) {
     const stepX = Math.max(1, Math.ceil(n / (W / 78)));
     opts.labels.forEach((l, i) => {
       const cx = plot.left + slot * (i + 0.5);
-      svg.append(svgEl("rect", { x: cx - bw - 1, y: Y(opts.pos[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.pos[i])), rx: 3, fill: "var(--accent)", class: "j-bar", style: `animation-delay:${Math.min(i * 26, 400)}ms` }));
-      svg.append(svgEl("rect", { x: cx + 1, y: Y(opts.neg[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.neg[i])), rx: 3, fill: "#f43f5e", "fill-opacity": 0.85, class: "j-bar", style: `animation-delay:${Math.min(i * 26 + 60, 460)}ms` }));
+      svg.append(svgEl("rect", { x: cx - bw - 1, y: Y(opts.pos[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.pos[i])), rx: 3, fill: "var(--accent)", class: "vbar j-bar", style: `animation-delay:${Math.min(i * 26, 400)}ms` }));
+      svg.append(svgEl("rect", { x: cx + 1, y: Y(opts.neg[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.neg[i])), rx: 3, fill: "#f43f5e", "fill-opacity": 0.85, class: "vbar j-bar", style: `animation-delay:${Math.min(i * 26 + 60, 460)}ms` }));
       if (i % stepX === 0 || i === n - 1) {
         const t = svgEl("text", { x: cx, y: H - 9, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx3)" });
         t.textContent = fmtYmShort(l);
@@ -208,7 +222,7 @@ function chartDonut(opts) {
       const d = frac >= 0.9999
         ? `M${cx},${cy - R} A${R},${R} 0 1 1 ${cx - 0.01},${cy - R} M${cx},${cy - r} A${r},${r} 0 1 0 ${cx - 0.01},${cy - r}`
         : `M${cx + R * Math.cos(a0)},${cy + R * Math.sin(a0)} A${R},${R} 0 ${large} 1 ${cx + R * Math.cos(a1)},${cy + R * Math.sin(a1)} L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} A${r},${r} 0 ${large} 0 ${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} Z`;
-      const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, class: "j-slice", style: `cursor:pointer; animation-delay:${Math.min(si++ * 55, 440)}ms` });
+      const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, class: "dslice j-slice", style: `cursor:pointer; animation-delay:${Math.min(si++ * 55, 440)}ms` });
       const showTip = () => {
         tip.innerHTML = `<div class="t-title">${p.emoji || ""} ${esc(p.label)}</div><div class="t-row"><span>${fmtPct(frac)}</span><b>${fmtMoney(p.value, opts.cur)}</b></div>`;
         tip.style.opacity = 1;

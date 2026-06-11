@@ -16,7 +16,6 @@ const State = {
   activeBudgetId: null,
   budgets: [],
   transactions: [],           // suivi réel : {id,budgetId,date,kind,amount,categoryId,label,notes}
-  gami: { lastDay: "", streak: 0, best: 0 },   // série quotidienne (jours consécutifs d'ouverture)
   sync: {                     // synchronisation Supabase (auto-hébergée)
     enabled: false,
     url: "", anonKey: "", room: "",   // identifiants — propres à chaque appareil, NON synchronisés
@@ -85,11 +84,10 @@ function loadState() {
     if (data && data.version >= 1) {
       const sync = Object.assign({}, State.sync, data.sync || {});
       const settings = Object.assign({}, State.settings, data.settings || {});
-      const gami = Object.assign({}, State.gami, data.gami || {});
       Object.assign(State, data);
       State.sync = sync;       // garantit les nouveaux champs même sur anciennes sauvegardes
       State.settings = settings;
-      State.gami = gami;
+      delete State.gami;       // reliquat d'une ancienne version
     }
   } catch (e) { console.warn("État illisible, démarrage à neuf", e); }
 }

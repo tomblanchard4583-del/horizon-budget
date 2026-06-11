@@ -100,9 +100,9 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.01em}
 .kpi .k-sub{font-size:12px; color:var(--tx2)}
 
 /* ---------- buttons ---------- */
-.btn{display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:8.5px 15px; border-radius:10px; font-weight:600; font-size:13.5px; border:1px solid var(--line2); background:var(--panel); color:var(--tx); transition:filter .12s, background .12s, transform .12s cubic-bezier(.34,1.56,.64,1); white-space:nowrap}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:8.5px 15px; border-radius:10px; font-weight:600; font-size:13.5px; border:1px solid var(--line2); background:var(--panel); color:var(--tx); transition:filter .12s, background .12s, border-color .12s, box-shadow .15s, transform .1s ease; white-space:nowrap}
 .btn:hover{background:var(--panel2)}
-.btn:active{transform:scale(.95)}
+.btn:active{transform:scale(.97)}
 .btn-p{background:var(--accent); border-color:var(--accent); color:#fff}
 .btn-p:hover{filter:brightness(1.07); background:var(--accent)}
 .btn-danger{background:var(--danger-soft); border-color:transparent; color:var(--danger)}
@@ -112,9 +112,9 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.01em}
 .btn-ico{padding:8px; border-radius:9px}
 .btn svg{flex:none}
 .btn:disabled{opacity:.45; cursor:not-allowed}
-.fab{position:fixed; right:22px; bottom:24px; z-index:40; width:54px; height:54px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; box-shadow:0 10px 28px -6px rgba(16,185,129,.55); transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s}
-.fab:hover{transform:scale(1.08) rotate(90deg); box-shadow:0 14px 34px -6px rgba(16,185,129,.65)}
-.fab:active{transform:scale(.88)}
+.fab{position:fixed; right:22px; bottom:24px; z-index:40; width:54px; height:54px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; box-shadow:0 10px 28px -6px rgba(16,185,129,.55); transition:transform .2s cubic-bezier(.22,1,.36,1), box-shadow .2s}
+.fab:hover{transform:scale(1.06); box-shadow:0 14px 34px -6px rgba(16,185,129,.65)}
+.fab:active{transform:scale(.94)}
 
 /* ---------- forms ---------- */
 .field{display:flex; flex-direction:column; gap:5px; min-width:0}
@@ -134,7 +134,7 @@ select.input{appearance:none; -webkit-appearance:none; background-image:url("dat
 .switch{position:relative; width:42px; height:24px; flex:none}
 .switch input{opacity:0; width:0; height:0}
 .switch .tr{position:absolute; inset:0; border-radius:99px; background:var(--line2); transition:background .15s}
-.switch .tr:before{content:""; position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform .3s cubic-bezier(.34,1.56,.64,1); box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch .tr:before{content:""; position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform .25s cubic-bezier(.22,1,.36,1); box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .switch input:checked+.tr{background:var(--accent)}
 .switch input:checked+.tr:before{transform:translateX(18px)}
 .seg{display:inline-flex; background:var(--bg2); border-radius:10px; padding:3px; gap:2px; border:1px solid var(--line)}
@@ -180,7 +180,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 
 /* ---------- modal ---------- */
 .modal-veil{position:fixed; inset:0; background:rgba(8,13,28,.55); backdrop-filter:blur(3px); z-index:90; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadein .15s}
-.modal{background:var(--panel); border-radius:18px; width:100%; max-width:560px; max-height:calc(100vh - 60px); display:flex; flex-direction:column; box-shadow:var(--shadow-lg); animation:pop .32s cubic-bezier(.26,1.25,.48,1); border:1px solid var(--line)}
+.modal{background:var(--panel); border-radius:18px; width:100%; max-width:560px; max-height:calc(100vh - 60px); display:flex; flex-direction:column; box-shadow:var(--shadow-lg); animation:pop .26s cubic-bezier(.22,1,.36,1); border:1px solid var(--line)}
 .modal.modal-lg{max-width:760px}
 .modal-head{display:flex; align-items:center; gap:10px; padding:18px 22px 12px; flex:none}
 .modal-head h3{font-size:17px; flex:1}
@@ -200,7 +200,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 
 /* ---------- toast ---------- */
 .toasts{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:120; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none}
-.toast{pointer-events:auto; display:flex; align-items:center; gap:11px; background:var(--navy); color:var(--navy-tx); padding:11px 16px; border-radius:12px; box-shadow:var(--shadow-lg); font-size:13.5px; font-weight:550; animation:toastIn .42s cubic-bezier(.34,1.56,.64,1); max-width:min(92vw,480px)}
+.toast{pointer-events:auto; display:flex; align-items:center; gap:11px; background:var(--navy); color:var(--navy-tx); padding:11px 16px; border-radius:12px; box-shadow:var(--shadow-lg); font-size:13.5px; font-weight:550; animation:toastIn .3s cubic-bezier(.22,1,.36,1); max-width:min(92vw,480px)}
 [data-theme="dark"] .toast{background:#243252}
 .toast button{color:var(--accent); font-weight:700; flex:none}
 
@@ -362,11 +362,9 @@ details.adv[open] summary:before{transform:rotate(90deg)}
 .help-list{margin:4px 0 8px 18px; display:flex; flex-direction:column; gap:5px}
 .help-list li{line-height:1.65}
 
-/* ============ juice : micro-animations & célébrations ============ */
-.fx-canvas{position:fixed; inset:0; width:100vw; height:100vh; z-index:300; pointer-events:none}
-
+/* ============ animations d'interface ============ */
 /* entrée des vues en cascade */
-.j-stagger{opacity:0; transform:translateY(9px); animation:jRise .42s cubic-bezier(.22,1,.36,1) forwards; animation-delay:var(--jd,0ms)}
+.j-stagger{opacity:0; transform:translateY(7px); animation:jRise .38s cubic-bezier(.22,1,.36,1) forwards; animation-delay:var(--jd,0ms)}
 @keyframes jRise{to{opacity:1; transform:none}}
 
 /* graphiques : tracés progressifs */
@@ -377,23 +375,54 @@ details.adv[open] summary:before{transform:rotate(90deg)}
 @keyframes jFade{to{opacity:1}}
 .j-bar{transform-box:fill-box; transform-origin:50% 100%; transform:scaleY(0); animation:jBar .6s cubic-bezier(.22,1,.36,1) forwards}
 @keyframes jBar{to{transform:scaleY(1)}}
+@keyframes toastIn{from{opacity:0; transform:translateY(14px) scale(.97)}}
 
-/* pastille série quotidienne */
-.streak-chip{display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:99px; font-size:12.5px; font-weight:750; background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(239,68,68,.12)); border:1px solid rgba(245,158,11,.3); color:#d97706; transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
-.streak-chip:hover{transform:scale(1.08)}
-.streak-chip:active{transform:scale(.92)}
-[data-theme="dark"] .streak-chip{color:#fbbf24}
-.streak-chip .fl{font-size:13px; line-height:1}
-.streak-big{font-size:54px; line-height:1.15; animation:jFlame 2.2s ease-in-out infinite}
-@keyframes jFlame{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.12) rotate(2deg)}}
-
-/* divers */
-.empty .e-ico{display:inline-block; animation:jFloat 3.2s ease-in-out infinite}
-@keyframes jFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-@keyframes toastIn{from{opacity:0; transform:translateY(16px) scale(.93)}}
+/* survol des graphiques */
+.dslice{transition:opacity .15s ease, filter .15s ease}
+svg:has(.dslice:hover) .dslice:not(:hover){opacity:.45}
+.dslice:hover{filter:brightness(1.07)}
+.vbar{transition:filter .12s ease}
+.vbar:hover{filter:brightness(1.12)}
+.chart-dot{transition:opacity .12s ease; pointer-events:none}
 
 @media (prefers-reduced-motion: reduce){
   *,*:before,*:after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important}
+}
+
+/* ============ finitions : focus, survols, barres de défilement ============ */
+.btn:focus-visible,.nav-item:focus-visible,.seg button:focus-visible,.choice:focus-visible,.item-row:focus-visible,.budget-pill:focus-visible,.sync-chip:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+.input:hover:not(:focus){border-color:var(--tx3)}
+.input:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+.btn:hover{border-color:var(--tx3)}
+.btn-p{box-shadow:0 1px 2px rgba(16,185,129,.25)}
+.btn-p:hover{border-color:var(--accent); box-shadow:0 4px 14px -4px rgba(16,185,129,.5)}
+.btn-ghost:hover,.btn-danger:hover{border-color:transparent}
+.check input,.switch input{cursor:pointer}
+.cal-cell:hover{box-shadow:var(--shadow)}
+
+/* indicateur de section active dans la navigation */
+.nav-item{position:relative}
+.nav-item.active:before{content:""; position:absolute; left:-12px; top:8px; bottom:8px; width:3px; border-radius:0 3px 3px 0; background:var(--accent)}
+
+/* barres de défilement discrètes */
+::-webkit-scrollbar{width:11px; height:11px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line2); border-radius:99px; border:3px solid transparent; background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--tx3); border:3px solid transparent; background-clip:content-box}
+
+/* ============ sidebar compacte (largeurs intermédiaires) ============ */
+@media(min-width:881px) and (max-width:1100px){
+  :root{--sidebar-w:68px}
+  .sidebar{padding:18px 10px 10px}
+  .brand{justify-content:center; padding:4px 0 16px}
+  .brand span{display:none}
+  .nav-item{justify-content:center; padding:11px 0; gap:0}
+  .nav-item:hover{transform:none}
+  .nav-label{display:none}
+  .nav-item.active:before{left:-10px}
+  .budget-pill{justify-content:center; padding:9px 0}
+  .budget-pill .b-name{display:none}
+  .budget-pill .ico{display:none !important}
 }
 
 </style>
@@ -744,7 +773,6 @@ const State = {
   activeBudgetId: null,
   budgets: [],
   transactions: [],           // suivi réel : {id,budgetId,date,kind,amount,categoryId,label,notes}
-  gami: { lastDay: "", streak: 0, best: 0 },   // série quotidienne (jours consécutifs d'ouverture)
   sync: {                     // synchronisation Supabase (auto-hébergée)
     enabled: false,
     url: "", anonKey: "", room: "",   // identifiants — propres à chaque appareil, NON synchronisés
@@ -813,11 +841,10 @@ function loadState() {
     if (data && data.version >= 1) {
       const sync = Object.assign({}, State.sync, data.sync || {});
       const settings = Object.assign({}, State.settings, data.settings || {});
-      const gami = Object.assign({}, State.gami, data.gami || {});
       Object.assign(State, data);
       State.sync = sync;       // garantit les nouveaux champs même sur anciennes sauvegardes
       State.settings = settings;
-      State.gami = gami;
+      delete State.gami;       // reliquat d'une ancienne version
     }
   } catch (e) { console.warn("État illisible, démarrage à neuf", e); }
 }
@@ -1331,7 +1358,7 @@ function chartBox(height, draw) {
     if (!w) return;
     box.innerHTML = "";
     const svg = draw(w, height);
-    if (animed || !Juice.on()) $$(".j-line,.j-area,.j-fade,.j-slice,.j-bar", svg).forEach(n => n.removeAttribute("class"));
+    if (animed || !Juice.on()) $$(".j-line,.j-area,.j-fade,.j-slice,.j-bar", svg).forEach(n => n.classList.remove("j-line", "j-area", "j-fade", "j-slice", "j-bar"));
     animed = true;
     box.append(svg);
   };
@@ -1344,7 +1371,7 @@ function chartBox(height, draw) {
   return box;
 }
 
-function attachTip(box, svg, plot, count, idxToTip, idxToX) {
+function attachTip(box, svg, plot, count, idxToTip, idxToX, onIdx, onLeave) {
   const tip = el("div", { class: "chart-tip", style: "opacity:0" });
   box.append(tip);
   const guide = svgEl("line", { y1: plot.top, y2: plot.top + plot.h, stroke: "var(--tx3)", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 });
@@ -1360,8 +1387,9 @@ function attachTip(box, svg, plot, count, idxToTip, idxToX) {
     tip.style.opacity = 1;
     tip.style.left = clamp(cx, 70, r.width - 70) + "px";
     tip.style.top = plot.top + 14 + "px";
+    onIdx && onIdx(idx);
   };
-  const leave = () => { tip.style.opacity = 0; guide.setAttribute("opacity", 0); };
+  const leave = () => { tip.style.opacity = 0; guide.setAttribute("opacity", 0); onLeave && onLeave(); };
   box.addEventListener("mousemove", move);
   box.addEventListener("touchstart", move, { passive: true });
   box.addEventListener("touchmove", move, { passive: true });
@@ -1422,6 +1450,13 @@ function chartLine(opts) {
       svg.append(t);
     }
 
+    // points de survol : un par série, positionnés sur le mois pointé
+    const dots = opts.series.map(s => {
+      const c = svgEl("circle", { r: 4, fill: s.color, stroke: "var(--panel)", "stroke-width": 1.5, opacity: 0, class: "chart-dot" });
+      svg.append(c);
+      return c;
+    });
+
     attachTipWrapper(svg, plot, opts, X);
     return svg;
 
@@ -1436,7 +1471,13 @@ function chartLine(opts) {
           }
           for (const m of (opts.markers || []).filter(m => m.idx === idx)) html += `<div class="t-row">${m.emoji || "📌"} ${esc(m.label)}</div>`;
           return html;
-        }, X);
+        }, X,
+        idx => dots.forEach((d, k) => {
+          d.setAttribute("cx", X(idx));
+          d.setAttribute("cy", Y(opts.series[k].values[idx]));
+          d.setAttribute("opacity", 1);
+        }),
+        () => dots.forEach(d => d.setAttribute("opacity", 0)));
       });
     }
   });
@@ -1464,8 +1505,8 @@ function chartBars(opts) {
     const stepX = Math.max(1, Math.ceil(n / (W / 78)));
     opts.labels.forEach((l, i) => {
       const cx = plot.left + slot * (i + 0.5);
-      svg.append(svgEl("rect", { x: cx - bw - 1, y: Y(opts.pos[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.pos[i])), rx: 3, fill: "var(--accent)", class: "j-bar", style: `animation-delay:${Math.min(i * 26, 400)}ms` }));
-      svg.append(svgEl("rect", { x: cx + 1, y: Y(opts.neg[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.neg[i])), rx: 3, fill: "#f43f5e", "fill-opacity": 0.85, class: "j-bar", style: `animation-delay:${Math.min(i * 26 + 60, 460)}ms` }));
+      svg.append(svgEl("rect", { x: cx - bw - 1, y: Y(opts.pos[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.pos[i])), rx: 3, fill: "var(--accent)", class: "vbar j-bar", style: `animation-delay:${Math.min(i * 26, 400)}ms` }));
+      svg.append(svgEl("rect", { x: cx + 1, y: Y(opts.neg[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.neg[i])), rx: 3, fill: "#f43f5e", "fill-opacity": 0.85, class: "vbar j-bar", style: `animation-delay:${Math.min(i * 26 + 60, 460)}ms` }));
       if (i % stepX === 0 || i === n - 1) {
         const t = svgEl("text", { x: cx, y: H - 9, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx3)" });
         t.textContent = fmtYmShort(l);
@@ -1504,7 +1545,7 @@ function chartDonut(opts) {
       const d = frac >= 0.9999
         ? `M${cx},${cy - R} A${R},${R} 0 1 1 ${cx - 0.01},${cy - R} M${cx},${cy - r} A${r},${r} 0 1 0 ${cx - 0.01},${cy - r}`
         : `M${cx + R * Math.cos(a0)},${cy + R * Math.sin(a0)} A${R},${R} 0 ${large} 1 ${cx + R * Math.cos(a1)},${cy + R * Math.sin(a1)} L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} A${r},${r} 0 ${large} 0 ${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} Z`;
-      const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, class: "j-slice", style: `cursor:pointer; animation-delay:${Math.min(si++ * 55, 440)}ms` });
+      const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, class: "dslice j-slice", style: `cursor:pointer; animation-delay:${Math.min(si++ * 55, 440)}ms` });
       const showTip = () => {
         tip.innerHTML = `<div class="t-title">${p.emoji || ""} ${esc(p.label)}</div><div class="t-row"><span>${fmtPct(frac)}</span><b>${fmtMoney(p.value, opts.cur)}</b></div>`;
         tip.style.opacity = 1;
@@ -1660,120 +1701,25 @@ const emptyState = (emoji, title, text, action) => el("div", { class: "empty" },
 
 /* ===== 07-juice.js ===== */
 "use strict";
-/* ============ juice : micro-animations, célébrations & série quotidienne ============ */
+/* ============ animations d'interface : entrées de vue, chiffres, jauges ============ */
 
 const Juice = (() => {
   const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
   const on = () => State.settings.juice !== false && !reduced.matches;
 
-  /* ---- retour haptique (mobile) ---- */
+  /* ---- retour haptique discret (mobile, confirmation d'action) ---- */
   function buzz(pattern) {
     if (!on() || !navigator.vibrate) return;
     try { navigator.vibrate(pattern); } catch (e) {}
   }
 
-  /* ---- moteur confettis : un canvas plein écran partagé, retiré quand tout est retombé ---- */
-  const COLORS = ["#10b981", "#34d399", "#f59e0b", "#3b82f6", "#8b5cf6", "#f43f5e", "#fbbf24"];
-  let cv = null, ctx = null, parts = [], raf = 0;
-
-  function ensureCanvas() {
-    if (!cv) {
-      cv = el("canvas", { class: "fx-canvas" });
-      document.body.append(cv);
-      ctx = cv.getContext("2d");
-    }
-    const dpr = Math.min(devicePixelRatio || 1, 2);
-    if (cv.width !== innerWidth * dpr || cv.height !== innerHeight * dpr) {
-      cv.width = innerWidth * dpr;
-      cv.height = innerHeight * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-  }
-
-  function spawn(n, mk) {
-    if (!on()) return;
-    ensureCanvas();
-    const born = performance.now();
-    for (let i = 0; i < n; i++) { const p = mk(i); p.born = born; parts.push(p); }
-    if (!raf) loop();
-  }
-
-  function loop() {
-    raf = requestAnimationFrame(loop);
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
-    // purge : fin de vie, sorti de l'écran, ou trop vieux (onglet resté en arrière-plan)
-    const now = performance.now();
-    parts = parts.filter(p => p.life < p.ttl && p.y < innerHeight + 40 && now - p.born < 12000);
-    if (!parts.length) {
-      cancelAnimationFrame(raf); raf = 0;
-      cv.remove(); cv = ctx = null;
-      return;
-    }
-    for (const p of parts) {
-      p.life++;
-      p.vy += p.g; p.vx *= p.drag; p.vy *= p.drag;
-      p.x += p.vx + (p.sway ? Math.sin(p.life * 0.08 + p.sway) * 0.8 : 0);
-      p.y += p.vy;
-      p.rot += p.vr;
-      ctx.globalAlpha = clamp(1 - Math.max(0, (p.life - p.ttl * 0.7) / (p.ttl * 0.3)), 0, 1);
-      ctx.fillStyle = p.color;
-      ctx.save();
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-      if (p.shape) { ctx.beginPath(); ctx.arc(0, 0, p.size / 2, 0, 7); ctx.fill(); }
-      else ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.62);
-      ctx.restore();
-    }
-    ctx.globalAlpha = 1;
-  }
-
-  const burstPart = (x, y) => {
-    const a = Math.random() * Math.PI * 2;
-    const v = 5.5 * (0.4 + Math.random());
-    return {
-      x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 4,
-      g: 0.26, drag: 0.985,
-      rot: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.35,
-      size: 4 + Math.random() * 5,
-      color: COLORS[Math.random() * COLORS.length | 0],
-      shape: Math.random() < 0.4 ? 1 : 0,
-      life: 0, ttl: 60 + Math.random() * 50, sway: 0,
-    };
-  };
-
-  /* éclat localisé — accepte un nœud, un événement de clic, ou rien (centre bas de l'écran) */
-  function pop(target, n) {
-    if (!on()) return;
-    if (target && target.currentTarget) target = target.currentTarget;
-    let x = innerWidth / 2, y = innerHeight * 0.7;
-    if (target && target.getBoundingClientRect) {
-      const r = target.getBoundingClientRect();
-      if (r.width || r.height) { x = r.left + r.width / 2; y = r.top + r.height / 2; }
-    }
-    spawn(n || 22, () => burstPart(x, y));
-  }
-
-  /* pluie de confettis : grande célébration */
-  function rain(n) {
-    spawn(n || 130, () => ({
-      x: Math.random() * innerWidth, y: -20 - Math.random() * innerHeight * 0.4,
-      vx: (Math.random() - 0.5) * 1.6, vy: 2 + Math.random() * 3.2,
-      g: 0.045, drag: 0.999,
-      rot: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.25,
-      size: 5 + Math.random() * 5,
-      color: COLORS[Math.random() * COLORS.length | 0],
-      shape: Math.random() < 0.4 ? 1 : 0,
-      life: 0, ttl: 330, sway: Math.random() * 6.3,
-    }));
-  }
-
   /* ---- chiffres animés : fait défiler la partie numérique d'un texte déjà rendu ---- */
   function countUpText(node, dur) {
     const final = node.textContent;
-    const m = final.match(/-?\d(?:[\d\s  ]*\d)?(?:,\d+)?/);
+    const m = final.match(/-?\d(?:[\d\s  ]*\d)?(?:,\d+)?/);
     if (!m) return;
     const raw = m[0];
-    const val = parseFloat(raw.replace(/[\s  ]/g, "").replace(",", "."));
+    const val = parseFloat(raw.replace(/[\s  ]/g, "").replace(",", "."));
     if (!isFinite(val) || Math.abs(val) < 1) return;
     const dec = (raw.split(",")[1] || "").length;
     const nf = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
@@ -1793,11 +1739,11 @@ const Juice = (() => {
     const inner = $(".content-inner", content) || content;
     [...inner.children].slice(0, 14).forEach((c, i) => {
       c.classList.add("j-stagger");
-      c.style.setProperty("--jd", i * 38 + "ms");
+      c.style.setProperty("--jd", i * 34 + "ms");
     });
     $$(".kpi", content).forEach((k, i) => {
       k.classList.add("j-stagger");
-      k.style.setProperty("--jd", i * 45 + "ms");
+      k.style.setProperty("--jd", i * 40 + "ms");
     });
     $$(".k-value", content).forEach(n => countUpText(n, 620));
     growBars(content);
@@ -1814,94 +1760,7 @@ const Juice = (() => {
     });
   }
 
-  /* ---- série quotidienne (streak) ---- */
-  const MILESTONES = [3, 5, 7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365];
-
-  /* À appeler une fois au démarrage. Retourne le palier atteint aujourd'hui, sinon 0. */
-  function touchStreak() {
-    const g = State.gami;
-    const today = todayStr();
-    if (g.lastDay === today) return 0;
-    const yesterday = new Date(Date.now() - 86400e3).toISOString().slice(0, 10);
-    g.streak = g.lastDay === yesterday ? g.streak + 1 : 1;
-    g.lastDay = today;
-    if (g.streak > (g.best || 0)) g.best = g.streak;
-    persist();
-    return MILESTONES.includes(g.streak) ? g.streak : 0;
-  }
-
-  function streakMilestone(n) {
-    rain(150);
-    buzz([20, 60, 30, 60, 80]);
-    toast(`🔥 ${n} jours d'affilée ! Votre budget vous dit merci.`, { ms: 5200 });
-  }
-
-  function streakChip() {
-    const g = State.gami;
-    if (!g || !g.streak) return null;
-    return el("button", {
-      class: "streak-chip",
-      title: `Série : ${g.streak} jour${g.streak > 1 ? "s" : ""} d'affilée · record ${g.best}`,
-      onclick: openStreakModal,
-    }, el("span", { class: "fl" }, "🔥"), el("b", {}, String(g.streak)));
-  }
-
-  function openStreakModal() {
-    const g = State.gami;
-    const next = MILESTONES.find(x => x > g.streak) || g.streak + 1;
-    const prev = [...MILESTONES].reverse().find(x => x <= g.streak) || 0;
-    const pct = clamp((g.streak - prev) / (next - prev), 0.05, 1);
-    const stat = (emoji, v, label) => el("div", { style: "text-align:center" },
-      el("div", { style: "font-size:18px" }, emoji),
-      el("div", { style: "font-weight:800; font-size:17px" }, String(v)),
-      el("div", { class: "xs muted" }, label));
-    const m = modal({
-      title: "Votre série",
-      body: el("div", { style: "text-align:center; padding:8px 0 6px" },
-        el("div", { class: "streak-big" }, "🔥"),
-        el("div", { style: "font-size:32px; font-weight:800; letter-spacing:-.02em" }, String(g.streak)),
-        el("div", { class: "muted small" }, `jour${g.streak > 1 ? "s" : ""} d'affilée à garder un œil sur votre budget`),
-        el("div", { class: "mt16", style: "text-align:left" },
-          el("div", { class: "flex small mb8" },
-            el("span", { class: "muted" }, "Prochain palier"),
-            el("span", { class: "spacer" }),
-            el("b", {}, `${next} jours`)),
-          el("div", { class: "pbar", style: "height:10px" },
-            el("i", { style: `width:${pct * 100}%; background:linear-gradient(90deg,#f59e0b,#ef4444)` }))),
-        el("div", { class: "flex mt16", style: "justify-content:center; gap:26px" },
-          stat("🏆", g.best || g.streak, "record"),
-          stat("🎖️", MILESTONES.filter(x => x <= (g.best || 0)).length, "paliers atteints")),
-        el("p", { class: "xs muted mt16", style: "line-height:1.7" },
-          "Ouvrez l'application chaque jour pour faire grandir la flamme — un jour manqué et la série repart de zéro. Le suivi régulier, c'est le secret d'un budget tenu.")),
-    });
-    growBars(m.root);
-  }
-
-  /* ---- célébrations ---- */
-  const TX_TOASTS = [
-    "💪 C'est noté !", "👏 Suivi à jour", "✨ Bien joué", "📒 Enregistré, rien ne vous échappe",
-    "🧠 Noté = maîtrisé", "🎯 Toujours au point",
-  ];
-  let _txStep = Math.random() * TX_TOASTS.length | 0;
-
-  function txAdded(target) {
-    pop(target, 20);
-    buzz(12);
-    toast(TX_TOASTS[_txStep++ % TX_TOASTS.length], { ms: 1700 });
-  }
-
-  function goalReached(g) {
-    rain(190);
-    buzz([25, 70, 35, 70, 120]);
-    toast(`🎉 Objectif « ${g.name} » atteint, félicitations !`, { ms: 6500 });
-  }
-
-  function welcome() {
-    rain(140);
-    buzz([15, 50, 25]);
-  }
-
-  return { on, view, growBars, pop, rain, buzz, txAdded, goalReached, welcome, touchStreak, streakMilestone, streakChip };
+  return { on, view, growBars, buzz };
 })();
 
 
@@ -2022,7 +1881,6 @@ function showOnboarding() {
     persist();
     root.remove();
     renderApp();
-    Juice.welcome();
     if (TEMPLATE_ITEMS[data.situation] && TEMPLATE_ITEMS[data.situation].length) {
       setTimeout(() => toast("💡 Montants indicatifs préremplis : ajustez-les dans l'onglet Budget"), 600);
     }
@@ -2128,11 +1986,17 @@ function viewDashboard(root) {
       el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("goals") }, "Gérer →")),
     el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:14px" },
       b.goals.slice(0, 4).map(g => {
-        const pct = g.target ? clamp((+g.current || 0) / g.target, 0, 1) : 0;
+        const current = +g.current || 0;
+        const pct = g.target ? clamp(current / g.target, 0, 1) : 0;
+        const done = g.target > 0 && current >= g.target;
+        const eta = done ? null : goalEta(b, g);
         return el("div", {},
           el("div", { class: "flex small mb8" }, el("span", {}, `${g.emoji || "🎯"} ${g.name}`), el("span", { class: "spacer" }),
-            el("b", { class: "mono" }, fmtMoney(+g.current || 0, cur, { dec: 0 }) + " / " + fmtMoney(g.target, cur, { dec: 0 }))),
-          el("div", { class: "pbar" }, el("i", { style: `width:${pct * 100}%; background:${g.color || "var(--accent)"}` }))
+            el("b", { class: "mono" }, fmtMoney(current, cur, { dec: 0 }) + " / " + fmtMoney(g.target, cur, { dec: 0 }))),
+          el("div", { class: "pbar" }, el("i", { style: `width:${pct * 100}%; background:${g.color || "var(--accent)"}` })),
+          el("div", { class: "xs muted", style: "margin-top:5px" },
+            done ? "Objectif atteint"
+              : `Reste ${fmtMoney(Math.max(0, (g.target || 0) - current), cur, { dec: 0 })}` + (eta ? ` · atteint vers ${fmtYm(eta).toLowerCase()}` : ""))
         );
       })
     )
@@ -2892,7 +2756,7 @@ function openTxEditor(b, tx, defaultDate) {
       el("span", { class: "spacer" }),
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
-        class: "btn btn-p", onclick: e => {
+        class: "btn btn-p", onclick: () => {
           t.kind = kind;
           t.amount = Math.abs(numVal(amountInp));
           if (!t.amount) { toast("⚠️ Montant manquant"); return; }
@@ -2902,7 +2766,7 @@ function openTxEditor(b, tx, defaultDate) {
           if (isNew) State.transactions.push(t);
           else Object.assign(State.transactions.find(x => x.id === t.id), t);
           persist();
-          if (isNew) Juice.txAdded(e);
+          if (isNew) { Juice.buzz(10); toast("Transaction ajoutée", { ms: 1600 }); }
           m.close(); renderApp();
         }
       }, isNew ? "Ajouter" : "Enregistrer"),
@@ -3045,8 +2909,7 @@ function openCsvImport(b) {
             const toAdd = parsed.filter(p => p.sel);
             toAdd.forEach(p => State.transactions.push({ id: uid(), budgetId: b.id, date: p.date, kind: p.kind, amount: p.amount, categoryId: p.categoryId, label: p.label, notes: "" }));
             persist(); m.close(); renderApp();
-            if (toAdd.length >= 8) Juice.rain(90);
-            Juice.buzz(15);
+            Juice.buzz(12);
             toast(`✅ ${toAdd.length} transactions importées`);
           }
         }, "Importer la sélection"))
@@ -3064,31 +2927,68 @@ function viewGoals(root) {
   const cur = b.currency;
 
   const goalCards = b.goals.map(g => {
-    const pct = g.target ? clamp((+g.current || 0) / g.target, 0, 1) : 0;
+    const current = +g.current || 0;
+    const pct = g.target ? clamp(current / g.target, 0, 1) : 0;
+    const remaining = Math.max(0, (g.target || 0) - current);
+    const done = g.target > 0 && current >= g.target;
     const req = goalRequiredMonthly(g);
-    const eta = goalEta(b, g);
+    const eta = done ? null : goalEta(b, g);
     const linked = b.items.filter(i => i.savingTo === g.id);
     const monthly = linked.reduce((s, i) => s + monthlyEquivalent(i), 0);
-    return el("div", { class: "card card-pad" },
-      el("div", { class: "flex mb8" },
-        el("span", { style: "font-size:24px" }, g.emoji || "🎯"),
+
+    // écart entre la trajectoire actuelle et la date visée (en mois)
+    const drift = (eta && g.targetDate) ? monthIndex(eta) - monthIndex(ymOf(g.targetDate)) : null;
+
+    let badge;
+    if (done) badge = el("span", { class: "badge b-pos" }, "Atteint");
+    else if (drift != null) badge = drift <= 0 ? el("span", { class: "badge b-pos" }, "En bonne voie") : el("span", { class: "badge b-warn" }, "À ajuster");
+    else if (monthly > 0) badge = el("span", { class: "badge b-info" }, "En cours");
+    else badge = el("span", { class: "badge b-mut" }, "À planifier");
+
+    // accompagnement factuel : où on en est, où ça mène, quoi changer si besoin
+    const facts = [];
+    if (done) {
+      facts.push(`Objectif atteint${g.target ? " — " + fmtMoney(g.target, cur, { dec: 0 }) + " réunis" : ""}.`);
+    } else {
+      if (monthly > 0) facts.push(`Versements liés : ${fmtMoney(monthly, cur)} /mois.`);
+      if (eta) {
+        let s = `À ce rythme : atteint vers ${fmtYm(eta).toLowerCase()}`;
+        if (drift != null) s += drift <= 0
+          ? (drift === 0 ? ", dans les temps." : `, ${-drift} mois avant la date visée.`)
+          : `, ${drift} mois après la date visée.`;
+        else s += ".";
+        facts.push(s);
+      }
+      if (req != null && (monthly < req - 0.5)) {
+        facts.push(monthly > 0
+          ? `Pour tenir ${fmtDate(g.targetDate)} : ${fmtMoney(req, cur, { dec: 0 })} /mois (soit ${fmtMoney(req - monthly, cur, { dec: 0 })} de plus).`
+          : `Pour atteindre l'objectif au ${fmtDate(g.targetDate)} : ${fmtMoney(req, cur, { dec: 0 })} /mois.`);
+      }
+      if (!monthly && req == null) facts.push("Aucun versement automatique : planifiez un montant mensuel pour avancer sans y penser.");
+    }
+
+    return el("div", { class: "card card-pad goal-card" },
+      el("div", { class: "flex mb8", style: "align-items:flex-start" },
+        el("span", { style: "font-size:24px; line-height:1.2" }, g.emoji || "🎯"),
         el("div", { style: "flex:1; min-width:0" },
           el("h3", { style: "font-size:15.5px" }, g.name),
-          el("div", { class: "xs muted" }, g.targetDate ? "objectif pour " + fmtDate(g.targetDate) : "sans date limite")),
-        el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 15), onclick: () => openGoalEditor(b, g) })),
-      el("div", { class: "flex small mb8" },
-        el("b", { class: "mono", style: "font-size:17px" }, fmtMoney(+g.current || 0, cur, { dec: 0 })),
+          el("div", { class: "xs muted" }, g.targetDate ? "pour le " + fmtDate(g.targetDate) : "sans date limite")),
+        badge,
+        el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 15), title: "Modifier", onclick: () => openGoalEditor(b, g) })),
+      el("div", { class: "flex small mb8", style: "align-items:baseline" },
+        el("b", { class: "mono", style: "font-size:18px" }, fmtMoney(current, cur, { dec: 0 })),
         el("span", { class: "muted" }, "sur " + fmtMoney(g.target, cur, { dec: 0 })),
         el("span", { class: "spacer" }),
         el("b", {}, Math.round(pct * 100) + " %")),
-      el("div", { class: "pbar", style: "height:11px" }, el("i", { style: `width:${pct * 100}%; background:${g.color || "var(--accent)"}` })),
-      el("div", { class: "small muted mt12", style: "line-height:1.7" },
-        monthly > 0 ? el("div", {}, `💸 Versements liés : ${fmtMoney(monthly, cur)} /mois`) : el("div", {}, "💸 Aucun versement automatique lié"),
-        req != null ? el("div", {}, `📐 Nécessaire pour tenir la date : ${fmtMoney(req, cur)} /mois`) : null,
-        eta ? el("div", {}, `🏁 Au rythme actuel, objectif atteint vers ${fmtYm(eta)}`) : null),
-      el("div", { class: "flex mt12" },
-        el("button", { class: "btn btn-sm", onclick: () => addContribution(b, g) }, "+ Versement ponctuel"),
-        !monthly ? el("button", {
+      el("div", { class: "pbar", style: "height:11px" }, el("i", { style: `width:${pct * 100}%; background:${done ? "var(--accent)" : (g.color || "var(--accent)")}` })),
+      !done ? el("div", { class: "flex small mt8" },
+        el("span", { class: "muted" }, "Reste"),
+        el("b", { class: "mono" }, fmtMoney(remaining, cur, { dec: 0 }))) : null,
+      facts.length ? el("div", { class: "small muted mt12", style: "line-height:1.75" },
+        facts.map(f => el("div", {}, f))) : null,
+      el("div", { class: "flex mt12", style: "flex-wrap:wrap" },
+        !done ? el("button", { class: "btn btn-sm", onclick: () => addContribution(b, g) }, "+ Versement ponctuel") : null,
+        !done && !monthly ? el("button", {
           class: "btn btn-sm btn-ghost", onclick: () => {
             const it = newItem("expense");
             it.name = "Épargne — " + g.name;
@@ -3151,17 +3051,15 @@ function addContribution(b, g) {
     foot: [el("span", { class: "spacer" }),
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
-        class: "btn btn-p", onclick: e => {
+        class: "btn btn-p", onclick: () => {
           const v = numVal(inp);
           if (!v) return;
           const before = +g.current || 0;
           g.current = before + v;
           const done = g.target > 0 && before < g.target && g.current >= g.target;
-          persist();
-          if (!done) { Juice.pop(e); Juice.buzz(12); }
-          m.close(); renderApp();
-          if (done) Juice.goalReached(g);
-          else toast(`✅ ${fmtMoney(v, b.currency)} ajoutés à « ${g.name} »`);
+          persist(); m.close(); renderApp();
+          Juice.buzz(10);
+          toast(done ? `Objectif « ${g.name} » atteint` : `${fmtMoney(v, b.currency)} ajoutés à « ${g.name} »`, { ms: done ? 4500 : 2500 });
         }
       }, "Ajouter")]
   });
@@ -3201,8 +3099,6 @@ function openGoalEditor(b, goal) {
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
         class: "btn btn-p", onclick: () => {
-          const old = isNew ? null : b.goals.find(x => x.id === g.id);
-          const wasDone = old && +old.target > 0 && (+old.current || 0) >= +old.target;
           g.name = nameI.value.trim() || "Objectif";
           g.emoji = emojiI.value.trim() || "🎯";
           g.color = colorI.value;
@@ -3212,7 +3108,6 @@ function openGoalEditor(b, goal) {
           if (isNew) b.goals.push(g);
           else Object.assign(b.goals.find(x => x.id === g.id), g);
           persist(); m.close(); renderApp();
-          if (g.target > 0 && g.current >= g.target && !wasDone) Juice.goalReached(g);
         }
       }, isNew ? "Créer" : "Enregistrer")]
   });
@@ -3898,10 +3793,10 @@ function viewSettings(root) {
       fField("Prénom", nameI),
       fField("Inflation par défaut (projections)", inflI),
       fField("Budget actif", el("div", { class: "small", style: "padding-top:10px" }, curBudget() ? `${curBudget().emoji} ${curBudget().name}` : "—")),
-      fField("Animations & célébrations", el("label", { class: "switch", style: "margin-top:8px" },
+      fField("Animations d'interface", el("label", { class: "switch", style: "margin-top:8px" },
         el("input", { type: "checkbox", checked: s.juice !== false, onchange: e => { s.juice = e.target.checked; persist(); } }),
         el("span", { class: "tr" })))),
-    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios macro-économiques. Les animations (confettis, chiffres qui défilent, série 🔥) se désactivent ici — elles respectent aussi le réglage « réduire les animations » de votre système.")
+    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios macro-économiques. Les animations d'interface (transitions, graphiques) respectent aussi le réglage « réduire les animations » de votre système.")
   );
 
   const syncCard = el("div", { class: "card card-pad" },
@@ -4808,7 +4703,6 @@ function renderApp() {
         State.budgets.filter(x => !x.archived).length > 1 ? el("span", { class: "ico", html: I.chevD, style: "width:12px;height:12px;display:inline-grid;place-items:center;vertical-align:-1px;margin-left:3px;opacity:.6" }) : null,
         ` · ${v.sub()}`)),
     el("div", { class: "topbar-actions" },
-      Juice.streakChip(),
       Sync.chipEl(),
       themeBtn));
 
@@ -4836,8 +4730,9 @@ function renderApp() {
   function navBtn(k) {
     return el("button", {
       class: "nav-item" + (_view === k ? " active" : ""),
+      title: VIEWS[k].label,
       onclick: () => go(k)
-    }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), VIEWS[k].label);
+    }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), el("span", { class: "nav-label" }, VIEWS[k].label));
   }
 }
 
@@ -4891,10 +4786,8 @@ document.addEventListener("keydown", e => {
 loadState();
 applyTheme();
 Sync.init();
-const _streakMilestone = Juice.touchStreak();
 if (!State.onboarded || !State.budgets.length) showOnboarding();
 else renderApp();
-if (_streakMilestone) setTimeout(() => Juice.streakMilestone(_streakMilestone), 900);
 window.addEventListener("beforeunload", () => {
   if (window._wipe) return; // effacement volontaire : ne pas re-sauvegarder
   clearTimeout(_saveTimer);

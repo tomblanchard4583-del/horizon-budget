@@ -6,31 +6,68 @@ function viewGoals(root) {
   const cur = b.currency;
 
   const goalCards = b.goals.map(g => {
-    const pct = g.target ? clamp((+g.current || 0) / g.target, 0, 1) : 0;
+    const current = +g.current || 0;
+    const pct = g.target ? clamp(current / g.target, 0, 1) : 0;
+    const remaining = Math.max(0, (g.target || 0) - current);
+    const done = g.target > 0 && current >= g.target;
     const req = goalRequiredMonthly(g);
-    const eta = goalEta(b, g);
+    const eta = done ? null : goalEta(b, g);
     const linked = b.items.filter(i => i.savingTo === g.id);
     const monthly = linked.reduce((s, i) => s + monthlyEquivalent(i), 0);
-    return el("div", { class: "card card-pad" },
-      el("div", { class: "flex mb8" },
-        el("span", { style: "font-size:24px" }, g.emoji || "🎯"),
+
+    // écart entre la trajectoire actuelle et la date visée (en mois)
+    const drift = (eta && g.targetDate) ? monthIndex(eta) - monthIndex(ymOf(g.targetDate)) : null;
+
+    let badge;
+    if (done) badge = el("span", { class: "badge b-pos" }, "Atteint");
+    else if (drift != null) badge = drift <= 0 ? el("span", { class: "badge b-pos" }, "En bonne voie") : el("span", { class: "badge b-warn" }, "À ajuster");
+    else if (monthly > 0) badge = el("span", { class: "badge b-info" }, "En cours");
+    else badge = el("span", { class: "badge b-mut" }, "À planifier");
+
+    // accompagnement factuel : où on en est, où ça mène, quoi changer si besoin
+    const facts = [];
+    if (done) {
+      facts.push(`Objectif atteint${g.target ? " — " + fmtMoney(g.target, cur, { dec: 0 }) + " réunis" : ""}.`);
+    } else {
+      if (monthly > 0) facts.push(`Versements liés : ${fmtMoney(monthly, cur)} /mois.`);
+      if (eta) {
+        let s = `À ce rythme : atteint vers ${fmtYm(eta).toLowerCase()}`;
+        if (drift != null) s += drift <= 0
+          ? (drift === 0 ? ", dans les temps." : `, ${-drift} mois avant la date visée.`)
+          : `, ${drift} mois après la date visée.`;
+        else s += ".";
+        facts.push(s);
+      }
+      if (req != null && (monthly < req - 0.5)) {
+        facts.push(monthly > 0
+          ? `Pour tenir ${fmtDate(g.targetDate)} : ${fmtMoney(req, cur, { dec: 0 })} /mois (soit ${fmtMoney(req - monthly, cur, { dec: 0 })} de plus).`
+          : `Pour atteindre l'objectif au ${fmtDate(g.targetDate)} : ${fmtMoney(req, cur, { dec: 0 })} /mois.`);
+      }
+      if (!monthly && req == null) facts.push("Aucun versement automatique : planifiez un montant mensuel pour avancer sans y penser.");
+    }
+
+    return el("div", { class: "card card-pad goal-card" },
+      el("div", { class: "flex mb8", style: "align-items:flex-start" },
+        el("span", { style: "font-size:24px; line-height:1.2" }, g.emoji || "🎯"),
         el("div", { style: "flex:1; min-width:0" },
           el("h3", { style: "font-size:15.5px" }, g.name),
-          el("div", { class: "xs muted" }, g.targetDate ? "objectif pour " + fmtDate(g.targetDate) : "sans date limite")),
-        el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 15), onclick: () => openGoalEditor(b, g) })),
-      el("div", { class: "flex small mb8" },
-        el("b", { class: "mono", style: "font-size:17px" }, fmtMoney(+g.current || 0, cur, { dec: 0 })),
+          el("div", { class: "xs muted" }, g.targetDate ? "pour le " + fmtDate(g.targetDate) : "sans date limite")),
+        badge,
+        el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 15), title: "Modifier", onclick: () => openGoalEditor(b, g) })),
+      el("div", { class: "flex small mb8", style: "align-items:baseline" },
+        el("b", { class: "mono", style: "font-size:18px" }, fmtMoney(current, cur, { dec: 0 })),
         el("span", { class: "muted" }, "sur " + fmtMoney(g.target, cur, { dec: 0 })),
         el("span", { class: "spacer" }),
         el("b", {}, Math.round(pct * 100) + " %")),
-      el("div", { class: "pbar", style: "height:11px" }, el("i", { style: `width:${pct * 100}%; background:${g.color || "var(--accent)"}` })),
-      el("div", { class: "small muted mt12", style: "line-height:1.7" },
-        monthly > 0 ? el("div", {}, `💸 Versements liés : ${fmtMoney(monthly, cur)} /mois`) : el("div", {}, "💸 Aucun versement automatique lié"),
-        req != null ? el("div", {}, `📐 Nécessaire pour tenir la date : ${fmtMoney(req, cur)} /mois`) : null,
-        eta ? el("div", {}, `🏁 Au rythme actuel, objectif atteint vers ${fmtYm(eta)}`) : null),
-      el("div", { class: "flex mt12" },
-        el("button", { class: "btn btn-sm", onclick: () => addContribution(b, g) }, "+ Versement ponctuel"),
-        !monthly ? el("button", {
+      el("div", { class: "pbar", style: "height:11px" }, el("i", { style: `width:${pct * 100}%; background:${done ? "var(--accent)" : (g.color || "var(--accent)")}` })),
+      !done ? el("div", { class: "flex small mt8" },
+        el("span", { class: "muted" }, "Reste"),
+        el("b", { class: "mono" }, fmtMoney(remaining, cur, { dec: 0 }))) : null,
+      facts.length ? el("div", { class: "small muted mt12", style: "line-height:1.75" },
+        facts.map(f => el("div", {}, f))) : null,
+      el("div", { class: "flex mt12", style: "flex-wrap:wrap" },
+        !done ? el("button", { class: "btn btn-sm", onclick: () => addContribution(b, g) }, "+ Versement ponctuel") : null,
+        !done && !monthly ? el("button", {
           class: "btn btn-sm btn-ghost", onclick: () => {
             const it = newItem("expense");
             it.name = "Épargne — " + g.name;
@@ -93,17 +130,15 @@ function addContribution(b, g) {
     foot: [el("span", { class: "spacer" }),
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
-        class: "btn btn-p", onclick: e => {
+        class: "btn btn-p", onclick: () => {
           const v = numVal(inp);
           if (!v) return;
           const before = +g.current || 0;
           g.current = before + v;
           const done = g.target > 0 && before < g.target && g.current >= g.target;
-          persist();
-          if (!done) { Juice.pop(e); Juice.buzz(12); }
-          m.close(); renderApp();
-          if (done) Juice.goalReached(g);
-          else toast(`✅ ${fmtMoney(v, b.currency)} ajoutés à « ${g.name} »`);
+          persist(); m.close(); renderApp();
+          Juice.buzz(10);
+          toast(done ? `Objectif « ${g.name} » atteint` : `${fmtMoney(v, b.currency)} ajoutés à « ${g.name} »`, { ms: done ? 4500 : 2500 });
         }
       }, "Ajouter")]
   });
@@ -143,8 +178,6 @@ function openGoalEditor(b, goal) {
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
         class: "btn btn-p", onclick: () => {
-          const old = isNew ? null : b.goals.find(x => x.id === g.id);
-          const wasDone = old && +old.target > 0 && (+old.current || 0) >= +old.target;
           g.name = nameI.value.trim() || "Objectif";
           g.emoji = emojiI.value.trim() || "🎯";
           g.color = colorI.value;
@@ -154,7 +187,6 @@ function openGoalEditor(b, goal) {
           if (isNew) b.goals.push(g);
           else Object.assign(b.goals.find(x => x.id === g.id), g);
           persist(); m.close(); renderApp();
-          if (g.target > 0 && g.current >= g.target && !wasDone) Juice.goalReached(g);
         }
       }, isNew ? "Créer" : "Enregistrer")]
   });
