@@ -4685,7 +4685,7 @@ const Sync = (() => {
           _base = buildBase();
           try { localStorage.setItem(STORE_KEY, JSON.stringify(State)); } catch (e) {}
           setStatus("synced");
-          if (changedRemote && !_openModals.length) renderApp();
+          if (remote && !_openModals.length) renderApp();
           _busy = false;
           if (_pending) schedulePush();
           return;
@@ -4701,10 +4701,13 @@ const Sync = (() => {
     }
   }
   function stableDocHash(doc) {
-    // empreinte rapide indépendante de l'ordre, pour détecter un vrai changement
-    return doc.budgets.length + "|" + doc.transactions.length + "|" +
-      doc.budgets.reduce((s, b) => s + (b._rev || 0), 0) + "|" +
-      doc.transactions.reduce((s, t) => s + (t._rev || 0), 0) + "|" + (doc.settings._rev || 0);
+    let h = doc.transactions.length + "|" + doc.budgets.length + "|" + (doc.settings && doc.settings._rev || 0);
+    for (const t of (doc.transactions || [])) h += "|" + (t._rev || 0);
+    for (const b of (doc.budgets || [])) {
+      h += "|b" + (b._rev || 0);
+      for (const sc of SUBCOLLS) for (const r of (b[sc] || [])) h += "," + (r._rev || 0);
+    }
+    return h;
   }
 
   /* ---------- interrogation périodique ---------- */
