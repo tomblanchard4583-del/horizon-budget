@@ -1814,7 +1814,7 @@ function viewDashboard(root) {
     upcoming.length ? el("div", { class: "row-list", style: "padding-bottom:8px" }, upcoming.slice(0, 8).map(u =>
       el("div", { class: "item-row", style: "cursor:default" },
         el("div", { class: "i-emoji", style: "font-size:12px; font-weight:700; flex-direction:column; line-height:1.1; display:flex; align-items:center; justify-content:center" },
-          el("span", {}, String(+u.date.slice(8))), el("span", { class: "xs muted" }, MOIS[+u.date.slice(5, 7) - 1].slice(0, 3) + ".")),
+          el("span", {}, String(+u.date.slice(8))), el("span", { class: "xs muted" }, MOIS[+u.date.slice(5, 7) - 1].slice(0, 4) + ".")),
         el("div", { class: "i-main" },
           el("div", { class: "i-name" }, u.item.name || "(sans nom)"),
           el("div", { class: "i-sub" }, u.item._debt ? "mensualité de crédit" : catLabel(b, u.item.categoryId))),
