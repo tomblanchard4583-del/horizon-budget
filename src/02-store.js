@@ -15,7 +15,15 @@ const State = {
   },
   activeBudgetId: null,
   budgets: [],
-  transactions: [],           // suivi réel : {id,budgetId,date,kind,amount,categoryId,label,notes}
+  transactions: [],           // suivi réel : {id,budgetId,date,kind,amount,categoryId,label,notes,splits?}
+  intel: {                    // apprentissage local — propre à cet appareil, NON synchronisé
+    rules: {},                // "budgetId|clé marchand" → {kind,categoryId,confirms,amounts,days,itemId}
+    catUsage: {},             // "budgetId|categoryId" → nombre d'utilisations
+    splitMemory: {},          // "budgetId|clé marchand" → [{categoryId, share}] (méthode des enveloppes)
+    csvMaps: {},              // empreinte d'en-tête CSV → mapping de colonnes mémorisé
+    dismissed: {},            // suggestions écartées
+  },
+  ai: { provider: "", key: "" },  // connecteur IA optionnel — clé locale, jamais synchronisée
   sync: {                     // synchronisation Supabase (auto-hébergée)
     enabled: false,
     url: "", anonKey: "", room: "",   // identifiants — propres à chaque appareil, NON synchronisés
@@ -84,9 +92,13 @@ function loadState() {
     if (data && data.version >= 1) {
       const sync = Object.assign({}, State.sync, data.sync || {});
       const settings = Object.assign({}, State.settings, data.settings || {});
+      const intel = Object.assign({}, State.intel, data.intel || {});
+      const ai = Object.assign({}, State.ai, data.ai || {});
       Object.assign(State, data);
       State.sync = sync;       // garantit les nouveaux champs même sur anciennes sauvegardes
       State.settings = settings;
+      State.intel = intel;
+      State.ai = ai;
       delete State.gami;       // reliquat d'une ancienne version
     }
   } catch (e) { console.warn("État illisible, démarrage à neuf", e); }
@@ -192,7 +204,9 @@ function exportTransactionsCSV() {
   const rows = [["date", "type", "montant", "catégorie", "libellé", "notes"]];
   State.transactions.filter(t => t.budgetId === b.id)
     .sort((a, z) => a.date.localeCompare(z.date))
-    .forEach(t => rows.push([t.date, t.kind === "income" ? "revenu" : "dépense", String(t.amount).replace(".", ","), catLabel(b, t.categoryId), t.label || "", t.notes || ""]));
+    .forEach(t => rows.push([t.date, t.kind === "income" ? "revenu" : "dépense", String(t.amount).replace(".", ","),
+      (t.splits && t.splits.length) ? t.splits.map(s => `${catLabel(b, s.categoryId)} ${String(s.amount).replace(".", ",")}`).join(" + ") : catLabel(b, t.categoryId),
+      t.label || "", t.notes || ""]));
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(";")).join("\n");
   downloadFile(`transactions-${todayStr()}.csv`, "﻿" + csv, "text/csv;charset=utf-8");
   toast("📦 CSV exporté");

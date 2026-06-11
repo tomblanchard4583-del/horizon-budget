@@ -264,7 +264,11 @@ const HELP_SECTIONS = [
       p("Saisissez vos dépenses réelles pour les comparer au budget prévu, ou importez directement un relevé bancaire."),
       ul([
         "<b>Prévu vs réel</b> : barres de progression par catégorie, dépassements signalés en rouge, « reste à dépenser ».",
-        "<b>Import CSV</b> : exportez un relevé depuis votre banque, importez-le ici. L'app détecte les colonnes, catégorise automatiquement (Carrefour → Courses, SNCF → Transport…) et écarte les doublons.",
+        "<b>Import CSV</b> : exportez un relevé depuis votre banque, importez-le ici. L'app détecte les colonnes (et mémorise le format de votre banque), catégorise automatiquement et écarte les doublons.",
+        "<b>Apprentissage</b> : chaque catégorie confirmée ou corrigée est mémorisée. Après 2 confirmations, le marchand est reconnu automatiquement aux imports suivants ; seuls les cas inhabituels (libellé inconnu, montant inattendu) vous sont présentés.",
+        "<b>Régularités</b> : l'app repère les opérations qui reviennent (loyer, salaire, abonnements…) et propose d'en faire des postes du budget — ou d'ajuster un poste existant si le montant ou la date a dérivé.",
+        "<b>Ventilation</b> : un montant peut être réparti sur plusieurs catégories (ex. retrait de 280 € = 180 € courses + 100 € sorties, méthode des enveloppes). L'app retient vos répartitions habituelles et les propose au retrait suivant.",
+        "<b>Assistance IA</b> (réglages) : en option, une clé Claude ou Gemini catégorise les libellés inconnus. Seuls les libellés sont envoyés, jamais vos montants.",
         "<b>Export</b> : vos transactions en CSV à tout moment.",
       ]),
     ],

@@ -35,6 +35,33 @@ function viewSettings(root) {
     el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios macro-économiques. Les animations d'interface (transitions, graphiques) respectent aussi le réglage « réduire les animations » de votre système.")
   );
 
+  const aiKeyI = el("input", {
+    class: "input", type: "password", value: State.ai.key || "", placeholder: "Clé API",
+    oninput: debounce(e => { State.ai.key = e.target.value.trim(); persist(); }, 400)
+  });
+  const aiSeg = segControl([
+    { value: "", label: "Désactivé" }, { value: "claude", label: "Claude" }, { value: "gemini", label: "Gemini" },
+  ], State.ai.provider || "", v => { State.ai.provider = v; persist(); });
+  const aiCard = el("div", { class: "card card-pad" },
+    el("h3", { class: "mb12" }, "🤖 Assistance IA (optionnel)"),
+    el("p", { class: "small muted mb12" }, "À l'import d'un relevé, les libellés que l'app ne connaît pas encore peuvent être soumis à une IA qui propose une catégorie. Seuls ces libellés sont envoyés — jamais vos montants, soldes ni historique. Coût : une fraction de centime par import, sur votre propre clé. Sans clé, l'apprentissage local fait le travail au fil de vos imports."),
+    el("div", { class: "form-grid" },
+      fField("Fournisseur", el("div", {}, aiSeg)),
+      fField("Clé API (stockée sur cet appareil uniquement)", aiKeyI)),
+    el("div", { class: "flex mt12" },
+      el("button", {
+        class: "btn btn-sm", onclick: async ev => {
+          const btn = ev.target.closest("button");
+          if (!Intel.aiReady()) { toast("⚠️ Choisissez un fournisseur et saisissez une clé"); return; }
+          btn.disabled = true; btn.textContent = "Test en cours…";
+          try { await Intel.aiTest(); toast("✅ Connexion IA fonctionnelle"); }
+          catch (e) { toast("❌ Échec du test : " + e.message); }
+          btn.disabled = false; btn.textContent = "Tester la connexion";
+        }
+      }, "Tester la connexion")),
+    el("p", { class: "xs muted mt12" }, "Obtenir une clé : Claude → console.anthropic.com (API keys) · Gemini → aistudio.google.com (Get API key). La clé n'est jamais synchronisée entre appareils.")
+  );
+
   const syncCard = el("div", { class: "card card-pad" },
     el("div", { class: "flex mb12" }, el("h3", {}, "☁️ Synchronisation multi-appareils"),
       el("span", { class: "spacer" }),
@@ -102,5 +129,5 @@ function viewSettings(root) {
   );
 
   root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
-    generalCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
+    generalCard, aiCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
 }

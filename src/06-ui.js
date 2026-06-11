@@ -80,11 +80,21 @@ function selectInput(options, value, attrs) {
   return s;
 }
 
-/* Sélecteur de catégorie groupé (avec sous-catégories indentées). */
+/* Sélecteur de catégorie groupé (avec sous-catégories indentées).
+   Les catégories les plus utilisées remontent dans un groupe « Fréquentes ». */
 function catSelect(budget, kind, value, attrs) {
   const roots = budget.categories.filter(c => c.kind === kind && !c.parentId);
   const s = el("select", { class: "input", ...attrs });
   s.append(el("option", { value: "" }, "— Sans catégorie —"));
+  const freq = (typeof Intel !== "undefined") ? Intel.topCats(budget, kind, 5) : [];
+  if (freq.length) {
+    const g = el("optgroup", { label: "★ Fréquentes" });
+    freq.forEach(c => {
+      const p = c.parentId ? catById(budget, c.parentId) : null;
+      g.append(el("option", { value: c.id }, `${(p || c).emoji} ${c.name}`));
+    });
+    s.append(g);
+  }
   for (const r of roots) {
     const g = el("optgroup", { label: `${r.emoji} ${r.name}` });
     g.append(el("option", { value: r.id, selected: r.id === value }, `${r.name} (général)`));

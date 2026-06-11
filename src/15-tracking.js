@@ -72,7 +72,9 @@ function viewTracking(root) {
         el("div", { class: "i-emoji" }, c ? c.emoji : (t.kind === "income" ? "💶" : "🧾")),
         el("div", { class: "i-main" },
           el("div", { class: "i-name" }, t.label || catLabel(b, t.categoryId)),
-          el("div", { class: "i-sub" }, fmtDate(t.date) + " · " + catLabel(b, t.categoryId))),
+          el("div", { class: "i-sub" }, fmtDate(t.date) + " · " + ((t.splits && t.splits.length)
+            ? t.splits.map(s => `${catLabel(b, s.categoryId)} ${fmtMoney(s.amount, cur, { dec: 0 })}`).join(" + ")
+            : catLabel(b, t.categoryId)))),
         el("div", { class: "i-amt " + (t.kind === "income" ? "pos" : "") },
           fmtMoney(t.kind === "income" ? +t.amount : -t.amount, cur, { sign: true }))
       );
@@ -94,7 +96,30 @@ function viewTracking(root) {
     txList
   );
 
-  root.append(el("div", { class: "content-inner" }, head, kpis,
+  // suggestions issues de l'historique : récurrences, dérives de montant ou de date
+  const suggestions = Intel.detectRecurring(b);
+  const suggCard = suggestions.length ? el("div", { class: "card mt16" },
+    el("div", { class: "card-head" },
+      el("h3", {}, "Régularités détectées"),
+      el("span", { class: "spacer" }),
+      el("span", { class: "xs muted" }, "d'après vos transactions")),
+    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:12px" },
+      suggestions.slice(0, 4).map(sg => el("div", { class: "flex", style: "gap:10px; flex-wrap:wrap" },
+        el("div", { class: "small", style: "flex:1; min-width:220px; line-height:1.55" }, sg.text),
+        el("div", { class: "flex", style: "gap:6px" },
+          el("button", {
+            class: "btn btn-sm btn-p", onclick: () => {
+              const msg = sg.apply();
+              Intel.dismiss(sg.id);
+              persist(); renderApp();
+              toast("✅ " + msg);
+            }
+          }, "Appliquer"),
+          el("button", { class: "btn btn-sm btn-ghost", onclick: () => { Intel.dismiss(sg.id); persist(); renderApp(); } }, "Ignorer"))
+      )))
+  ) : null;
+
+  root.append(el("div", { class: "content-inner" }, head, kpis, suggCard,
     el("div", { class: "grid g2 mt16", style: "align-items:start" }, compareCard, listCard)));
 
   function kpiBox(label, value, sub, tone) {
@@ -116,10 +141,55 @@ function openTxEditor(b, tx, defaultDate) {
   const dateInp = el("input", { class: "input", type: "date", value: t.date });
   let catSel = catSelect(b, kind, t.categoryId);
   const catWrap = el("div", {}, catSel);
+  let splits = (t.splits || []).map(s => ({ ...s }));
+  const catZone = el("div", { class: "field full" });
+
+  function renderCatZone() {
+    catZone.innerHTML = "";
+    if (!splits.length) {
+      catZone.append(el("label", {}, "Catégorie"), catWrap,
+        el("button", {
+          class: "btn btn-sm btn-ghost", style: "margin-top:8px",
+          onclick: () => {
+            const total = Math.abs(numVal(amountInp)) || 0;
+            splits = Intel.splitFor(b, labelInp.value, total) || [{ categoryId: catSel.value || null, amount: total }];
+            renderCatZone();
+          }
+        }, "÷ Ventiler en plusieurs catégories"));
+      return;
+    }
+    catZone.append(el("label", {}, "Ventilation par catégorie"));
+    const rest = el("span", { class: "xs muted" });
+    const refreshRest = () => {
+      const total = Math.abs(numVal(amountInp)) || 0;
+      const d = round2(total - splits.reduce((s, x) => s + (+x.amount || 0), 0));
+      rest.textContent = d ? `Reste à répartir : ${fmtMoney(d, b.currency)}` : "Ventilation complète ✓";
+      rest.className = "xs " + (d ? "neg" : "pos");
+    };
+    const list = el("div", { style: "display:flex; flex-direction:column; gap:8px" });
+    splits.forEach((sp, i) => {
+      const amtI = moneyInput({ value: sp.amount || "", oninput: e => { sp.amount = parseAmount(e.target.value); refreshRest(); } });
+      const cs = catSelect(b, kind, sp.categoryId, { style: "flex:1; min-width:0" });
+      cs.addEventListener("change", () => sp.categoryId = cs.value || null);
+      list.append(el("div", { class: "flex", style: "gap:8px" },
+        el("div", { style: "width:130px; flex:none" }, amtI), cs,
+        el("button", { class: "btn btn-ico btn-ghost", html: ico("x", 15), onclick: () => { splits.splice(i, 1); renderCatZone(); } })));
+    });
+    catZone.append(list,
+      el("div", { class: "flex", style: "gap:8px; margin-top:8px; flex-wrap:wrap" },
+        el("button", { class: "btn btn-sm", onclick: () => { splits.push({ categoryId: null, amount: 0 }); renderCatZone(); } }, "+ Ligne"),
+        el("button", { class: "btn btn-sm btn-ghost", onclick: () => { splits = []; renderCatZone(); } }, "Annuler la ventilation"),
+        el("span", { class: "spacer" }), rest));
+    refreshRest();
+  }
+  renderCatZone();
+
   const seg = segControl([{ value: "expense", label: "Dépense" }, { value: "income", label: "Revenu" }], kind, v => {
     kind = v;
     const ns = catSelect(b, kind, null);
     catWrap.innerHTML = ""; catWrap.append(ns); catSel = ns;
+    splits = [];                        // les catégories de l'autre type ne s'appliquent plus
+    renderCatZone();
   });
 
   const m = modal({
@@ -130,7 +200,7 @@ function openTxEditor(b, tx, defaultDate) {
         fField("Montant", amountInp),
         fField("Date", dateInp),
         fField("Libellé", labelInp, { full: true }),
-        fField("Catégorie", catWrap, { full: true }))),
+        catZone)),
     foot: [
       !isNew ? el("button", {
         class: "btn btn-danger", html: ico("trash", 15),
@@ -150,9 +220,19 @@ function openTxEditor(b, tx, defaultDate) {
           if (!t.amount) { toast("⚠️ Montant manquant"); return; }
           t.date = dateInp.value || todayStr();
           t.label = labelInp.value.trim();
-          t.categoryId = catSel.value || null;
+          if (splits.length) {
+            const clean = splits.filter(s => +s.amount > 0).map(s => ({ categoryId: s.categoryId || null, amount: round2(+s.amount) }));
+            const sum = round2(clean.reduce((s, x) => s + x.amount, 0));
+            if (Math.abs(sum - t.amount) > 0.011) { toast(`⚠️ Ventilation : ${fmtMoney(sum, b.currency)} répartis sur ${fmtMoney(t.amount, b.currency)}`); return; }
+            t.splits = clean;
+            t.categoryId = null;
+          } else {
+            t.splits = undefined;
+            t.categoryId = catSel.value || null;
+          }
           if (isNew) State.transactions.push(t);
           else Object.assign(State.transactions.find(x => x.id === t.id), t);
+          Intel.learn(b, t);            // mémorise marchand → catégorie (et les ventilations)
           persist();
           if (isNew) { Juice.buzz(10); toast("Transaction ajoutée", { ms: 1600 }); }
           m.close(); renderApp();
@@ -182,7 +262,9 @@ function openCsvImport(b) {
       const lines = text.split(/\r?\n/).filter(l => l.trim());
       const rows = lines.map(l => splitCsvLine(l, sep));
       if (rows.length < 2) { toast("❌ Fichier vide ou illisible"); return; }
-      showMapping(rows);
+      const known = Intel.knownCsvMap(rows[0]);
+      if (known) preview(rows, known, true);   // format déjà rencontré : colonnes appliquées directement
+      else showMapping(rows);
     };
     reader.readAsText(file, "utf-8");
   }
@@ -227,7 +309,14 @@ function openCsvImport(b) {
         el("div", { class: "field" }, el("label", {}, "— ou bien —"), el("div", { class: "xs muted", style: "padding-top:10px" }, "colonnes séparées :")),
         fField("Débit", debitSel), fField("Crédit", creditSel)),
       el("div", { class: "flex mt16" }, el("span", { class: "spacer" }),
-        el("button", { class: "btn btn-p", onclick: () => preview(rows, +dateSel.value, +labelSel.value, +amtSel.value, +debitSel.value, +creditSel.value) }, "Analyser →"))
+        el("button", {
+          class: "btn btn-p", onclick: () => {
+            const map = { iDate: +dateSel.value, iLabel: +labelSel.value, iAmt: +amtSel.value, iDebit: +debitSel.value, iCredit: +creditSel.value };
+            Intel.rememberCsvMap(rows[0], map);   // la prochaine fois, cette étape sera sautée
+            persist();
+            preview(rows, map, false);
+          }
+        }, "Analyser →"))
     );
   }
 
@@ -242,17 +331,9 @@ function openCsvImport(b) {
     return null;
   }
 
-  function autoCat(label, kind) {
-    for (const [re, catName] of AUTO_CAT_KEYWORDS) {
-      if (re.test(label)) {
-        const c = b.categories.find(c => c.name === catName && (c.kind === kind));
-        if (c) return c.id;
-      }
-    }
-    return null;
-  }
-
-  function preview(rows, iDate, iLabel, iAmt, iDebit, iCredit) {
+  function preview(rows, map, autoMapped) {
+    const { iDate, iLabel, iAmt, iDebit, iCredit } = map;
+    const cur = b.currency;
     const parsed = [];
     for (const r of rows.slice(1)) {
       const date = parseDate(r[iDate] || "");
@@ -265,42 +346,160 @@ function openCsvImport(b) {
         amount = c - d;
       }
       if (!amount) continue;
-      const label = iLabel >= 0 ? r[iLabel] : "";
+      const label = iLabel >= 0 ? (r[iLabel] || "") : "";
       const kind = amount >= 0 ? "income" : "expense";
-      parsed.push({ sel: true, date, label, amount: Math.abs(amount), kind, categoryId: autoCat(label, kind) });
+      parsed.push({ sel: true, date, label, amount: Math.abs(amount), kind, categoryId: null, tier: "new", note: "", splits: null });
     }
     if (!parsed.length) { toast("❌ Aucune ligne exploitable (vérifiez les colonnes)"); return; }
-    const dup = new Set(State.transactions.filter(t => t.budgetId === b.id).map(t => `${t.date}|${t.amount}|${(t.label || "").slice(0, 18)}`));
-    parsed.forEach(p => { if (dup.has(`${p.date}|${p.amount}|${(p.label || "").slice(0, 18)}`)) p.sel = false; });
 
-    m.body.innerHTML = "";
-    const list = el("div", { style: "max-height:46vh; overflow-y:auto" });
-    parsed.forEach(p => {
+    /* classement par confiance : auto (marchand confirmé) > suggéré > à vérifier ; retraits & doublons à part */
+    const dup = new Set(State.transactions.filter(t => t.budgetId === b.id).map(t => `${t.date}|${t.amount}|${(t.label || "").slice(0, 18)}`));
+    for (const p of parsed) {
+      if (dup.has(`${p.date}|${p.amount}|${(p.label || "").slice(0, 18)}`)) { p.tier = "dup"; p.sel = false; p.note = "déjà présente dans le suivi"; continue; }
+      if (p.kind === "expense" && Intel.isCashWithdrawal(p.label)) {
+        p.tier = "split";
+        p.splits = Intel.splitFor(b, p.label, p.amount);
+        p.note = p.splits ? "ventilation proposée d'après vos retraits passés" : "retrait d'espèces — vous pouvez le ventiler par enveloppe";
+        continue;
+      }
+      const s = Intel.suggest(b, p.label, p.kind);
+      if (s) {
+        p.categoryId = s.categoryId;
+        if (s.usual && Math.abs(p.amount - s.usual) > Math.max(15, s.usual * 0.4)) {
+          p.tier = "review"; p.note = `montant inhabituel — d'habitude ≈ ${fmtMoney(s.usual, cur, { dec: 0 })}`;
+        } else if (s.auto) { p.tier = "auto"; p.note = ""; }
+        else { p.tier = "sugg"; p.note = s.source === "appris" ? "appris de vos choix passés" : "reconnu par mots-clés"; }
+      } else { p.note = "libellé inconnu"; }
+    }
+
+    function row(p) {
       const chk = el("input", { type: "checkbox", checked: p.sel, onchange: e => p.sel = e.target.checked });
-      const cs = catSelect(b, p.kind, p.categoryId, { style: "max-width:200px; min-height:34px; padding:5px 28px 5px 9px; font-size:12.5px" });
-      cs.addEventListener("change", () => p.categoryId = cs.value || null);
-      list.append(el("div", { class: "flex small", style: "padding:6px 0; border-bottom:1px solid var(--line); gap:8px" },
+      const line = el("div", { style: "border-bottom:1px solid var(--line); padding:7px 0" });
+      const main = el("div", { class: "flex small", style: "gap:8px" },
         chk,
         el("span", { class: "mono xs muted nowrap" }, p.date),
         el("span", { style: "flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap" }, p.label || "—"),
-        el("b", { class: "mono nowrap " + (p.kind === "income" ? "pos" : "") }, fmtMoney(p.kind === "income" ? p.amount : -p.amount, b.currency, { sign: true })),
-        cs));
-    });
-    const dupCount = parsed.filter(p => !p.sel).length;
+        el("b", { class: "mono nowrap " + (p.kind === "income" ? "pos" : "") }, fmtMoney(p.kind === "income" ? p.amount : -p.amount, cur, { sign: true })));
+      line.append(main);
+      if (p.tier === "split") {
+        const zone = el("div", { style: "margin:6px 0 2px 26px" });
+        const renderZone = () => {
+          zone.innerHTML = "";
+          if (p.splits && p.splits.length) {
+            zone.append(
+              el("span", { class: "xs muted" }, p.splits.map(s => `${catLabel(b, s.categoryId)} ${fmtMoney(s.amount, cur, { dec: 0 })}`).join(" + ") + "  "),
+              el("button", { class: "btn btn-sm btn-ghost", onclick: editSplits }, "Modifier"));
+          } else {
+            zone.append(el("button", { class: "btn btn-sm", onclick: () => { p.splits = [{ categoryId: null, amount: p.amount }]; editSplits(); } }, "÷ Ventiler"));
+          }
+        };
+        const editSplits = () => {
+          zone.innerHTML = "";
+          if (!p.splits || !p.splits.length) p.splits = [{ categoryId: null, amount: p.amount }];
+          const rest = el("span", { class: "xs muted" });
+          const refresh = () => {
+            const d = round2(p.amount - p.splits.reduce((s, x) => s + (+x.amount || 0), 0));
+            rest.textContent = d ? `reste ${fmtMoney(d, cur)}` : "✓ complet";
+            rest.className = "xs " + (d ? "neg" : "pos");
+          };
+          const lst = el("div", { style: "display:flex; flex-direction:column; gap:6px" });
+          p.splits.forEach((sp, i) => {
+            const amtI = moneyInput({ value: sp.amount || "", oninput: e => { sp.amount = parseAmount(e.target.value); refresh(); } });
+            const cs2 = catSelect(b, "expense", sp.categoryId, { style: "flex:1; min-width:0; min-height:32px; padding:4px 28px 4px 9px; font-size:12.5px" });
+            cs2.addEventListener("change", () => sp.categoryId = cs2.value || null);
+            lst.append(el("div", { class: "flex", style: "gap:6px" },
+              el("div", { style: "width:110px; flex:none" }, amtI), cs2,
+              el("button", { class: "btn btn-ico btn-ghost", html: ico("x", 14), onclick: () => { p.splits.splice(i, 1); editSplits(); } })));
+          });
+          zone.append(lst, el("div", { class: "flex", style: "gap:6px; margin-top:6px" },
+            el("button", { class: "btn btn-sm", onclick: () => { p.splits.push({ categoryId: null, amount: 0 }); editSplits(); } }, "+ Ligne"),
+            el("button", { class: "btn btn-sm btn-ghost", onclick: () => { p.splits = null; renderZone(); } }, "Sans ventilation"),
+            el("span", { class: "spacer" }), rest));
+          refresh();
+        };
+        renderZone();
+        line.append(zone);
+      } else {
+        const cs = catSelect(b, p.kind, p.categoryId, { style: "max-width:210px; min-height:32px; padding:4px 28px 4px 9px; font-size:12.5px" });
+        cs.addEventListener("change", () => { p.categoryId = cs.value || null; });
+        p._sel = cs;
+        main.append(cs);
+      }
+      if (p.note) line.append(el("div", { class: "xs", style: "margin-left:26px; margin-top:3px; color:" + (p.tier === "review" ? "#f59e0b" : "var(--mut, #93a1ba)") }, p.note));
+      return line;
+    }
+
+    function section(title, items, collapsed) {
+      if (!items.length) return null;
+      const body = el("div", {}, items.map(row));
+      if (collapsed) return el("details", { style: "margin-bottom:6px" },
+        el("summary", { class: "small muted", style: "cursor:pointer; padding:6px 0" }, `${title} (${items.length})`), body);
+      return el("div", { style: "margin-bottom:6px" },
+        el("div", { class: "small", style: "font-weight:600; padding:8px 0 2px" }, `${title} (${items.length})`), body);
+    }
+
+    const byTier = t => parsed.filter(p => p.tier === t);
+    const toCheck = parsed.filter(p => p.tier === "review" || p.tier === "new");
+    const months = [...new Set(parsed.map(p => ymOf(p.date)))].sort();
+    const span = months.length > 1 ? `de ${fmtYm(months[0])} à ${fmtYm(months[months.length - 1])}` : fmtYm(months[0]);
+
+    const aiLine = el("div", { class: "xs muted", style: "margin:2px 0 8px" });
+    async function runAI() {
+      if (!Intel.aiReady()) return;
+      const unknowns = parsed.filter(p => p.tier === "new" && p.label);
+      const uniq = [...new Map(unknowns.map(p => [p.label + "|" + p.kind, { label: p.label, kind: p.kind }])).values()];
+      if (!uniq.length) return;
+      aiLine.textContent = `🤖 IA : analyse de ${uniq.length} libellé(s) inconnu(s)…`;
+      try {
+        const res = await Intel.aiCategorize(b, uniq);
+        let n = 0;
+        for (const p of unknowns) {
+          const cid = res.get(p.label);
+          if (cid && !p.categoryId) { p.categoryId = cid; if (p._sel) p._sel.value = cid; n++; }
+        }
+        aiLine.textContent = n ? `🤖 IA : ${n} ligne(s) catégorisée(s) — un coup d'œil suffit avant d'importer.` : "🤖 IA consultée : aucune catégorie sûre, à compléter à la main.";
+      } catch (e) {
+        aiLine.textContent = `🤖 IA indisponible (${e.message}) — catégorisation locale uniquement.`;
+      }
+    }
+
+    m.body.innerHTML = "";
+    const list = el("div", { style: "max-height:48vh; overflow-y:auto" },
+      section("⚠ À vérifier", toCheck, false),
+      section("💶 Retraits d'espèces", byTier("split"), false),
+      section("Catégories proposées", byTier("sugg"), false),
+      section("Reconnues automatiquement", byTier("auto"), true),
+      section("Doublons probables — décochés", byTier("dup"), true));
     m.body.append(
-      el("p", { class: "small muted mb8" }, `${parsed.length} transactions détectées, catégorisées automatiquement quand c'est possible.` + (dupCount ? ` ${dupCount} doublon(s) probable(s) décoché(s).` : "")),
-      list,
+      el("p", { class: "small muted mb8" },
+        `${parsed.length} lignes, ${span}. ` +
+        `${byTier("auto").length} reconnues automatiquement, ${byTier("sugg").length} proposées, ${toCheck.length} à vérifier` +
+        (byTier("dup").length ? `, ${byTier("dup").length} doublon(s) écarté(s)` : "") + "."),
+      autoMapped ? el("div", { class: "xs muted mb8" }, "Format de fichier reconnu — colonnes appliquées automatiquement. ",
+        el("button", { class: "btn btn-sm btn-ghost", onclick: () => showMapping(rows) }, "Modifier les colonnes")) : null,
+      aiLine, list,
       el("div", { class: "flex mt16" }, el("span", { class: "spacer" }),
         el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
         el("button", {
           class: "btn btn-p", onclick: () => {
             const toAdd = parsed.filter(p => p.sel);
-            toAdd.forEach(p => State.transactions.push({ id: uid(), budgetId: b.id, date: p.date, kind: p.kind, amount: p.amount, categoryId: p.categoryId, label: p.label, notes: "" }));
+            if (!toAdd.length) { toast("Aucune ligne sélectionnée"); return; }
+            toAdd.forEach(p => {
+              const raw = (p.splits || []).filter(s => +s.amount > 0).map(s => ({ categoryId: s.categoryId || null, amount: round2(+s.amount) }));
+              const sum = round2(raw.reduce((s, x) => s + x.amount, 0));
+              const splits = (raw.length > 1 && Math.abs(sum - p.amount) <= 0.011) ? raw : undefined;
+              const tx = { id: uid(), budgetId: b.id, date: p.date, kind: p.kind, amount: p.amount, categoryId: splits ? null : p.categoryId, label: p.label, notes: "", splits };
+              State.transactions.push(tx);
+              Intel.learn(b, tx);   // chaque import affine les règles pour la prochaine fois
+            });
             persist(); m.close(); renderApp();
             Juice.buzz(12);
-            toast(`✅ ${toAdd.length} transactions importées`);
+            const auto = toAdd.filter(p => p.tier === "auto").length;
+            toast(`✅ ${toAdd.length} transactions importées` + (auto ? ` dont ${auto} reconnues automatiquement` : ""));
+            if (Intel.detectRecurring(b).length) setTimeout(() => toast("💡 Régularités détectées — suggestions affichées dans le Suivi réel", { ms: 5000 }), 700);
           }
         }, "Importer la sélection"))
     );
+    runAI();
   }
 }

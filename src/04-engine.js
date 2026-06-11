@@ -168,10 +168,14 @@ function realMonthByCat(budget, ym) {
   let income = 0, expense = 0;
   for (const t of State.transactions) {
     if (t.budgetId !== budget.id || ymOf(t.date) !== ym) continue;
-    const top = catTop(budget, t.categoryId);
-    const key = top ? top.id : "_";
-    if (t.kind === "income") { income += +t.amount; incomeByCat[key] = (incomeByCat[key] || 0) + +t.amount; }
-    else { expense += +t.amount; byCat[key] = (byCat[key] || 0) + +t.amount; }
+    // une transaction ventilée répartit son montant sur plusieurs catégories
+    const parts = (t.splits && t.splits.length) ? t.splits : [{ categoryId: t.categoryId, amount: +t.amount }];
+    for (const p of parts) {
+      const top = catTop(budget, p.categoryId);
+      const key = top ? top.id : "_";
+      if (t.kind === "income") { income += +p.amount; incomeByCat[key] = (incomeByCat[key] || 0) + +p.amount; }
+      else { expense += +p.amount; byCat[key] = (byCat[key] || 0) + +p.amount; }
+    }
   }
   return { income, expense, byCat, incomeByCat };
 }
