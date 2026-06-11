@@ -78,6 +78,7 @@ function renderApp() {
         State.budgets.filter(x => !x.archived).length > 1 ? el("span", { class: "ico", html: I.chevD, style: "width:12px;height:12px;display:inline-grid;place-items:center;vertical-align:-1px;margin-left:3px;opacity:.6" }) : null,
         ` · ${v.sub()}`)),
     el("div", { class: "topbar-actions" },
+      Juice.streakChip(),
       Sync.chipEl(),
       themeBtn));
 
@@ -100,6 +101,7 @@ function renderApp() {
 
   app.append(sidebar, main, bottomnav, fab);
   v.render(content);
+  Juice.view(content);
 
   function navBtn(k) {
     return el("button", {
@@ -159,8 +161,10 @@ document.addEventListener("keydown", e => {
 loadState();
 applyTheme();
 Sync.init();
+const _streakMilestone = Juice.touchStreak();
 if (!State.onboarded || !State.budgets.length) showOnboarding();
 else renderApp();
+if (_streakMilestone) setTimeout(() => Juice.streakMilestone(_streakMilestone), 900);
 window.addEventListener("beforeunload", () => {
   if (window._wipe) return; // effacement volontaire : ne pas re-sauvegarder
   clearTimeout(_saveTimer);

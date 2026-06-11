@@ -29,11 +29,15 @@ const fmtAxis = (v, cur) => {
 /* Conteneur responsive : dessine via cb(width) et redessine au resize. */
 function chartBox(height, draw) {
   const box = el("div", { class: "chart-box", style: `height:${height}px` });
+  let animed = false; // n'anime que le premier tracé (pas les redraws au resize)
   const render = () => {
     const w = box.clientWidth;
     if (!w) return;
     box.innerHTML = "";
-    box.append(draw(w, height));
+    const svg = draw(w, height);
+    if (animed || !Juice.on()) $$(".j-line,.j-area,.j-fade,.j-slice,.j-bar", svg).forEach(n => n.removeAttribute("class"));
+    animed = true;
+    box.append(svg);
   };
   requestAnimationFrame(render);
   if (window.ResizeObserver) {
@@ -104,17 +108,20 @@ function chartLine(opts) {
     for (const s of opts.series) {
       const pts = s.values.map((v, i) => `${X(i)},${Y(v)}`);
       if (s.fill) {
-        const area = svgEl("path", { d: `M${X(0)},${Y(Math.max(min, 0))} L` + pts.join(" L") + ` L${X(s.values.length - 1)},${Y(Math.max(min, 0))} Z`, fill: s.color, opacity: 0.1 });
+        const area = svgEl("path", { d: `M${X(0)},${Y(Math.max(min, 0))} L` + pts.join(" L") + ` L${X(s.values.length - 1)},${Y(Math.max(min, 0))} Z`, fill: s.color, "fill-opacity": 0.1, class: "j-area" });
         svg.append(area);
       }
-      svg.append(svgEl("path", { d: "M" + pts.join(" L"), fill: "none", stroke: s.color, "stroke-width": 2.2, "stroke-linejoin": "round", "stroke-dasharray": s.dash ? "5 4" : "" }));
+      const lineAttrs = { d: "M" + pts.join(" L"), fill: "none", stroke: s.color, "stroke-width": 2.2, "stroke-linejoin": "round" };
+      if (s.dash) { lineAttrs["stroke-dasharray"] = "5 4"; lineAttrs.class = "j-fade"; }
+      else { lineAttrs.pathLength = 1; lineAttrs.class = "j-line"; }
+      svg.append(svgEl("path", lineAttrs));
     }
 
     // marqueurs d'événements de vie
     for (const m of opts.markers || []) {
       const x = X(m.idx);
-      svg.append(svgEl("line", { x1: x, x2: x, y1: plot.top, y2: plot.top + plot.h, stroke: "var(--violet)", "stroke-width": 1.2, "stroke-dasharray": "2 3", opacity: 0.7 }));
-      const t = svgEl("text", { x, y: plot.top + 9, "text-anchor": "middle", "font-size": 11 });
+      svg.append(svgEl("line", { x1: x, x2: x, y1: plot.top, y2: plot.top + plot.h, stroke: "var(--violet)", "stroke-width": 1.2, "stroke-dasharray": "2 3", "stroke-opacity": 0.7, class: "j-fade" }));
+      const t = svgEl("text", { x, y: plot.top + 9, "text-anchor": "middle", "font-size": 11, class: "j-fade" });
       t.textContent = m.emoji || "📌";
       svg.append(t);
     }
@@ -161,8 +168,8 @@ function chartBars(opts) {
     const stepX = Math.max(1, Math.ceil(n / (W / 78)));
     opts.labels.forEach((l, i) => {
       const cx = plot.left + slot * (i + 0.5);
-      svg.append(svgEl("rect", { x: cx - bw - 1, y: Y(opts.pos[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.pos[i])), rx: 3, fill: "var(--accent)" }));
-      svg.append(svgEl("rect", { x: cx + 1, y: Y(opts.neg[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.neg[i])), rx: 3, fill: "#f43f5e", opacity: 0.85 }));
+      svg.append(svgEl("rect", { x: cx - bw - 1, y: Y(opts.pos[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.pos[i])), rx: 3, fill: "var(--accent)", class: "j-bar", style: `animation-delay:${Math.min(i * 26, 400)}ms` }));
+      svg.append(svgEl("rect", { x: cx + 1, y: Y(opts.neg[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.neg[i])), rx: 3, fill: "#f43f5e", "fill-opacity": 0.85, class: "j-bar", style: `animation-delay:${Math.min(i * 26 + 60, 460)}ms` }));
       if (i % stepX === 0 || i === n - 1) {
         const t = svgEl("text", { x: cx, y: H - 9, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx3)" });
         t.textContent = fmtYmShort(l);
@@ -191,7 +198,7 @@ function chartDonut(opts) {
     const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H });
     const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 8, r = R * 0.64;
     const total = opts.parts.reduce((s, p) => s + p.value, 0) || 1;
-    let a0 = -Math.PI / 2;
+    let a0 = -Math.PI / 2, si = 0;
     const tip = el("div", { class: "chart-tip", style: "opacity:0" });
     for (const p of opts.parts) {
       const frac = p.value / total;
@@ -201,7 +208,7 @@ function chartDonut(opts) {
       const d = frac >= 0.9999
         ? `M${cx},${cy - R} A${R},${R} 0 1 1 ${cx - 0.01},${cy - R} M${cx},${cy - r} A${r},${r} 0 1 0 ${cx - 0.01},${cy - r}`
         : `M${cx + R * Math.cos(a0)},${cy + R * Math.sin(a0)} A${R},${R} 0 ${large} 1 ${cx + R * Math.cos(a1)},${cy + R * Math.sin(a1)} L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} A${r},${r} 0 ${large} 0 ${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} Z`;
-      const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, style: "cursor:pointer" });
+      const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, class: "j-slice", style: `cursor:pointer; animation-delay:${Math.min(si++ * 55, 440)}ms` });
       const showTip = () => {
         tip.innerHTML = `<div class="t-title">${p.emoji || ""} ${esc(p.label)}</div><div class="t-row"><span>${fmtPct(frac)}</span><b>${fmtMoney(p.value, opts.cur)}</b></div>`;
         tip.style.opacity = 1;
@@ -214,9 +221,9 @@ function chartDonut(opts) {
       svg.append(path);
       a0 = a1;
     }
-    const t1 = svgEl("text", { x: cx, y: cy - 4, "text-anchor": "middle", "font-size": 16, "font-weight": 750, fill: "var(--tx)" });
+    const t1 = svgEl("text", { x: cx, y: cy - 4, "text-anchor": "middle", "font-size": 16, "font-weight": 750, fill: "var(--tx)", class: "j-fade" });
     t1.textContent = fmtMoney(total, opts.cur, { dec: 0 });
-    const t2 = svgEl("text", { x: cx, y: cy + 14, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx2)" });
+    const t2 = svgEl("text", { x: cx, y: cy + 14, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx2)", class: "j-fade" });
     t2.textContent = opts.centerLabel || "par mois";
     svg.append(t1, t2);
     requestAnimationFrame(() => { if (svg.parentElement) svg.parentElement.append(tip); });

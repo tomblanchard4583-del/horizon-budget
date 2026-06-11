@@ -114,6 +114,7 @@ function showOnboarding() {
     persist();
     root.remove();
     renderApp();
+    Juice.welcome();
     if (TEMPLATE_ITEMS[data.situation] && TEMPLATE_ITEMS[data.situation].length) {
       setTimeout(() => toast("💡 Montants indicatifs préremplis : ajustez-les dans l'onglet Budget"), 600);
     }

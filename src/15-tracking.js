@@ -144,7 +144,7 @@ function openTxEditor(b, tx, defaultDate) {
       el("span", { class: "spacer" }),
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
-        class: "btn btn-p", onclick: () => {
+        class: "btn btn-p", onclick: e => {
           t.kind = kind;
           t.amount = Math.abs(numVal(amountInp));
           if (!t.amount) { toast("⚠️ Montant manquant"); return; }
@@ -153,7 +153,9 @@ function openTxEditor(b, tx, defaultDate) {
           t.categoryId = catSel.value || null;
           if (isNew) State.transactions.push(t);
           else Object.assign(State.transactions.find(x => x.id === t.id), t);
-          persist(); m.close(); renderApp();
+          persist();
+          if (isNew) Juice.txAdded(e);
+          m.close(); renderApp();
         }
       }, isNew ? "Ajouter" : "Enregistrer"),
     ]
@@ -295,6 +297,8 @@ function openCsvImport(b) {
             const toAdd = parsed.filter(p => p.sel);
             toAdd.forEach(p => State.transactions.push({ id: uid(), budgetId: b.id, date: p.date, kind: p.kind, amount: p.amount, categoryId: p.categoryId, label: p.label, notes: "" }));
             persist(); m.close(); renderApp();
+            if (toAdd.length >= 8) Juice.rain(90);
+            Juice.buzz(15);
             toast(`✅ ${toAdd.length} transactions importées`);
           }
         }, "Importer la sélection"))

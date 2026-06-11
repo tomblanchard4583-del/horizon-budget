@@ -28,8 +28,11 @@ function viewSettings(root) {
       fField("Thème", el("div", {}, themeSeg)),
       fField("Prénom", nameI),
       fField("Inflation par défaut (projections)", inflI),
-      fField("Budget actif", el("div", { class: "small", style: "padding-top:10px" }, curBudget() ? `${curBudget().emoji} ${curBudget().name}` : "—"))),
-    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios macro-économiques.")
+      fField("Budget actif", el("div", { class: "small", style: "padding-top:10px" }, curBudget() ? `${curBudget().emoji} ${curBudget().name}` : "—")),
+      fField("Animations & célébrations", el("label", { class: "switch", style: "margin-top:8px" },
+        el("input", { type: "checkbox", checked: s.juice !== false, onchange: e => { s.juice = e.target.checked; persist(); } }),
+        el("span", { class: "tr" })))),
+    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios macro-économiques. Les animations (confettis, chiffres qui défilent, série 🔥) se désactivent ici — elles respectent aussi le réglage « réduire les animations » de votre système.")
   );
 
   const syncCard = el("div", { class: "card card-pad" },

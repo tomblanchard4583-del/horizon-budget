@@ -62,8 +62,8 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.01em}
 .sidebar{width:var(--sidebar-w); flex:none; background:var(--navy); color:var(--navy-tx); display:flex; flex-direction:column; padding:18px 12px 12px; gap:4px; overflow-y:auto}
 .brand{display:flex; align-items:center; gap:10px; padding:4px 10px 16px; font-weight:800; font-size:17px; letter-spacing:-.02em}
 .brand svg{flex:none}
-.nav-item{display:flex; align-items:center; gap:11px; padding:9.5px 12px; border-radius:10px; color:inherit; opacity:.72; font-weight:550; font-size:14px; width:100%; text-align:left; transition:background .15s,opacity .15s}
-.nav-item:hover{opacity:1; background:rgba(255,255,255,.06)}
+.nav-item{display:flex; align-items:center; gap:11px; padding:9.5px 12px; border-radius:10px; color:inherit; opacity:.72; font-weight:550; font-size:14px; width:100%; text-align:left; transition:background .15s,opacity .15s,transform .18s ease}
+.nav-item:hover{opacity:1; background:rgba(255,255,255,.06); transform:translateX(3px)}
 .nav-item.active{opacity:1; background:rgba(255,255,255,.1); font-weight:650}
 .nav-item .ico{width:19px; height:19px; flex:none; display:grid; place-items:center}
 .nav-sep{height:1px; background:rgba(255,255,255,.08); margin:10px 8px}
@@ -102,9 +102,9 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.01em}
 .kpi .k-sub{font-size:12px; color:var(--tx2)}
 
 /* ---------- buttons ---------- */
-.btn{display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:8.5px 15px; border-radius:10px; font-weight:600; font-size:13.5px; border:1px solid var(--line2); background:var(--panel); color:var(--tx); transition:filter .12s, background .12s; white-space:nowrap}
+.btn{display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:8.5px 15px; border-radius:10px; font-weight:600; font-size:13.5px; border:1px solid var(--line2); background:var(--panel); color:var(--tx); transition:filter .12s, background .12s, transform .12s cubic-bezier(.34,1.56,.64,1); white-space:nowrap}
 .btn:hover{background:var(--panel2)}
-.btn:active{transform:translateY(1px)}
+.btn:active{transform:scale(.95)}
 .btn-p{background:var(--accent); border-color:var(--accent); color:#fff}
 .btn-p:hover{filter:brightness(1.07); background:var(--accent)}
 .btn-danger{background:var(--danger-soft); border-color:transparent; color:var(--danger)}
@@ -114,8 +114,9 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.01em}
 .btn-ico{padding:8px; border-radius:9px}
 .btn svg{flex:none}
 .btn:disabled{opacity:.45; cursor:not-allowed}
-.fab{position:fixed; right:22px; bottom:24px; z-index:40; width:54px; height:54px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; box-shadow:0 10px 28px -6px rgba(16,185,129,.55); transition:transform .15s}
-.fab:hover{transform:scale(1.06)}
+.fab{position:fixed; right:22px; bottom:24px; z-index:40; width:54px; height:54px; border-radius:50%; background:var(--accent); color:#fff; display:grid; place-items:center; box-shadow:0 10px 28px -6px rgba(16,185,129,.55); transition:transform .3s cubic-bezier(.34,1.56,.64,1), box-shadow .3s}
+.fab:hover{transform:scale(1.08) rotate(90deg); box-shadow:0 14px 34px -6px rgba(16,185,129,.65)}
+.fab:active{transform:scale(.88)}
 
 /* ---------- forms ---------- */
 .field{display:flex; flex-direction:column; gap:5px; min-width:0}
@@ -135,7 +136,7 @@ select.input{appearance:none; -webkit-appearance:none; background-image:url("dat
 .switch{position:relative; width:42px; height:24px; flex:none}
 .switch input{opacity:0; width:0; height:0}
 .switch .tr{position:absolute; inset:0; border-radius:99px; background:var(--line2); transition:background .15s}
-.switch .tr:before{content:""; position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform .15s; box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.switch .tr:before{content:""; position:absolute; width:18px; height:18px; border-radius:50%; background:#fff; top:3px; left:3px; transition:transform .3s cubic-bezier(.34,1.56,.64,1); box-shadow:0 1px 3px rgba(0,0,0,.25)}
 .switch input:checked+.tr{background:var(--accent)}
 .switch input:checked+.tr:before{transform:translateX(18px)}
 .seg{display:inline-flex; background:var(--bg2); border-radius:10px; padding:3px; gap:2px; border:1px solid var(--line)}
@@ -155,8 +156,8 @@ select.input{appearance:none; -webkit-appearance:none; background-image:url("dat
 
 /* ---------- lists / rows ---------- */
 .row-list{display:flex; flex-direction:column}
-.item-row{display:flex; align-items:center; gap:12px; padding:11px 20px; border-top:1px solid var(--line); transition:background .1s; cursor:pointer}
-.item-row:hover{background:var(--panel2)}
+.item-row{display:flex; align-items:center; gap:12px; padding:11px 20px; border-top:1px solid var(--line); transition:background .1s, transform .18s ease; cursor:pointer}
+.item-row:hover{background:var(--panel2); transform:translateX(3px)}
 .item-row .i-emoji{width:36px; height:36px; flex:none; border-radius:10px; display:grid; place-items:center; font-size:17px; background:var(--bg2)}
 .item-row .i-main{flex:1; min-width:0}
 .item-row .i-name{font-weight:600; font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -181,14 +182,14 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 
 /* ---------- modal ---------- */
 .modal-veil{position:fixed; inset:0; background:rgba(8,13,28,.55); backdrop-filter:blur(3px); z-index:90; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadein .15s}
-.modal{background:var(--panel); border-radius:18px; width:100%; max-width:560px; max-height:calc(100vh - 60px); display:flex; flex-direction:column; box-shadow:var(--shadow-lg); animation:pop .18s; border:1px solid var(--line)}
+.modal{background:var(--panel); border-radius:18px; width:100%; max-width:560px; max-height:calc(100vh - 60px); display:flex; flex-direction:column; box-shadow:var(--shadow-lg); animation:pop .32s cubic-bezier(.26,1.25,.48,1); border:1px solid var(--line)}
 .modal.modal-lg{max-width:760px}
 .modal-head{display:flex; align-items:center; gap:10px; padding:18px 22px 12px; flex:none}
 .modal-head h3{font-size:17px; flex:1}
 .modal-body{padding:6px 22px 18px; overflow-y:auto; -webkit-overflow-scrolling:touch}
 .modal-foot{display:flex; gap:9px; padding:14px 22px 18px; border-top:1px solid var(--line); flex:none; align-items:center}
 .modal-foot .spacer{flex:1}
-@keyframes pop{from{transform:scale(.96) translateY(8px); opacity:0}}
+@keyframes pop{from{transform:scale(.93) translateY(14px); opacity:0}}
 @keyframes fadein{from{opacity:0}}
 @media(max-width:620px){
   .modal-veil{padding:0; align-items:flex-end}
@@ -201,7 +202,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 
 /* ---------- toast ---------- */
 .toasts{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:120; display:flex; flex-direction:column; gap:8px; align-items:center; pointer-events:none}
-.toast{pointer-events:auto; display:flex; align-items:center; gap:11px; background:var(--navy); color:var(--navy-tx); padding:11px 16px; border-radius:12px; box-shadow:var(--shadow-lg); font-size:13.5px; font-weight:550; animation:pop .2s; max-width:min(92vw,480px)}
+.toast{pointer-events:auto; display:flex; align-items:center; gap:11px; background:var(--navy); color:var(--navy-tx); padding:11px 16px; border-radius:12px; box-shadow:var(--shadow-lg); font-size:13.5px; font-weight:550; animation:toastIn .42s cubic-bezier(.34,1.56,.64,1); max-width:min(92vw,480px)}
 [data-theme="dark"] .toast{background:#243252}
 .toast button{color:var(--accent); font-weight:700; flex:none}
 
@@ -218,7 +219,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 
 /* ---------- progress ---------- */
 .pbar{height:9px; border-radius:99px; background:var(--bg2); overflow:hidden; position:relative}
-.pbar>i{display:block; height:100%; border-radius:99px; background:var(--accent); transition:width .4s ease}
+.pbar>i{display:block; height:100%; border-radius:99px; background:var(--accent); transition:width .85s cubic-bezier(.22,1,.36,1)}
 .pbar.over>i{background:var(--danger)}
 .pbar .pmark{position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--tx3)}
 
@@ -262,8 +263,8 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 .onb-steps i.on{background:var(--accent)}
 .choice-grid{display:grid; grid-template-columns:1fr 1fr; gap:11px}
 @media(max-width:540px){.choice-grid{grid-template-columns:1fr}}
-.choice{display:flex; align-items:center; gap:13px; padding:14px 15px; border-radius:13px; border:1.5px solid var(--line2); background:var(--panel); cursor:pointer; text-align:left; transition:border-color .12s, background .12s}
-.choice:hover{border-color:var(--accent)}
+.choice{display:flex; align-items:center; gap:13px; padding:14px 15px; border-radius:13px; border:1.5px solid var(--line2); background:var(--panel); cursor:pointer; text-align:left; transition:border-color .12s, background .12s, transform .18s ease}
+.choice:hover{border-color:var(--accent); transform:translateY(-2px)}
 .choice.on{border-color:var(--accent); background:var(--accent-soft)}
 .choice .ch-emoji{font-size:24px; flex:none}
 .choice .ch-t{font-weight:700; font-size:14.5px}
@@ -362,6 +363,40 @@ details.adv[open] summary:before{transform:rotate(90deg)}
 .help-body{padding:0 18px 16px; font-size:13.5px; color:var(--tx); line-height:1.65}
 .help-list{margin:4px 0 8px 18px; display:flex; flex-direction:column; gap:5px}
 .help-list li{line-height:1.65}
+
+/* ============ juice : micro-animations & célébrations ============ */
+.fx-canvas{position:fixed; inset:0; width:100vw; height:100vh; z-index:300; pointer-events:none}
+
+/* entrée des vues en cascade */
+.j-stagger{opacity:0; transform:translateY(9px); animation:jRise .42s cubic-bezier(.22,1,.36,1) forwards; animation-delay:var(--jd,0ms)}
+@keyframes jRise{to{opacity:1; transform:none}}
+
+/* graphiques : tracés progressifs */
+.j-line{stroke-dasharray:1; stroke-dashoffset:1; animation:jLine .9s cubic-bezier(.55,0,.25,1) .1s forwards}
+@keyframes jLine{to{stroke-dashoffset:0}}
+.j-area,.j-fade{opacity:0; animation:jFade .55s ease .4s forwards}
+.j-slice{opacity:0; animation:jFade .4s ease forwards}
+@keyframes jFade{to{opacity:1}}
+.j-bar{transform-box:fill-box; transform-origin:50% 100%; transform:scaleY(0); animation:jBar .6s cubic-bezier(.22,1,.36,1) forwards}
+@keyframes jBar{to{transform:scaleY(1)}}
+
+/* pastille série quotidienne */
+.streak-chip{display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:99px; font-size:12.5px; font-weight:750; background:linear-gradient(135deg, rgba(245,158,11,.18), rgba(239,68,68,.12)); border:1px solid rgba(245,158,11,.3); color:#d97706; transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+.streak-chip:hover{transform:scale(1.08)}
+.streak-chip:active{transform:scale(.92)}
+[data-theme="dark"] .streak-chip{color:#fbbf24}
+.streak-chip .fl{font-size:13px; line-height:1}
+.streak-big{font-size:54px; line-height:1.15; animation:jFlame 2.2s ease-in-out infinite}
+@keyframes jFlame{0%,100%{transform:scale(1) rotate(-2deg)}50%{transform:scale(1.12) rotate(2deg)}}
+
+/* divers */
+.empty .e-ico{display:inline-block; animation:jFloat 3.2s ease-in-out infinite}
+@keyframes jFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes toastIn{from{opacity:0; transform:translateY(16px) scale(.93)}}
+
+@media (prefers-reduced-motion: reduce){
+  *,*:before,*:after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; scroll-behavior:auto !important}
+}
 
 </style>
 </head>
@@ -706,10 +741,12 @@ const State = {
     horizonMonths: 24,        // horizon de projection par défaut
     scenarioMode: "expected", // expected | optimistic | pessimistic
     firstName: "",
+    juice: true,              // micro-animations & célébrations
   },
   activeBudgetId: null,
   budgets: [],
   transactions: [],           // suivi réel : {id,budgetId,date,kind,amount,categoryId,label,notes}
+  gami: { lastDay: "", streak: 0, best: 0 },   // série quotidienne (jours consécutifs d'ouverture)
   sync: {                     // synchronisation Supabase (auto-hébergée)
     enabled: false,
     url: "", anonKey: "", room: "",   // identifiants — propres à chaque appareil, NON synchronisés
@@ -777,8 +814,12 @@ function loadState() {
     const data = JSON.parse(raw);
     if (data && data.version >= 1) {
       const sync = Object.assign({}, State.sync, data.sync || {});
+      const settings = Object.assign({}, State.settings, data.settings || {});
+      const gami = Object.assign({}, State.gami, data.gami || {});
       Object.assign(State, data);
       State.sync = sync;       // garantit les nouveaux champs même sur anciennes sauvegardes
+      State.settings = settings;
+      State.gami = gami;
     }
   } catch (e) { console.warn("État illisible, démarrage à neuf", e); }
 }
@@ -1286,11 +1327,15 @@ const fmtAxis = (v, cur) => {
 /* Conteneur responsive : dessine via cb(width) et redessine au resize. */
 function chartBox(height, draw) {
   const box = el("div", { class: "chart-box", style: `height:${height}px` });
+  let animed = false; // n'anime que le premier tracé (pas les redraws au resize)
   const render = () => {
     const w = box.clientWidth;
     if (!w) return;
     box.innerHTML = "";
-    box.append(draw(w, height));
+    const svg = draw(w, height);
+    if (animed || !Juice.on()) $$(".j-line,.j-area,.j-fade,.j-slice,.j-bar", svg).forEach(n => n.removeAttribute("class"));
+    animed = true;
+    box.append(svg);
   };
   requestAnimationFrame(render);
   if (window.ResizeObserver) {
@@ -1361,17 +1406,20 @@ function chartLine(opts) {
     for (const s of opts.series) {
       const pts = s.values.map((v, i) => `${X(i)},${Y(v)}`);
       if (s.fill) {
-        const area = svgEl("path", { d: `M${X(0)},${Y(Math.max(min, 0))} L` + pts.join(" L") + ` L${X(s.values.length - 1)},${Y(Math.max(min, 0))} Z`, fill: s.color, opacity: 0.1 });
+        const area = svgEl("path", { d: `M${X(0)},${Y(Math.max(min, 0))} L` + pts.join(" L") + ` L${X(s.values.length - 1)},${Y(Math.max(min, 0))} Z`, fill: s.color, "fill-opacity": 0.1, class: "j-area" });
         svg.append(area);
       }
-      svg.append(svgEl("path", { d: "M" + pts.join(" L"), fill: "none", stroke: s.color, "stroke-width": 2.2, "stroke-linejoin": "round", "stroke-dasharray": s.dash ? "5 4" : "" }));
+      const lineAttrs = { d: "M" + pts.join(" L"), fill: "none", stroke: s.color, "stroke-width": 2.2, "stroke-linejoin": "round" };
+      if (s.dash) { lineAttrs["stroke-dasharray"] = "5 4"; lineAttrs.class = "j-fade"; }
+      else { lineAttrs.pathLength = 1; lineAttrs.class = "j-line"; }
+      svg.append(svgEl("path", lineAttrs));
     }
 
     // marqueurs d'événements de vie
     for (const m of opts.markers || []) {
       const x = X(m.idx);
-      svg.append(svgEl("line", { x1: x, x2: x, y1: plot.top, y2: plot.top + plot.h, stroke: "var(--violet)", "stroke-width": 1.2, "stroke-dasharray": "2 3", opacity: 0.7 }));
-      const t = svgEl("text", { x, y: plot.top + 9, "text-anchor": "middle", "font-size": 11 });
+      svg.append(svgEl("line", { x1: x, x2: x, y1: plot.top, y2: plot.top + plot.h, stroke: "var(--violet)", "stroke-width": 1.2, "stroke-dasharray": "2 3", "stroke-opacity": 0.7, class: "j-fade" }));
+      const t = svgEl("text", { x, y: plot.top + 9, "text-anchor": "middle", "font-size": 11, class: "j-fade" });
       t.textContent = m.emoji || "📌";
       svg.append(t);
     }
@@ -1418,8 +1466,8 @@ function chartBars(opts) {
     const stepX = Math.max(1, Math.ceil(n / (W / 78)));
     opts.labels.forEach((l, i) => {
       const cx = plot.left + slot * (i + 0.5);
-      svg.append(svgEl("rect", { x: cx - bw - 1, y: Y(opts.pos[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.pos[i])), rx: 3, fill: "var(--accent)" }));
-      svg.append(svgEl("rect", { x: cx + 1, y: Y(opts.neg[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.neg[i])), rx: 3, fill: "#f43f5e", opacity: 0.85 }));
+      svg.append(svgEl("rect", { x: cx - bw - 1, y: Y(opts.pos[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.pos[i])), rx: 3, fill: "var(--accent)", class: "j-bar", style: `animation-delay:${Math.min(i * 26, 400)}ms` }));
+      svg.append(svgEl("rect", { x: cx + 1, y: Y(opts.neg[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.neg[i])), rx: 3, fill: "#f43f5e", "fill-opacity": 0.85, class: "j-bar", style: `animation-delay:${Math.min(i * 26 + 60, 460)}ms` }));
       if (i % stepX === 0 || i === n - 1) {
         const t = svgEl("text", { x: cx, y: H - 9, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx3)" });
         t.textContent = fmtYmShort(l);
@@ -1448,7 +1496,7 @@ function chartDonut(opts) {
     const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H });
     const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 8, r = R * 0.64;
     const total = opts.parts.reduce((s, p) => s + p.value, 0) || 1;
-    let a0 = -Math.PI / 2;
+    let a0 = -Math.PI / 2, si = 0;
     const tip = el("div", { class: "chart-tip", style: "opacity:0" });
     for (const p of opts.parts) {
       const frac = p.value / total;
@@ -1458,7 +1506,7 @@ function chartDonut(opts) {
       const d = frac >= 0.9999
         ? `M${cx},${cy - R} A${R},${R} 0 1 1 ${cx - 0.01},${cy - R} M${cx},${cy - r} A${r},${r} 0 1 0 ${cx - 0.01},${cy - r}`
         : `M${cx + R * Math.cos(a0)},${cy + R * Math.sin(a0)} A${R},${R} 0 ${large} 1 ${cx + R * Math.cos(a1)},${cy + R * Math.sin(a1)} L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} A${r},${r} 0 ${large} 0 ${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} Z`;
-      const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, style: "cursor:pointer" });
+      const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, class: "j-slice", style: `cursor:pointer; animation-delay:${Math.min(si++ * 55, 440)}ms` });
       const showTip = () => {
         tip.innerHTML = `<div class="t-title">${p.emoji || ""} ${esc(p.label)}</div><div class="t-row"><span>${fmtPct(frac)}</span><b>${fmtMoney(p.value, opts.cur)}</b></div>`;
         tip.style.opacity = 1;
@@ -1471,9 +1519,9 @@ function chartDonut(opts) {
       svg.append(path);
       a0 = a1;
     }
-    const t1 = svgEl("text", { x: cx, y: cy - 4, "text-anchor": "middle", "font-size": 16, "font-weight": 750, fill: "var(--tx)" });
+    const t1 = svgEl("text", { x: cx, y: cy - 4, "text-anchor": "middle", "font-size": 16, "font-weight": 750, fill: "var(--tx)", class: "j-fade" });
     t1.textContent = fmtMoney(total, opts.cur, { dec: 0 });
-    const t2 = svgEl("text", { x: cx, y: cy + 14, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx2)" });
+    const t2 = svgEl("text", { x: cx, y: cy + 14, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx2)", class: "j-fade" });
     t2.textContent = opts.centerLabel || "par mois";
     svg.append(t1, t2);
     requestAnimationFrame(() => { if (svg.parentElement) svg.parentElement.append(tip); });
@@ -1612,6 +1660,253 @@ const emptyState = (emoji, title, text, action) => el("div", { class: "empty" },
 );
 
 
+/* ===== 07-juice.js ===== */
+"use strict";
+/* ============ juice : micro-animations, célébrations & série quotidienne ============ */
+
+const Juice = (() => {
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const on = () => State.settings.juice !== false && !reduced.matches;
+
+  /* ---- retour haptique (mobile) ---- */
+  function buzz(pattern) {
+    if (!on() || !navigator.vibrate) return;
+    try { navigator.vibrate(pattern); } catch (e) {}
+  }
+
+  /* ---- moteur confettis : un canvas plein écran partagé, retiré quand tout est retombé ---- */
+  const COLORS = ["#10b981", "#34d399", "#f59e0b", "#3b82f6", "#8b5cf6", "#f43f5e", "#fbbf24"];
+  let cv = null, ctx = null, parts = [], raf = 0;
+
+  function ensureCanvas() {
+    if (!cv) {
+      cv = el("canvas", { class: "fx-canvas" });
+      document.body.append(cv);
+      ctx = cv.getContext("2d");
+    }
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    if (cv.width !== innerWidth * dpr || cv.height !== innerHeight * dpr) {
+      cv.width = innerWidth * dpr;
+      cv.height = innerHeight * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+  }
+
+  function spawn(n, mk) {
+    if (!on()) return;
+    ensureCanvas();
+    const born = performance.now();
+    for (let i = 0; i < n; i++) { const p = mk(i); p.born = born; parts.push(p); }
+    if (!raf) loop();
+  }
+
+  function loop() {
+    raf = requestAnimationFrame(loop);
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    // purge : fin de vie, sorti de l'écran, ou trop vieux (onglet resté en arrière-plan)
+    const now = performance.now();
+    parts = parts.filter(p => p.life < p.ttl && p.y < innerHeight + 40 && now - p.born < 12000);
+    if (!parts.length) {
+      cancelAnimationFrame(raf); raf = 0;
+      cv.remove(); cv = ctx = null;
+      return;
+    }
+    for (const p of parts) {
+      p.life++;
+      p.vy += p.g; p.vx *= p.drag; p.vy *= p.drag;
+      p.x += p.vx + (p.sway ? Math.sin(p.life * 0.08 + p.sway) * 0.8 : 0);
+      p.y += p.vy;
+      p.rot += p.vr;
+      ctx.globalAlpha = clamp(1 - Math.max(0, (p.life - p.ttl * 0.7) / (p.ttl * 0.3)), 0, 1);
+      ctx.fillStyle = p.color;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      if (p.shape) { ctx.beginPath(); ctx.arc(0, 0, p.size / 2, 0, 7); ctx.fill(); }
+      else ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.62);
+      ctx.restore();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  const burstPart = (x, y) => {
+    const a = Math.random() * Math.PI * 2;
+    const v = 5.5 * (0.4 + Math.random());
+    return {
+      x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 4,
+      g: 0.26, drag: 0.985,
+      rot: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.35,
+      size: 4 + Math.random() * 5,
+      color: COLORS[Math.random() * COLORS.length | 0],
+      shape: Math.random() < 0.4 ? 1 : 0,
+      life: 0, ttl: 60 + Math.random() * 50, sway: 0,
+    };
+  };
+
+  /* éclat localisé — accepte un nœud, un événement de clic, ou rien (centre bas de l'écran) */
+  function pop(target, n) {
+    if (!on()) return;
+    if (target && target.currentTarget) target = target.currentTarget;
+    let x = innerWidth / 2, y = innerHeight * 0.7;
+    if (target && target.getBoundingClientRect) {
+      const r = target.getBoundingClientRect();
+      if (r.width || r.height) { x = r.left + r.width / 2; y = r.top + r.height / 2; }
+    }
+    spawn(n || 22, () => burstPart(x, y));
+  }
+
+  /* pluie de confettis : grande célébration */
+  function rain(n) {
+    spawn(n || 130, () => ({
+      x: Math.random() * innerWidth, y: -20 - Math.random() * innerHeight * 0.4,
+      vx: (Math.random() - 0.5) * 1.6, vy: 2 + Math.random() * 3.2,
+      g: 0.045, drag: 0.999,
+      rot: Math.random() * 6.3, vr: (Math.random() - 0.5) * 0.25,
+      size: 5 + Math.random() * 5,
+      color: COLORS[Math.random() * COLORS.length | 0],
+      shape: Math.random() < 0.4 ? 1 : 0,
+      life: 0, ttl: 330, sway: Math.random() * 6.3,
+    }));
+  }
+
+  /* ---- chiffres animés : fait défiler la partie numérique d'un texte déjà rendu ---- */
+  function countUpText(node, dur) {
+    const final = node.textContent;
+    const m = final.match(/-?\d(?:[\d\s  ]*\d)?(?:,\d+)?/);
+    if (!m) return;
+    const raw = m[0];
+    const val = parseFloat(raw.replace(/[\s  ]/g, "").replace(",", "."));
+    if (!isFinite(val) || Math.abs(val) < 1) return;
+    const dec = (raw.split(",")[1] || "").length;
+    const nf = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: dec, maximumFractionDigits: dec });
+    const t0 = performance.now();
+    function tick(now) {
+      const p = Math.min(1, (now - t0) / dur);
+      const e = 1 - Math.pow(1 - p, 3);
+      node.textContent = p >= 1 ? final : final.replace(raw, nf.format(val * e));
+      if (p < 1 && node.isConnected) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---- animation d'entrée d'une vue : sections en cascade, chiffres et jauges ---- */
+  function view(content) {
+    if (!on()) return;
+    const inner = $(".content-inner", content) || content;
+    [...inner.children].slice(0, 14).forEach((c, i) => {
+      c.classList.add("j-stagger");
+      c.style.setProperty("--jd", i * 38 + "ms");
+    });
+    $$(".kpi", content).forEach((k, i) => {
+      k.classList.add("j-stagger");
+      k.style.setProperty("--jd", i * 45 + "ms");
+    });
+    $$(".k-value", content).forEach(n => countUpText(n, 620));
+    growBars(content);
+  }
+
+  /* jauges : pousse de 0 vers leur largeur cible (transition CSS) */
+  function growBars(root) {
+    if (!on()) return;
+    $$(".pbar>i", root).forEach(bar => {
+      const w = bar.style.width;
+      if (!w || w === "0%") return;
+      bar.style.width = "0%";
+      requestAnimationFrame(() => requestAnimationFrame(() => { bar.style.width = w; }));
+    });
+  }
+
+  /* ---- série quotidienne (streak) ---- */
+  const MILESTONES = [3, 5, 7, 14, 21, 30, 45, 60, 90, 120, 180, 270, 365];
+
+  /* À appeler une fois au démarrage. Retourne le palier atteint aujourd'hui, sinon 0. */
+  function touchStreak() {
+    const g = State.gami;
+    const today = todayStr();
+    if (g.lastDay === today) return 0;
+    const yesterday = new Date(Date.now() - 86400e3).toISOString().slice(0, 10);
+    g.streak = g.lastDay === yesterday ? g.streak + 1 : 1;
+    g.lastDay = today;
+    if (g.streak > (g.best || 0)) g.best = g.streak;
+    persist();
+    return MILESTONES.includes(g.streak) ? g.streak : 0;
+  }
+
+  function streakMilestone(n) {
+    rain(150);
+    buzz([20, 60, 30, 60, 80]);
+    toast(`🔥 ${n} jours d'affilée ! Votre budget vous dit merci.`, { ms: 5200 });
+  }
+
+  function streakChip() {
+    const g = State.gami;
+    if (!g || !g.streak) return null;
+    return el("button", {
+      class: "streak-chip",
+      title: `Série : ${g.streak} jour${g.streak > 1 ? "s" : ""} d'affilée · record ${g.best}`,
+      onclick: openStreakModal,
+    }, el("span", { class: "fl" }, "🔥"), el("b", {}, String(g.streak)));
+  }
+
+  function openStreakModal() {
+    const g = State.gami;
+    const next = MILESTONES.find(x => x > g.streak) || g.streak + 1;
+    const prev = [...MILESTONES].reverse().find(x => x <= g.streak) || 0;
+    const pct = clamp((g.streak - prev) / (next - prev), 0.05, 1);
+    const stat = (emoji, v, label) => el("div", { style: "text-align:center" },
+      el("div", { style: "font-size:18px" }, emoji),
+      el("div", { style: "font-weight:800; font-size:17px" }, String(v)),
+      el("div", { class: "xs muted" }, label));
+    const m = modal({
+      title: "Votre série",
+      body: el("div", { style: "text-align:center; padding:8px 0 6px" },
+        el("div", { class: "streak-big" }, "🔥"),
+        el("div", { style: "font-size:32px; font-weight:800; letter-spacing:-.02em" }, String(g.streak)),
+        el("div", { class: "muted small" }, `jour${g.streak > 1 ? "s" : ""} d'affilée à garder un œil sur votre budget`),
+        el("div", { class: "mt16", style: "text-align:left" },
+          el("div", { class: "flex small mb8" },
+            el("span", { class: "muted" }, "Prochain palier"),
+            el("span", { class: "spacer" }),
+            el("b", {}, `${next} jours`)),
+          el("div", { class: "pbar", style: "height:10px" },
+            el("i", { style: `width:${pct * 100}%; background:linear-gradient(90deg,#f59e0b,#ef4444)` }))),
+        el("div", { class: "flex mt16", style: "justify-content:center; gap:26px" },
+          stat("🏆", g.best || g.streak, "record"),
+          stat("🎖️", MILESTONES.filter(x => x <= (g.best || 0)).length, "paliers atteints")),
+        el("p", { class: "xs muted mt16", style: "line-height:1.7" },
+          "Ouvrez l'application chaque jour pour faire grandir la flamme — un jour manqué et la série repart de zéro. Le suivi régulier, c'est le secret d'un budget tenu.")),
+    });
+    growBars(m.root);
+  }
+
+  /* ---- célébrations ---- */
+  const TX_TOASTS = [
+    "💪 C'est noté !", "👏 Suivi à jour", "✨ Bien joué", "📒 Enregistré, rien ne vous échappe",
+    "🧠 Noté = maîtrisé", "🎯 Toujours au point",
+  ];
+  let _txStep = Math.random() * TX_TOASTS.length | 0;
+
+  function txAdded(target) {
+    pop(target, 20);
+    buzz(12);
+    toast(TX_TOASTS[_txStep++ % TX_TOASTS.length], { ms: 1700 });
+  }
+
+  function goalReached(g) {
+    rain(190);
+    buzz([25, 70, 35, 70, 120]);
+    toast(`🎉 Objectif « ${g.name} » atteint, félicitations !`, { ms: 6500 });
+  }
+
+  function welcome() {
+    rain(140);
+    buzz([15, 50, 25]);
+  }
+
+  return { on, view, growBars, pop, rain, buzz, txAdded, goalReached, welcome, touchStreak, streakMilestone, streakChip };
+})();
+
+
 /* ===== 10-onboarding.js ===== */
 "use strict";
 /* ============ onboarding : premier lancement ============ */
@@ -1729,6 +2024,7 @@ function showOnboarding() {
     persist();
     root.remove();
     renderApp();
+    Juice.welcome();
     if (TEMPLATE_ITEMS[data.situation] && TEMPLATE_ITEMS[data.situation].length) {
       setTimeout(() => toast("💡 Montants indicatifs préremplis : ajustez-les dans l'onglet Budget"), 600);
     }
@@ -2598,7 +2894,7 @@ function openTxEditor(b, tx, defaultDate) {
       el("span", { class: "spacer" }),
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
-        class: "btn btn-p", onclick: () => {
+        class: "btn btn-p", onclick: e => {
           t.kind = kind;
           t.amount = Math.abs(numVal(amountInp));
           if (!t.amount) { toast("⚠️ Montant manquant"); return; }
@@ -2607,7 +2903,9 @@ function openTxEditor(b, tx, defaultDate) {
           t.categoryId = catSel.value || null;
           if (isNew) State.transactions.push(t);
           else Object.assign(State.transactions.find(x => x.id === t.id), t);
-          persist(); m.close(); renderApp();
+          persist();
+          if (isNew) Juice.txAdded(e);
+          m.close(); renderApp();
         }
       }, isNew ? "Ajouter" : "Enregistrer"),
     ]
@@ -2749,6 +3047,8 @@ function openCsvImport(b) {
             const toAdd = parsed.filter(p => p.sel);
             toAdd.forEach(p => State.transactions.push({ id: uid(), budgetId: b.id, date: p.date, kind: p.kind, amount: p.amount, categoryId: p.categoryId, label: p.label, notes: "" }));
             persist(); m.close(); renderApp();
+            if (toAdd.length >= 8) Juice.rain(90);
+            Juice.buzz(15);
             toast(`✅ ${toAdd.length} transactions importées`);
           }
         }, "Importer la sélection"))
@@ -2853,12 +3153,17 @@ function addContribution(b, g) {
     foot: [el("span", { class: "spacer" }),
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
-        class: "btn btn-p", onclick: () => {
+        class: "btn btn-p", onclick: e => {
           const v = numVal(inp);
           if (!v) return;
-          g.current = (+g.current || 0) + v;
-          persist(); m.close(); renderApp();
-          toast(`✅ ${fmtMoney(v, b.currency)} ajoutés à « ${g.name} »`);
+          const before = +g.current || 0;
+          g.current = before + v;
+          const done = g.target > 0 && before < g.target && g.current >= g.target;
+          persist();
+          if (!done) { Juice.pop(e); Juice.buzz(12); }
+          m.close(); renderApp();
+          if (done) Juice.goalReached(g);
+          else toast(`✅ ${fmtMoney(v, b.currency)} ajoutés à « ${g.name} »`);
         }
       }, "Ajouter")]
   });
@@ -2898,6 +3203,8 @@ function openGoalEditor(b, goal) {
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
         class: "btn btn-p", onclick: () => {
+          const old = isNew ? null : b.goals.find(x => x.id === g.id);
+          const wasDone = old && +old.target > 0 && (+old.current || 0) >= +old.target;
           g.name = nameI.value.trim() || "Objectif";
           g.emoji = emojiI.value.trim() || "🎯";
           g.color = colorI.value;
@@ -2907,6 +3214,7 @@ function openGoalEditor(b, goal) {
           if (isNew) b.goals.push(g);
           else Object.assign(b.goals.find(x => x.id === g.id), g);
           persist(); m.close(); renderApp();
+          if (g.target > 0 && g.current >= g.target && !wasDone) Juice.goalReached(g);
         }
       }, isNew ? "Créer" : "Enregistrer")]
   });
@@ -3591,8 +3899,11 @@ function viewSettings(root) {
       fField("Thème", el("div", {}, themeSeg)),
       fField("Prénom", nameI),
       fField("Inflation par défaut (projections)", inflI),
-      fField("Budget actif", el("div", { class: "small", style: "padding-top:10px" }, curBudget() ? `${curBudget().emoji} ${curBudget().name}` : "—"))),
-    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios macro-économiques.")
+      fField("Budget actif", el("div", { class: "small", style: "padding-top:10px" }, curBudget() ? `${curBudget().emoji} ${curBudget().name}` : "—")),
+      fField("Animations & célébrations", el("label", { class: "switch", style: "margin-top:8px" },
+        el("input", { type: "checkbox", checked: s.juice !== false, onchange: e => { s.juice = e.target.checked; persist(); } }),
+        el("span", { class: "tr" })))),
+    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios macro-économiques. Les animations (confettis, chiffres qui défilent, série 🔥) se désactivent ici — elles respectent aussi le réglage « réduire les animations » de votre système.")
   );
 
   const syncCard = el("div", { class: "card card-pad" },
@@ -4499,6 +4810,7 @@ function renderApp() {
         State.budgets.filter(x => !x.archived).length > 1 ? el("span", { class: "ico", html: I.chevD, style: "width:12px;height:12px;display:inline-grid;place-items:center;vertical-align:-1px;margin-left:3px;opacity:.6" }) : null,
         ` · ${v.sub()}`)),
     el("div", { class: "topbar-actions" },
+      Juice.streakChip(),
       Sync.chipEl(),
       themeBtn));
 
@@ -4521,6 +4833,7 @@ function renderApp() {
 
   app.append(sidebar, main, bottomnav, fab);
   v.render(content);
+  Juice.view(content);
 
   function navBtn(k) {
     return el("button", {
@@ -4580,8 +4893,10 @@ document.addEventListener("keydown", e => {
 loadState();
 applyTheme();
 Sync.init();
+const _streakMilestone = Juice.touchStreak();
 if (!State.onboarded || !State.budgets.length) showOnboarding();
 else renderApp();
+if (_streakMilestone) setTimeout(() => Juice.streakMilestone(_streakMilestone), 900);
 window.addEventListener("beforeunload", () => {
   if (window._wipe) return; // effacement volontaire : ne pas re-sauvegarder
   clearTimeout(_saveTimer);

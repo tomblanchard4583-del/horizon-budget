@@ -93,12 +93,17 @@ function addContribution(b, g) {
     foot: [el("span", { class: "spacer" }),
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
-        class: "btn btn-p", onclick: () => {
+        class: "btn btn-p", onclick: e => {
           const v = numVal(inp);
           if (!v) return;
-          g.current = (+g.current || 0) + v;
-          persist(); m.close(); renderApp();
-          toast(`✅ ${fmtMoney(v, b.currency)} ajoutés à « ${g.name} »`);
+          const before = +g.current || 0;
+          g.current = before + v;
+          const done = g.target > 0 && before < g.target && g.current >= g.target;
+          persist();
+          if (!done) { Juice.pop(e); Juice.buzz(12); }
+          m.close(); renderApp();
+          if (done) Juice.goalReached(g);
+          else toast(`✅ ${fmtMoney(v, b.currency)} ajoutés à « ${g.name} »`);
         }
       }, "Ajouter")]
   });
@@ -138,6 +143,8 @@ function openGoalEditor(b, goal) {
       el("button", { class: "btn", onclick: () => m.close() }, "Annuler"),
       el("button", {
         class: "btn btn-p", onclick: () => {
+          const old = isNew ? null : b.goals.find(x => x.id === g.id);
+          const wasDone = old && +old.target > 0 && (+old.current || 0) >= +old.target;
           g.name = nameI.value.trim() || "Objectif";
           g.emoji = emojiI.value.trim() || "🎯";
           g.color = colorI.value;
@@ -147,6 +154,7 @@ function openGoalEditor(b, goal) {
           if (isNew) b.goals.push(g);
           else Object.assign(b.goals.find(x => x.id === g.id), g);
           persist(); m.close(); renderApp();
+          if (g.target > 0 && g.current >= g.target && !wasDone) Juice.goalReached(g);
         }
       }, isNew ? "Créer" : "Enregistrer")]
   });
