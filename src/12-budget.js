@@ -131,6 +131,11 @@ function openItemEditor(b, item, isNew, onSaved) {
   const freqSel = selectInput(Object.entries(FREQS).map(([v, f]) => ({ value: v, label: f.label })), it.freq);
   const dayInp = selectInput(Array.from({ length: 28 }, (_, i) => ({ value: i + 1, label: "le " + (i + 1) })), clamp(it.day || 1, 1, 28));
   const startInp = el("input", { class: "input", type: "date", value: it.startDate || "" });
+  // choisir une date de début ajuste le jour du mois (évite un 1ᵉʳ versement raté)
+  startInp.addEventListener("change", () => {
+    const d = +startInp.value.slice(8);
+    if (d >= 1 && d <= 28) dayInp.value = String(d);
+  });
   const hasEnd = el("input", { type: "checkbox", checked: !!it.endDate });
   const endInp = el("input", { class: "input", type: "date", value: it.endDate || "", disabled: !it.endDate });
   hasEnd.addEventListener("change", () => { endInp.disabled = !hasEnd.checked; if (hasEnd.checked && !endInp.value) endInp.value = addMonths(ymOf(todayStr()), 12) + "-01"; });
@@ -141,7 +146,12 @@ function openItemEditor(b, item, isNew, onSaved) {
   const maxInp = moneyInput({ value: it.max ?? "", placeholder: "max" });
   const varRow = el("div", { class: "form-grid full", style: it.variable ? "" : "display:none" },
     fField("Montant minimum (mois creux)", minInp), fField("Montant maximum (mois hauts)", maxInp));
-  varChk.addEventListener("change", () => varRow.style.display = varChk.checked ? "" : "none");
+  const updateVarUi = () => {
+    varRow.style.display = varChk.checked ? "" : "none";
+    amountInp.input.placeholder = varChk.checked ? "vide = moyenne min–max" : "";
+  };
+  varChk.addEventListener("change", updateVarUi);
+  updateVarUi();
 
   // croissance
   const growthSel = selectInput([
@@ -246,6 +256,11 @@ function openItemEditor(b, item, isNew, onSaved) {
     if (isNew) b.items.push(it);
     else Object.assign(b.items.find(x => x.id === item.id), it);
     persist(); m.close(); renderApp();
+    if (ymOf(it.startDate) > ymOf(todayStr())) {
+      toast(`✅ « ${it.name} » ajouté — démarre en ${fmtYm(ymOf(it.startDate))}, il n'apparaît pas encore dans le mois en cours`, { ms: 5000 });
+    } else {
+      toast(isNew ? `✅ « ${it.name} » ajouté` : "✅ Modifications enregistrées");
+    }
     onSaved && onSaved(it);
   }
 }

@@ -68,9 +68,11 @@ function renderApp() {
     }
   });
   const topbar = el("div", { class: "topbar" },
-    el("div", {},
+    el("button", { class: "topbar-title", onclick: openBudgetSwitcher, title: "Changer de budget" },
       el("h1", {}, v.label),
-      el("div", { class: "sub" }, `${b.emoji} ${b.name} · ${v.sub()}`)),
+      el("div", { class: "sub" }, `${b.emoji} ${b.name}`,
+        State.budgets.filter(x => !x.archived).length > 1 ? el("span", { class: "ico", html: I.chevD, style: "width:12px;height:12px;display:inline-grid;place-items:center;vertical-align:-1px;margin-left:3px;opacity:.6" }) : null,
+        ` · ${v.sub()}`)),
     el("div", { class: "topbar-actions" },
       Sync.chipEl(),
       themeBtn));

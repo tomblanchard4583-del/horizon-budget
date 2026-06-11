@@ -1,14 +1,23 @@
 "use strict";
 /* ============ moteur de récurrence & d'évolution des postes ============ */
 
+/* Montant de base d'un poste : si variable sans montant saisi, moyenne de la fourchette. */
+function itemBaseAmount(item) {
+  if (item.variable && !item.amount && (item.min != null || item.max != null)) {
+    const lo = +item.min || 0, hi = item.max != null ? +item.max : lo;
+    return (lo + hi) / 2;
+  }
+  return +item.amount || 0;
+}
+
 /* Montant d'une occurrence du poste au mois donné (paliers + croissance + scénario). */
 function amountAt(item, ym, scenarioMode, inflation) {
   let base;
   if (item.variable && scenarioMode && scenarioMode !== "expected") {
     const optimistic = scenarioMode === "optimistic";
     const wantHigh = (item.kind === "income") === optimistic; // revenu haut si optimiste, dépense basse si optimiste
-    base = wantHigh ? (item.max ?? item.amount) : (item.min ?? item.amount);
-  } else base = item.amount;
+    base = wantHigh ? (item.max ?? itemBaseAmount(item)) : (item.min ?? itemBaseAmount(item));
+  } else base = itemBaseAmount(item);
 
   let baseDate = item.startDate || todayStr();
   const target = ym + "-28";
@@ -70,7 +79,10 @@ function occurrenceDatesInMonth(item, ym) {
   const mi = monthIndex(ym);
   if (mi < anchor || (mi - anchor) % interval !== 0) return [];
   const day = clamp(+item.day || +String(item.startDate || "1").slice(8) || 1, 1, dim);
-  const date = ym + "-" + String(day).padStart(2, "0");
+  let date = ym + "-" + String(day).padStart(2, "0");
+  // 1ʳᵉ occurrence : si le poste démarre en cours de mois après le jour prévu,
+  // elle a lieu à la date de début (sinon le poste serait absent de son 1ᵉʳ mois)
+  if (date < lo && item.startDate && ymOf(item.startDate) === ym) date = lo;
   if (date >= lo && date <= hi) out.push(date);
   return out;
 }
@@ -84,7 +96,7 @@ function monthlyAmount(item, ym, scenarioMode, inflation) {
 /* Équivalent mensuel moyen (pour l'affichage des listes). */
 function monthlyEquivalent(item) {
   if (item.freq === "once") return 0;
-  return item.amount * (FREQS[item.freq].perYear / 12);
+  return itemBaseAmount(item) * (FREQS[item.freq].perYear / 12);
 }
 
 /* Description lisible de la récurrence d'un poste. */
