@@ -56,22 +56,17 @@ function viewTracking(root) {
     ) : emptyState("📊", "Rien à comparer", "Ajoutez des transactions ou planifiez des postes pour voir la comparaison.")
   );
 
-  // liste des transactions
-  const txs = State.transactions
-    .filter(t => t.budgetId === b.id && ymOf(t.date) === ym)
-    .filter(t => !_trackSearch || (t.label || "").toLowerCase().includes(_trackSearch) || catLabel(b, t.categoryId).toLowerCase().includes(_trackSearch))
-    .sort((a, z) => z.date.localeCompare(a.date));
-
-  const search = el("div", { class: "searchbar" },
-    el("span", { html: ico("search", 15) }),
-    el("input", {
-      class: "input", placeholder: "Rechercher…", value: _trackSearch,
-      oninput: debounce(e => { _trackSearch = e.target.value.toLowerCase(); renderApp(); }, 300)
-    }));
-
-  const listCard = el("div", { class: "card", style: "overflow:hidden" },
-    el("div", { class: "card-head" }, el("h3", {}, `Transactions (${txs.length})`), el("span", { class: "spacer" }), search),
-    txs.length ? el("div", { class: "row-list", style: "padding:6px 0 8px" }, txs.map(t => {
+  // liste des transactions — recherche : seule la liste se reconstruit (le champ garde le focus)
+  const txCount = el("h3", {});
+  const txList = el("div", {});
+  function buildTxList() {
+    const txs = State.transactions
+      .filter(t => t.budgetId === b.id && ymOf(t.date) === ym)
+      .filter(t => !_trackSearch || (t.label || "").toLowerCase().includes(_trackSearch) || catLabel(b, t.categoryId).toLowerCase().includes(_trackSearch))
+      .sort((a, z) => z.date.localeCompare(a.date));
+    txCount.textContent = `Transactions (${txs.length})`;
+    txList.innerHTML = "";
+    txList.append(txs.length ? el("div", { class: "row-list", style: "padding:6px 0 8px" }, txs.map(t => {
       const c = catById(b, t.categoryId);
       return el("div", { class: "item-row", onclick: () => openTxEditor(b, t) },
         el("div", { class: "i-emoji" }, c ? c.emoji : (t.kind === "income" ? "💶" : "🧾")),
@@ -81,9 +76,22 @@ function viewTracking(root) {
         el("div", { class: "i-amt " + (t.kind === "income" ? "pos" : "") },
           fmtMoney(t.kind === "income" ? +t.amount : -t.amount, cur, { sign: true }))
       );
-    })) : emptyState("🧾", "Aucune transaction ce mois-ci",
-      "Saisissez vos dépenses au fil de l'eau ou importez un relevé bancaire CSV pour comparer le réel au prévu.",
-      el("button", { class: "btn btn-p btn-sm", onclick: () => openTxEditor(b, null) }, "Première transaction"))
+    })) : emptyState("🧾", _trackSearch ? "Aucun résultat" : "Aucune transaction ce mois-ci",
+      _trackSearch ? "Aucune transaction ne correspond à cette recherche sur ce mois." : "Saisissez vos dépenses au fil de l'eau ou importez un relevé bancaire CSV pour comparer le réel au prévu.",
+      _trackSearch ? null : el("button", { class: "btn btn-p btn-sm", onclick: () => openTxEditor(b, null) }, "Première transaction")));
+  }
+  buildTxList();
+
+  const search = el("div", { class: "searchbar" },
+    el("span", { html: ico("search", 15) }),
+    el("input", {
+      class: "input", placeholder: "Rechercher…", value: _trackSearch,
+      oninput: debounce(e => { _trackSearch = e.target.value.toLowerCase(); buildTxList(); }, 200)
+    }));
+
+  const listCard = el("div", { class: "card", style: "overflow:hidden" },
+    el("div", { class: "card-head" }, txCount, el("span", { class: "spacer" }), search),
+    txList
   );
 
   root.append(el("div", { class: "content-inner" }, head, kpis,

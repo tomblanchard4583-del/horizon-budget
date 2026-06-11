@@ -202,12 +202,14 @@ function chartDonut(opts) {
         ? `M${cx},${cy - R} A${R},${R} 0 1 1 ${cx - 0.01},${cy - R} M${cx},${cy - r} A${r},${r} 0 1 0 ${cx - 0.01},${cy - r}`
         : `M${cx + R * Math.cos(a0)},${cy + R * Math.sin(a0)} A${R},${R} 0 ${large} 1 ${cx + R * Math.cos(a1)},${cy + R * Math.sin(a1)} L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} A${r},${r} 0 ${large} 0 ${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} Z`;
       const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, style: "cursor:pointer" });
-      path.addEventListener("mouseenter", () => {
+      const showTip = () => {
         tip.innerHTML = `<div class="t-title">${p.emoji || ""} ${esc(p.label)}</div><div class="t-row"><span>${fmtPct(frac)}</span><b>${fmtMoney(p.value, opts.cur)}</b></div>`;
         tip.style.opacity = 1;
         tip.style.left = cx + (R * 0.86) * Math.cos(mid) + "px";
         tip.style.top = cy + (R * 0.86) * Math.sin(mid) + "px";
-      });
+      };
+      path.addEventListener("mouseenter", showTip);
+      path.addEventListener("click", showTip); // mobile : tap sur une part
       path.addEventListener("mouseleave", () => tip.style.opacity = 0);
       svg.append(path);
       a0 = a1;

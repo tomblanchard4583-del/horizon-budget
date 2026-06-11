@@ -27,7 +27,7 @@ function viewBudget(root) {
 
   root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
     head,
-    el("div", { class: "flex" }, seg, el("span", { class: "spacer" }),
+    el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" }, seg, el("span", { class: "spacer" }),
       el("button", { class: "btn btn-p", html: ico("plus", 16) + "<span>Ajouter un poste</span>", onclick: () => openItemEditor(b, newItem(_budgetTab), true) })),
     listCard
   ));

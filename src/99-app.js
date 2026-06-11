@@ -2,7 +2,11 @@
 /* ============ coquille applicative : navigation & rendu ============ */
 
 const VIEWS = {
-  dashboard:  { label: "Tableau de bord", icon: "home",    sub: () => "Vue d'ensemble de votre mois", render: viewDashboard },
+  dashboard:  { label: "Tableau de bord", icon: "home",    sub: () => {
+    const h = new Date().getHours();
+    const salut = h < 5 ? "Bonsoir" : h < 18 ? "Bonjour" : "Bonsoir";
+    return State.settings.firstName ? `${salut} ${State.settings.firstName} · votre mois en un coup d'œil` : "Vue d'ensemble de votre mois";
+  }, render: viewDashboard },
   budget:     { label: "Budget",          icon: "list",    sub: () => "Revenus & dépenses planifiés", render: viewBudget },
   projection: { label: "Projections",     icon: "trend",   sub: () => "Votre avenir financier, mois par mois", render: viewProjection },
   calendar:   { label: "Calendrier",      icon: "cal",     sub: () => "Échéances & solde au jour le jour", render: viewCalendar },

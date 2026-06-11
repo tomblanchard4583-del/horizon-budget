@@ -89,6 +89,7 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.01em}
 .card-head h3{font-size:15px}
 .card-head .spacer{flex:1}
 .grid{display:grid; gap:16px}
+.grid>*{min-width:0}
 .g2{grid-template-columns:1fr 1fr} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
 .g23{grid-template-columns:2fr 1.1fr}
 @media(max-width:980px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}.g23{grid-template-columns:1fr}}
@@ -304,7 +305,8 @@ details.adv[open] summary:before{transform:rotate(90deg)}
   .group-head{padding:12px 14px 6px}
   .card-head{padding:13px 15px 0}
   .legend{padding:10px 15px 0}
-  .seg{max-width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch}
+  .seg{max-width:100%; min-width:0; flex-shrink:1; overflow-x:auto; -webkit-overflow-scrolling:touch}
+  .flex{min-width:0}
   .kpi{padding:13px 14px}
   .kpi .k-label{font-size:10.5px}
   .kpi .k-sub{font-size:11px}
@@ -1455,12 +1457,14 @@ function chartDonut(opts) {
         ? `M${cx},${cy - R} A${R},${R} 0 1 1 ${cx - 0.01},${cy - R} M${cx},${cy - r} A${r},${r} 0 1 0 ${cx - 0.01},${cy - r}`
         : `M${cx + R * Math.cos(a0)},${cy + R * Math.sin(a0)} A${R},${R} 0 ${large} 1 ${cx + R * Math.cos(a1)},${cy + R * Math.sin(a1)} L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)} A${r},${r} 0 ${large} 0 ${cx + r * Math.cos(a0)},${cy + r * Math.sin(a0)} Z`;
       const path = svgEl("path", { d, fill: p.color, stroke: "var(--panel)", "stroke-width": 1.5, style: "cursor:pointer" });
-      path.addEventListener("mouseenter", () => {
+      const showTip = () => {
         tip.innerHTML = `<div class="t-title">${p.emoji || ""} ${esc(p.label)}</div><div class="t-row"><span>${fmtPct(frac)}</span><b>${fmtMoney(p.value, opts.cur)}</b></div>`;
         tip.style.opacity = 1;
         tip.style.left = cx + (R * 0.86) * Math.cos(mid) + "px";
         tip.style.top = cy + (R * 0.86) * Math.sin(mid) + "px";
-      });
+      };
+      path.addEventListener("mouseenter", showTip);
+      path.addEventListener("click", showTip); // mobile : tap sur une part
       path.addEventListener("mouseleave", () => tip.style.opacity = 0);
       svg.append(path);
       a0 = a1;
@@ -1890,7 +1894,7 @@ function viewBudget(root) {
 
   root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
     head,
-    el("div", { class: "flex" }, seg, el("span", { class: "spacer" }),
+    el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" }, seg, el("span", { class: "spacer" }),
       el("button", { class: "btn btn-p", html: ico("plus", 16) + "<span>Ajouter un poste</span>", onclick: () => openItemEditor(b, newItem(_budgetTab), true) })),
     listCard
   ));
@@ -2504,22 +2508,17 @@ function viewTracking(root) {
     ) : emptyState("📊", "Rien à comparer", "Ajoutez des transactions ou planifiez des postes pour voir la comparaison.")
   );
 
-  // liste des transactions
-  const txs = State.transactions
-    .filter(t => t.budgetId === b.id && ymOf(t.date) === ym)
-    .filter(t => !_trackSearch || (t.label || "").toLowerCase().includes(_trackSearch) || catLabel(b, t.categoryId).toLowerCase().includes(_trackSearch))
-    .sort((a, z) => z.date.localeCompare(a.date));
-
-  const search = el("div", { class: "searchbar" },
-    el("span", { html: ico("search", 15) }),
-    el("input", {
-      class: "input", placeholder: "Rechercher…", value: _trackSearch,
-      oninput: debounce(e => { _trackSearch = e.target.value.toLowerCase(); renderApp(); }, 300)
-    }));
-
-  const listCard = el("div", { class: "card", style: "overflow:hidden" },
-    el("div", { class: "card-head" }, el("h3", {}, `Transactions (${txs.length})`), el("span", { class: "spacer" }), search),
-    txs.length ? el("div", { class: "row-list", style: "padding:6px 0 8px" }, txs.map(t => {
+  // liste des transactions — recherche : seule la liste se reconstruit (le champ garde le focus)
+  const txCount = el("h3", {});
+  const txList = el("div", {});
+  function buildTxList() {
+    const txs = State.transactions
+      .filter(t => t.budgetId === b.id && ymOf(t.date) === ym)
+      .filter(t => !_trackSearch || (t.label || "").toLowerCase().includes(_trackSearch) || catLabel(b, t.categoryId).toLowerCase().includes(_trackSearch))
+      .sort((a, z) => z.date.localeCompare(a.date));
+    txCount.textContent = `Transactions (${txs.length})`;
+    txList.innerHTML = "";
+    txList.append(txs.length ? el("div", { class: "row-list", style: "padding:6px 0 8px" }, txs.map(t => {
       const c = catById(b, t.categoryId);
       return el("div", { class: "item-row", onclick: () => openTxEditor(b, t) },
         el("div", { class: "i-emoji" }, c ? c.emoji : (t.kind === "income" ? "💶" : "🧾")),
@@ -2529,9 +2528,22 @@ function viewTracking(root) {
         el("div", { class: "i-amt " + (t.kind === "income" ? "pos" : "") },
           fmtMoney(t.kind === "income" ? +t.amount : -t.amount, cur, { sign: true }))
       );
-    })) : emptyState("🧾", "Aucune transaction ce mois-ci",
-      "Saisissez vos dépenses au fil de l'eau ou importez un relevé bancaire CSV pour comparer le réel au prévu.",
-      el("button", { class: "btn btn-p btn-sm", onclick: () => openTxEditor(b, null) }, "Première transaction"))
+    })) : emptyState("🧾", _trackSearch ? "Aucun résultat" : "Aucune transaction ce mois-ci",
+      _trackSearch ? "Aucune transaction ne correspond à cette recherche sur ce mois." : "Saisissez vos dépenses au fil de l'eau ou importez un relevé bancaire CSV pour comparer le réel au prévu.",
+      _trackSearch ? null : el("button", { class: "btn btn-p btn-sm", onclick: () => openTxEditor(b, null) }, "Première transaction")));
+  }
+  buildTxList();
+
+  const search = el("div", { class: "searchbar" },
+    el("span", { html: ico("search", 15) }),
+    el("input", {
+      class: "input", placeholder: "Rechercher…", value: _trackSearch,
+      oninput: debounce(e => { _trackSearch = e.target.value.toLowerCase(); buildTxList(); }, 200)
+    }));
+
+  const listCard = el("div", { class: "card", style: "overflow:hidden" },
+    el("div", { class: "card-head" }, txCount, el("span", { class: "spacer" }), search),
+    txList
   );
 
   root.append(el("div", { class: "content-inner" }, head, kpis,
@@ -3594,8 +3606,8 @@ function viewSettings(root) {
   );
 
   const dataCard = el("div", { class: "card card-pad" },
-    el("h3", { class: "mb12" }, "💾 Sauvegarde & partage"),
-    el("p", { class: "small muted mb12" }, "Vos données restent uniquement sur cet appareil (aucun serveur, aucun compte). Exportez régulièrement une sauvegarde, et utilisez-la pour transférer vos budgets sur un autre appareil."),
+    el("h3", { class: "mb12" }, "💾 Sauvegarde & export"),
+    el("p", { class: "small muted mb12" }, "Vos données vivent sur cet appareil" + (State.sync.enabled ? " et se synchronisent, chiffrées, via votre salon" : "") + ". Une sauvegarde JSON de temps en temps reste la ceinture de sécurité : elle permet de tout restaurer, n'importe où."),
     el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" },
       el("button", { class: "btn btn-p", html: ico("down", 16) + "<span>Tout sauvegarder (JSON)</span>", onclick: () => exportJSON(false) }),
       el("button", { class: "btn", html: ico("down", 16) + "<span>Exporter le budget actif</span>", onclick: () => exportJSON(true) }),
@@ -3604,14 +3616,18 @@ function viewSettings(root) {
       importInp)
   );
 
+  const online = location.protocol === "https:";
+  const appUrl = location.origin + location.pathname;
   const installCard = el("div", { class: "card card-pad" },
-    el("h3", { class: "mb12" }, "📲 Utiliser sur téléphone & partager"),
+    el("h3", { class: "mb12" }, "📲 Installer & partager l'application"),
     el("div", { class: "small", style: "line-height:1.9" },
-      el("div", {}, el("b", {}, "Partager l'application : "), "envoyez simplement le fichier ", el("code", {}, "horizon-budget.html"), " (mail, AirDrop, clé USB…). Il contient toute l'application."),
-      el("div", {}, el("b", {}, "iPhone / iPad : "), "ouvrez le fichier dans Safari (ou hébergez-le en ligne), puis Partager → « Sur l'écran d'accueil »."),
-      el("div", {}, el("b", {}, "Android : "), "ouvrez-le dans Chrome, menu ⋮ → « Ajouter à l'écran d'accueil »."),
-      el("div", {}, el("b", {}, "Transférer vos données : "), "exportez la sauvegarde JSON ici, envoyez-la sur l'autre appareil, puis importez-la."),
-      el("div", { class: "muted xs mt8" }, "Astuce : chaque appareil garde ses propres données. La sauvegarde JSON sert de synchronisation manuelle.")
+      online ? el("div", {}, el("b", {}, "Adresse de l'application : "),
+        el("code", { style: "word-break:break-all" }, appUrl), " ",
+        el("button", { class: "btn btn-sm btn-ghost", style: "vertical-align:middle", onclick: () => { navigator.clipboard && navigator.clipboard.writeText(appUrl).then(() => toast("🔗 Lien copié")); } }, "Copier le lien")) : null,
+      el("div", {}, el("b", {}, "iPhone / iPad : "), online ? "dans Safari : Partager → « Sur l'écran d'accueil ». L'app s'installe comme une vraie application, utilisable hors-ligne." : "ouvrez le fichier dans Safari, puis Partager → « Sur l'écran d'accueil »."),
+      el("div", {}, el("b", {}, "Android : "), online ? "dans Chrome : menu ⋮ → « Installer l'application »." : "ouvrez-le dans Chrome, menu ⋮ → « Ajouter à l'écran d'accueil »."),
+      online ? el("div", {}, el("b", {}, "Mises à jour : "), "automatiques — chaque nouvelle version est récupérée à l'ouverture suivante.") : null,
+      el("div", {}, el("b", {}, "Partager : "), online ? "envoyez le lien ci-dessus. Chacun démarre avec ses propres données (rejoignez le même salon de synchro pour un budget commun)." : el("span", {}, "envoyez le fichier ", el("code", {}, "horizon-budget.html"), " (mail, AirDrop, clé USB…) — il contient toute l'application."))
     )
   );
 
@@ -3639,7 +3655,7 @@ function viewSettings(root) {
     el("h3", { class: "mb12" }, "ℹ️ À propos"),
     el("div", { class: "small muted", style: "line-height:1.8" },
       el("div", {}, el("b", { style: "color:var(--tx)" }, "Horizon Budget"), " — planification, projection et suivi de budget."),
-      el("div", {}, "100 % hors-ligne · aucune donnée transmise · fichier unique HTML/JS."),
+      el("div", {}, "Fonctionne 100 % hors-ligne · aucune donnée transmise (hors synchro chiffrée, si vous l'activez) · sans compte ni pub."),
       el("div", {}, "Les projections sont des estimations basées sur vos hypothèses : elles ne constituent pas un conseil financier."))
   );
 
@@ -4405,7 +4421,11 @@ function btn(label, onclick) { return el("button", { class: "btn btn-sm mt8", st
 /* ============ coquille applicative : navigation & rendu ============ */
 
 const VIEWS = {
-  dashboard:  { label: "Tableau de bord", icon: "home",    sub: () => "Vue d'ensemble de votre mois", render: viewDashboard },
+  dashboard:  { label: "Tableau de bord", icon: "home",    sub: () => {
+    const h = new Date().getHours();
+    const salut = h < 5 ? "Bonsoir" : h < 18 ? "Bonjour" : "Bonsoir";
+    return State.settings.firstName ? `${salut} ${State.settings.firstName} · votre mois en un coup d'œil` : "Vue d'ensemble de votre mois";
+  }, render: viewDashboard },
   budget:     { label: "Budget",          icon: "list",    sub: () => "Revenus & dépenses planifiés", render: viewBudget },
   projection: { label: "Projections",     icon: "trend",   sub: () => "Votre avenir financier, mois par mois", render: viewProjection },
   calendar:   { label: "Calendrier",      icon: "cal",     sub: () => "Échéances & solde au jour le jour", render: viewCalendar },
