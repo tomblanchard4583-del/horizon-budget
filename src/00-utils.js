@@ -65,7 +65,7 @@ function moneyFmt(cur, dec) {
 function fmtMoney(v, cur, opts) {
   cur = cur || (typeof curBudget === "function" && curBudget() ? curBudget().currency : "EUR");
   const dec = (opts && opts.dec != null) ? opts.dec : (Math.abs(v) >= 10000 ? 0 : 2);
-  let out = moneyFmt(cur, Math.abs(v) % 1 < 0.005 && Math.abs(v) >= 100 ? 0 : dec).format(v);
+  let out = moneyFmt(cur, Math.abs(v) % 1 < 0.005 ? 0 : dec).format(v);
   if (opts && opts.sign && v > 0) out = "+" + out;
   return out;
 }

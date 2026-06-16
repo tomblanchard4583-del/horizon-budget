@@ -108,6 +108,10 @@ function itemRow(b, it) {
   }
   const cat = catById(b, it.categoryId);
   const eq = it.freq === "once" ? it.amount : monthlyEquivalent(it);
+  // « en moyenne » seulement quand le montant affiché est une conversion ou une fourchette ;
+  // un poste mensuel à montant fixe est exact, pas une moyenne.
+  const exactMonthly = it.freq === "monthly" && !it.variable;
+  const per = it.freq === "once" ? "une fois" : (exactMonthly ? "/mois" : "/mois en moyenne");
   return el("div", { class: "item-row", onclick: () => openItemEditor(b, it, false) },
     el("div", { class: "i-emoji" }, cat ? cat.emoji : (it.kind === "income" ? "💶" : "🧾")),
     el("div", { class: "i-main" },
@@ -115,7 +119,7 @@ function itemRow(b, it) {
       el("div", { class: "i-sub" }, freqLabel(it))),
     el("div", { class: "i-amt " + (it.kind === "income" ? "pos" : "") },
       fmtMoney(it.kind === "income" ? eq : -eq, cur, { sign: it.kind === "income" }),
-      el("span", { class: "per" }, it.freq === "once" ? "une fois" : "/mois en moyenne"))
+      el("span", { class: "per" }, per))
   );
 }
 
