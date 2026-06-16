@@ -209,6 +209,52 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 .chart-tip .t-row b{font-variant-numeric:tabular-nums}
 .legend{display:flex; flex-wrap:wrap; gap:5px 16px; padding:10px 20px 0; font-size:12px; color:var(--tx2)}
 .legend .lg{display:inline-flex; align-items:center; gap:6px}
+.leg-toggles{display:flex; flex-wrap:wrap; gap:7px; padding:12px 20px 0}
+.chip-leg{display:inline-flex; align-items:center; gap:6px; padding:4px 11px; border-radius:99px; font-size:12px; font-weight:600; border:1px solid var(--line2); background:var(--panel); color:var(--tx); transition:opacity .15s, background .12s, border-color .12s}
+.chip-leg:hover{background:var(--panel2)}
+.chip-leg.off{opacity:.45; color:var(--tx2)}
+.chip-leg.off .cat-dot{background:var(--tx3)!important}
+
+/* ---------- projections : synthèse, jalons, chapitres ---------- */
+.synth{padding:15px 18px; display:flex; flex-direction:column; gap:8px}
+.synth .s-line{display:flex; gap:10px; font-size:13.5px; line-height:1.5; align-items:flex-start}
+.synth .s-line .s-ico{flex:none; font-size:15px; line-height:1.4}
+.synth .s-line.neg{color:var(--danger)}
+.synth .s-line b{font-weight:700}
+.miles{display:flex; gap:11px; overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity}
+.mile{flex:none; min-width:142px; padding:12px 15px; border-radius:14px; border:1px solid var(--line); background:var(--panel2); transition:border-color .12s, transform .15s ease; scroll-snap-align:start}
+.mile[style*="pointer"]:hover{border-color:var(--accent); transform:translateY(-2px)}
+.mile.now{background:linear-gradient(180deg, var(--accent-soft), transparent); border-color:color-mix(in srgb, var(--accent) 35%, var(--line))}
+.mile .m-when{font-size:11.5px; font-weight:650; color:var(--tx2); white-space:nowrap}
+.mile .m-val{font-size:21px; font-weight:750; letter-spacing:-.02em; font-variant-numeric:tabular-nums; margin-top:7px}
+.mile .m-delta{font-size:12px; font-weight:600; margin-top:2px}
+
+/* graphe interactif : zoom/pan + sélecteur */
+.pc-wrap{padding:6px 8px 8px}
+.pc-main{position:relative; width:100%; height:300px; cursor:grab; touch-action:pan-y; -webkit-user-select:none; user-select:none}
+.pc-main:active{cursor:grabbing}
+.pc-brush{position:relative; width:100%; height:52px; margin-top:6px; cursor:pointer; touch-action:none}
+.pc-hint{display:flex; gap:6px; align-items:center; justify-content:center; padding:8px 4px 0; font-size:11px; color:var(--tx3)}
+.pc-hint span:first-child{width:13px; height:13px; display:grid; place-items:center; flex:none}
+.pc-chips,.rep-chips{display:flex; gap:5px; flex-wrap:wrap}
+.rep-chips{padding:0 18px 2px}
+.pc-chip{padding:4px 9px; border-radius:8px; font-size:12px; font-weight:600; border:1px solid var(--line2); background:var(--panel); color:var(--tx2); transition:background .12s, color .12s, border-color .12s}
+.pc-chip.on{background:var(--accent-soft); color:var(--accent); border-color:transparent}
+.pc-chip:hover{background:var(--panel2)}
+@media(max-width:880px){ .pc-main{height:260px} .pc-hint{display:none} }
+.phases{display:flex; flex-direction:column; gap:10px; padding:16px 18px}
+.phase{position:relative; padding:12px 15px 13px 17px; border-radius:12px; background:var(--panel2); border:1px solid var(--line); overflow:hidden}
+.phase:before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--p-col, var(--accent))}
+.phase .ph-top{display:flex; align-items:center; gap:10px}
+.phase .ph-name{font-weight:700; font-size:14px}
+.phase .ph-when{font-size:12px; color:var(--tx2); margin-top:1px}
+.phase .ph-stats{display:flex; flex-wrap:wrap; gap:6px 26px; margin-top:10px}
+.phase .ph-stat .v{font-weight:700; font-size:14px; font-variant-numeric:tabular-nums}
+.phase .ph-stat .l{font-size:11px; color:var(--tx2); margin-top:1px}
+.tbl-summary{display:flex; align-items:center; gap:9px; padding:14px 18px; cursor:pointer; font-weight:700; font-size:14px; list-style:none; user-select:none; color:var(--tx)}
+.tbl-summary::-webkit-details-marker{display:none}
+.tbl-summary .spacer{flex:1}
+.tbl-summary>span:first-child{color:var(--tx2); display:grid; place-items:center; width:16px; height:16px}
 
 /* ---------- progress ---------- */
 .pbar{height:9px; border-radius:99px; background:var(--bg2); overflow:hidden; position:relative}

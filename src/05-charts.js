@@ -6,6 +6,17 @@ function svgEl(tag, attrs) {
   for (const [k, v] of Object.entries(attrs || {})) n.setAttribute(k, v);
   return n;
 }
+/* Indices d'étiquettes en X : multiples du pas + point final, sans collision. */
+function labelIdxs(n, stepX) {
+  const idxs = [];
+  for (let i = 0; i < n; i += stepX) idxs.push(i);
+  const last = idxs[idxs.length - 1];
+  if (last !== n - 1) {
+    if (n - 1 - last < stepX * 0.6) idxs[idxs.length - 1] = n - 1; // remplace le voisin trop proche
+    else idxs.push(n - 1);
+  }
+  return idxs;
+}
 function niceTicks(min, max, n) {
   if (min === max) { max = min + 1; }
   const span = max - min;
@@ -82,7 +93,7 @@ function chartLine(opts) {
   return chartBox(H, (W) => {
     const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H });
     const plot = { left: 52, top: 14, w: W - 52 - 14, h: H - 14 - 30 };
-    const all = opts.series.flatMap(s => s.values);
+    const all = opts.series.flatMap(s => s.values).concat(opts.band ? opts.band.lo.concat(opts.band.hi) : []);
     let min = Math.min(0, ...all), max = Math.max(0, ...all);
     if (min === max) max = min + 1;
     const pad = (max - min) * 0.06; max += pad; if (min < 0) min -= pad;
@@ -90,6 +101,8 @@ function chartLine(opts) {
     min = Math.min(min, ticks[0]); max = Math.max(max, ticks[ticks.length - 1]);
     const X = i => plot.left + (opts.labels.length === 1 ? plot.w / 2 : i / (opts.labels.length - 1) * plot.w);
     const Y = v => plot.top + (1 - (v - min) / (max - min)) * plot.h;
+
+    paintPhases(svg, plot, opts.phases, X);
 
     for (const t of ticks) {
       svg.append(svgEl("line", { x1: plot.left, x2: plot.left + plot.w, y1: Y(t), y2: Y(t), stroke: t === 0 ? "var(--tx3)" : "var(--chart-grid)", "stroke-width": 1 }));
@@ -99,12 +112,19 @@ function chartLine(opts) {
     }
     const nX = opts.labels.length;
     const stepX = Math.max(1, Math.ceil(nX / (W / 78)));
-    opts.labels.forEach((l, i) => {
-      if (i % stepX !== 0 && i !== nX - 1) return;
+    for (const i of labelIdxs(nX, stepX)) {
       const t = svgEl("text", { x: X(i), y: H - 9, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx3)" });
-      t.textContent = opts.fmtX ? opts.fmtX(l) : fmtYmShort(l);
+      t.textContent = opts.fmtX ? opts.fmtX(opts.labels[i]) : fmtYmShort(opts.labels[i]);
       svg.append(t);
-    });
+    }
+
+    // bande d'incertitude (scénarios pessimiste → optimiste)
+    if (opts.band) {
+      const hi = opts.band.hi, lo = opts.band.lo;
+      const d = "M" + hi.map((v, i) => `${X(i)},${Y(v)}`).join(" L")
+        + " L" + lo.map((v, i) => `${X(i)},${Y(v)}`).reverse().join(" L") + " Z";
+      svg.append(svgEl("path", { d, fill: opts.band.color || "var(--violet)", "fill-opacity": 0.14, class: "j-area" }));
+    }
 
     for (const s of opts.series) {
       const pts = s.values.map((v, i) => `${X(i)},${Y(v)}`);
@@ -118,14 +138,7 @@ function chartLine(opts) {
       svg.append(svgEl("path", lineAttrs));
     }
 
-    // marqueurs d'événements de vie
-    for (const m of opts.markers || []) {
-      const x = X(m.idx);
-      svg.append(svgEl("line", { x1: x, x2: x, y1: plot.top, y2: plot.top + plot.h, stroke: "var(--violet)", "stroke-width": 1.2, "stroke-dasharray": "2 3", "stroke-opacity": 0.7, class: "j-fade" }));
-      const t = svgEl("text", { x, y: plot.top + 9, "text-anchor": "middle", "font-size": 11, class: "j-fade" });
-      t.textContent = m.emoji || "📌";
-      svg.append(t);
-    }
+    drawMarkers(svg, plot, opts.markers, X);
 
     // points de survol : un par série, positionnés sur le mois pointé
     const dots = opts.series.map(s => {
@@ -180,11 +193,12 @@ function chartBars(opts) {
     const slot = plot.w / n;
     const bw = Math.min(16, slot * 0.32);
     const stepX = Math.max(1, Math.ceil(n / (W / 78)));
+    const lblSet = new Set(labelIdxs(n, stepX));
     opts.labels.forEach((l, i) => {
       const cx = plot.left + slot * (i + 0.5);
       svg.append(svgEl("rect", { x: cx - bw - 1, y: Y(opts.pos[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.pos[i])), rx: 3, fill: "var(--accent)", class: "vbar j-bar", style: `animation-delay:${Math.min(i * 26, 400)}ms` }));
       svg.append(svgEl("rect", { x: cx + 1, y: Y(opts.neg[i]), width: bw, height: Math.max(0, Y(0) - Y(opts.neg[i])), rx: 3, fill: "#f43f5e", "fill-opacity": 0.85, class: "vbar j-bar", style: `animation-delay:${Math.min(i * 26 + 60, 460)}ms` }));
-      if (i % stepX === 0 || i === n - 1) {
+      if (lblSet.has(i)) {
         const t = svgEl("text", { x: cx, y: H - 9, "text-anchor": "middle", "font-size": 10.5, fill: "var(--tx3)" });
         t.textContent = fmtYmShort(l);
         svg.append(t);
@@ -243,4 +257,27 @@ function chartDonut(opts) {
     requestAnimationFrame(() => { if (svg.parentElement) svg.parentElement.append(tip); });
     return svg;
   });
+}
+
+/* Bandes de fond délimitant les périodes de vie (chapitres).
+   phases : [{ startIdx, endIdx, color }] — alignées sur l'axe X. */
+function paintPhases(svg, plot, phases, X) {
+  if (!phases) return;
+  for (const p of phases) {
+    const x0 = X(p.startIdx), x1 = X(p.endIdx);
+    svg.append(svgEl("rect", { x: x0, y: plot.top, width: Math.max(0, x1 - x0), height: plot.h, fill: p.color, opacity: 0.05 }));
+    if (p.startIdx > 0)
+      svg.append(svgEl("line", { x1: x0, x2: x0, y1: plot.top, y2: plot.top + plot.h, stroke: p.color, "stroke-width": 1, "stroke-dasharray": "3 3", "stroke-opacity": 0.45 }));
+  }
+}
+
+/* Marqueurs verticaux d'événements de vie. */
+function drawMarkers(svg, plot, markers, X) {
+  for (const m of markers || []) {
+    const x = X(m.idx);
+    svg.append(svgEl("line", { x1: x, x2: x, y1: plot.top, y2: plot.top + plot.h, stroke: "var(--violet)", "stroke-width": 1.2, "stroke-dasharray": "2 3", "stroke-opacity": 0.7, class: "j-fade" }));
+    const t = svgEl("text", { x, y: plot.top + 9, "text-anchor": "middle", "font-size": 11, class: "j-fade" });
+    t.textContent = m.emoji || "📌";
+    svg.append(t);
+  }
 }
