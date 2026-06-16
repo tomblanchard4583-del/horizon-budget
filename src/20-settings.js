@@ -11,8 +11,8 @@ function persoRow(scope, allIds, id, orderable) {
   return el("div", { class: "perso-row" + (hidden ? " off" : "") },
     orderable ? el("span", { class: "pr-grip", html: ico("menu", 15) }) : null,
     el("span", { class: "pr-name" }, Custom.label(scope, id)),
-    orderable ? el("button", { class: "pr-btn", title: "Monter", disabled: i <= 0, html: ico("up", 13), onclick: () => { Custom.move(scope, allIds, id, -1); Custom.save(); } }) : null,
-    orderable ? el("button", { class: "pr-btn", title: "Descendre", disabled: i >= o.length - 1, html: ico("down", 13), onclick: () => { Custom.move(scope, allIds, id, 1); Custom.save(); } }) : null,
+    orderable ? el("button", { class: "pr-btn", title: "Monter", disabled: i <= 0, html: ico("chevU", 16), onclick: () => { Custom.move(scope, allIds, id, -1); Custom.save(); } }) : null,
+    orderable ? el("button", { class: "pr-btn", title: "Descendre", disabled: i >= o.length - 1, html: ico("chevD", 16), onclick: () => { Custom.move(scope, allIds, id, 1); Custom.save(); } }) : null,
     el("label", { class: "switch", style: "margin-left:4px", title: hidden ? "Afficher" : "Masquer" },
       el("input", { type: "checkbox", checked: !hidden, disabled: locked, onchange: e => { Custom.setHidden(scope, id, !e.target.checked); Custom.save(); } }),
       el("span", { class: "tr" })));
@@ -51,8 +51,8 @@ function buildPersonaCard() {
     const fi = c.fab.actions.indexOf(q.id);
     return el("div", { class: "perso-row" + (on ? "" : " off") },
       el("span", { class: "pr-name" }, `${q.emoji} ${q.label}`),
-      el("button", { class: "pr-btn", title: "Monter", disabled: !on || fi <= 0, html: ico("up", 13), onclick: () => { c.fab.actions.splice(fi - 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
-      el("button", { class: "pr-btn", title: "Descendre", disabled: !on || fi >= c.fab.actions.length - 1, html: ico("down", 13), onclick: () => { c.fab.actions.splice(fi + 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
+      el("button", { class: "pr-btn", title: "Monter", disabled: !on || fi <= 0, html: ico("chevU", 16), onclick: () => { c.fab.actions.splice(fi - 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
+      el("button", { class: "pr-btn", title: "Descendre", disabled: !on || fi >= c.fab.actions.length - 1, html: ico("chevD", 16), onclick: () => { c.fab.actions.splice(fi + 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
       el("label", { class: "switch", style: "margin-left:4px" },
         el("input", { type: "checkbox", checked: on, onchange: e => { if (e.target.checked) c.fab.actions.push(q.id); else c.fab.actions = c.fab.actions.filter(x => x !== q.id); Custom.save(); } }),
         el("span", { class: "tr" })));

@@ -110,6 +110,7 @@ const I = (() => {
     chevL: w('<path d="m15 18-6-6 6-6"/>'),
     chevR: w('<path d="m9 18 6-6-6-6"/>'),
     chevD: w('<path d="m6 9 6 6 6-6"/>'),
+    chevU: w('<path d="m6 15 6-6 6 6"/>'),
     down: w('<path d="M12 3v13M6 11l6 6 6-6"/><path d="M4 21h16"/>'),
     up: w('<path d="M12 21V8M6 13l6-6 6 6"/><path d="M4 3h16"/>'),
     alert: w('<path d="M12 3 1.5 21h21z"/><path d="M12 10v5"/><circle cx="12" cy="18" r="1" fill="currentColor"/>'),

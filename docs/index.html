@@ -664,6 +664,7 @@ body.cz-on .cz-item.cz-hidden{opacity:.42; filter:grayscale(.6)}
 .swatch.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--tx)}
 .swatch.auto{display:grid; place-items:center; font-size:12px; color:var(--tx2); background:var(--panel2)}
 .hbar-list{display:flex; flex-direction:column; gap:11px}
+.pc-chip[disabled]{opacity:.4; cursor:not-allowed}
 
 </style>
 </head>
@@ -783,6 +784,7 @@ const I = (() => {
     chevL: w('<path d="m15 18-6-6 6-6"/>'),
     chevR: w('<path d="m9 18 6-6-6-6"/>'),
     chevD: w('<path d="m6 9 6 6 6-6"/>'),
+    chevU: w('<path d="m6 15 6-6 6 6"/>'),
     down: w('<path d="M12 3v13M6 11l6 6 6-6"/><path d="M4 21h16"/>'),
     up: w('<path d="M12 21V8M6 13l6-6 6 6"/><path d="M4 3h16"/>'),
     alert: w('<path d="M12 3 1.5 21h21z"/><path d="M12 10v5"/><circle cx="12" cy="18" r="1" fill="currentColor"/>'),
@@ -5869,8 +5871,8 @@ function persoRow(scope, allIds, id, orderable) {
   return el("div", { class: "perso-row" + (hidden ? " off" : "") },
     orderable ? el("span", { class: "pr-grip", html: ico("menu", 15) }) : null,
     el("span", { class: "pr-name" }, Custom.label(scope, id)),
-    orderable ? el("button", { class: "pr-btn", title: "Monter", disabled: i <= 0, html: ico("up", 13), onclick: () => { Custom.move(scope, allIds, id, -1); Custom.save(); } }) : null,
-    orderable ? el("button", { class: "pr-btn", title: "Descendre", disabled: i >= o.length - 1, html: ico("down", 13), onclick: () => { Custom.move(scope, allIds, id, 1); Custom.save(); } }) : null,
+    orderable ? el("button", { class: "pr-btn", title: "Monter", disabled: i <= 0, html: ico("chevU", 16), onclick: () => { Custom.move(scope, allIds, id, -1); Custom.save(); } }) : null,
+    orderable ? el("button", { class: "pr-btn", title: "Descendre", disabled: i >= o.length - 1, html: ico("chevD", 16), onclick: () => { Custom.move(scope, allIds, id, 1); Custom.save(); } }) : null,
     el("label", { class: "switch", style: "margin-left:4px", title: hidden ? "Afficher" : "Masquer" },
       el("input", { type: "checkbox", checked: !hidden, disabled: locked, onchange: e => { Custom.setHidden(scope, id, !e.target.checked); Custom.save(); } }),
       el("span", { class: "tr" })));
@@ -5909,8 +5911,8 @@ function buildPersonaCard() {
     const fi = c.fab.actions.indexOf(q.id);
     return el("div", { class: "perso-row" + (on ? "" : " off") },
       el("span", { class: "pr-name" }, `${q.emoji} ${q.label}`),
-      el("button", { class: "pr-btn", title: "Monter", disabled: !on || fi <= 0, html: ico("up", 13), onclick: () => { c.fab.actions.splice(fi - 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
-      el("button", { class: "pr-btn", title: "Descendre", disabled: !on || fi >= c.fab.actions.length - 1, html: ico("down", 13), onclick: () => { c.fab.actions.splice(fi + 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
+      el("button", { class: "pr-btn", title: "Monter", disabled: !on || fi <= 0, html: ico("chevU", 16), onclick: () => { c.fab.actions.splice(fi - 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
+      el("button", { class: "pr-btn", title: "Descendre", disabled: !on || fi >= c.fab.actions.length - 1, html: ico("chevD", 16), onclick: () => { c.fab.actions.splice(fi + 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
       el("label", { class: "switch", style: "margin-left:4px" },
         el("input", { type: "checkbox", checked: on, onchange: e => { if (e.target.checked) c.fab.actions.push(q.id); else c.fab.actions = c.fab.actions.filter(x => x !== q.id); Custom.save(); } }),
         el("span", { class: "tr" })));
