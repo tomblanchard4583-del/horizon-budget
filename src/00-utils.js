@@ -9,14 +9,18 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 
 function el(tag, attrs, ...children) {
   const node = document.createElement(tag);
-  if (attrs) for (const [k, v] of Object.entries(attrs)) {
-    if (v == null || v === false) continue;
-    if (k === "class") node.className = v;
-    else if (k === "html") node.innerHTML = v;
-    else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
-    else if (k === "style") node.style.cssText = v;
-    else if (k in node && k !== "list" && typeof v !== "string") node[k] = v;
-    else node.setAttribute(k, v === true ? "" : v);
+  if (attrs) {
+    // titre sur bouton sans aria-label : en faire un aria-label (WCAG 1.4.4)
+    if (tag === "button" && attrs.title && !attrs["aria-label"]) attrs["aria-label"] = attrs.title;
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === "class") node.className = v;
+      else if (k === "html") node.innerHTML = v;
+      else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+      else if (k === "style") node.style.cssText = v;
+      else if (k in node && k !== "list" && typeof v !== "string") node[k] = v;
+      else node.setAttribute(k, v === true ? "" : v);
+    }
   }
   for (const c of children.flat(9)) {
     if (c == null || c === false) continue;

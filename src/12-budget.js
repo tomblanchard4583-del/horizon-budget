@@ -178,7 +178,7 @@ function openItemEditor(b, item, isNew, onSaved) {
       const typeI = selectInput([{ value: "set", label: "nouveau montant" }, { value: "pct", label: "variation en %" }], s.type || "set", { style: "max-width:170px", onchange: e => s.type = e.target.value });
       const valI = el("input", { class: "input", type: "text", inputmode: "decimal", value: s.value ?? "", placeholder: "valeur", style: "max-width:110px", oninput: e => s.value = parseAmount(e.target.value) });
       stepsBox.append(el("div", { class: "evo-row" }, dateI, typeI, valI,
-        el("button", { class: "btn btn-ghost btn-ico", html: ico("trash", 15), onclick: () => { steps.splice(i, 1); renderSteps(); } })));
+        el("button", { class: "btn btn-ghost btn-ico", title: "Supprimer", html: ico("trash", 15), onclick: () => { steps.splice(i, 1); renderSteps(); } })));
     });
     stepsBox.append(el("button", {
       class: "btn btn-sm btn-ghost mt8", html: ico("plus", 14) + "<span>Ajouter un palier (ex. augmentation prévue)</span>",
@@ -298,15 +298,15 @@ function openCategoryManager(b) {
         el("span", { class: "cat-dot", style: "background:" + r.color }),
         el("span", { class: "spacer" }),
         el("button", { class: "btn btn-ghost btn-ico", html: ico("plus", 14), title: "Ajouter une sous-catégorie", onclick: () => editCat(null, r) }),
-        el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 14), onclick: () => editCat(r, null) }),
-        el("button", { class: "btn btn-ghost btn-ico", html: ico("trash", 14), onclick: () => removeCat(r) })
+        el("button", { class: "btn btn-ghost btn-ico", title: "Modifier", html: ico("edit", 14), onclick: () => editCat(r, null) }),
+        el("button", { class: "btn btn-ghost btn-ico", title: "Supprimer", html: ico("trash", 14), onclick: () => removeCat(r) })
       ));
       for (const c of b.categories.filter(c => c.parentId === r.id)) {
         body.append(el("div", { class: "flex small", style: "padding:3px 2px 3px 30px; color:var(--tx2)" },
           el("span", {}, c.name),
           el("span", { class: "spacer" }),
-          el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 13), onclick: () => editCat(c, r) }),
-          el("button", { class: "btn btn-ghost btn-ico", html: ico("trash", 13), onclick: () => removeCat(c) })
+          el("button", { class: "btn btn-ghost btn-ico", title: "Modifier", html: ico("edit", 13), onclick: () => editCat(c, r) }),
+          el("button", { class: "btn btn-ghost btn-ico", title: "Supprimer", html: ico("trash", 13), onclick: () => removeCat(c) })
         ));
       }
     }

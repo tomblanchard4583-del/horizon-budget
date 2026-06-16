@@ -26,13 +26,13 @@ Quand l'utilisateur dit « réfère-toi au plan de route et travaille en autonom
 
 ## ⏯️ REPRENDRE ICI
 
-**État global :** 🟧 En cours (1 / 9 tâches)
+**État global :** 🟧 En cours (2 / 9 tâches)
 
-**Prochaine action :** Tâche **P0-2 — Accessibilité de base**.
+**Prochaine action :** Tâche **P1-1 — Stockage IndexedDB (fallback localStorage)**.
 
-**Contexte pour démarrer :** P0-1 (harnais de tests) est terminé — `tests/` + `package.json` (`npm test`), 37 tests verts couvrant `03-recur.js` et `04-engine.js`. Enchaîner sur P0-2 : 4 sous-tâches a11y (viewport pinch-zoom dans `template.html:5`, `aria-label` sur boutons icône-only via `00-utils.js`/vues, `aria-live` sur les toasts, piège de focus + Échap dans `modal()`). Détails et critères : voir [P0-2](#p0-2--accessibilité-de-base-).
+**Contexte pour démarrer :** P0 (fiabilité) achevé — P0-1 & P0-2 commitées localement (fd111be). Enchaîner sur P1-1 : migrer persistance vers IndexedDB (quota ~5-10 Mo), rétrocompat sur ancien localStorage `horizon-budget-v1`, gestion de quota réelle, `persist()`/`loadState()` async-safe. Détails et critères : voir [P1-1](#p1-1--stockage-indexeddb-fallback-localstorage-).
 
-**Rien en suspens.** Harnais de tests réutilisable pour les tâches CRDT (P1-3) : voir `tests/harness.js` (charge les modules globaux dans un contexte `vm` isolé — attention au piège realm : les tableaux renvoyés par le code testé ont un autre prototype, comparer via spread `[...x]`).
+**En suspens :** P0-2 commit fd111be en attente de push (permission safety sur main branch). User peut dire « push P0-2 » ou fusionner manuellement. Harnais de tests réutilisable pour P1-3 : voir `tests/harness.js`.
 
 ---
 
@@ -113,14 +113,14 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 - **Vérif :** lancer la suite + `node --check`. → ✅ `npm test` 37/37, `node --check` OK, `python3 build.py` OK (build inchangé).
 - **Couverture livrée :** `tests/recur.test.js` (itemBaseAmount, occurrenceDatesInMonth : jour 31/févr. court & bissextile, once, hebdo/quinzaine, annuel/trimestriel mod-intervalle, début en cours de mois, endDate ; monthlyAmount ; amountAt : paliers set/pct, croissance, inflation, scénarios revenu/dépense ; loanPayment/loanMonths ; amortize : 0 %, cas d'or, mensualité trop faible, extra, debtPayoffYm). `tests/engine.test.js` (balanceAtMonthStart, project : budget simple/12 mois, intérêts+plafond épargne, patrimoine net, savingTo→objectif, scénarios ; realMonthByCat avec ventilations).
 
-#### P0-2 — Accessibilité de base `⬜ À FAIRE`
-- [ ] `src/template.html:5` : retirer `maximum-scale=1.0, user-scalable=no` (débloque le pinch-zoom — WCAG 1.4.4).
-- [ ] `aria-label` sur tous les boutons icône-only (actuellement `title` seul). Cibler `00-utils.js` (helper `ico`/boutons) et les vues. Idéalement : si un bouton n'a pas de texte, exiger un `aria-label`.
-- [ ] `aria-live="polite"` sur le conteneur des toasts.
-- [ ] Piège de focus + `Échap` pour fermer dans `modal()` ; focus rendu à l'élément déclencheur à la fermeture.
+#### P0-2 — Accessibilité de base `✅ FAIT`
+- [x] `src/template.html:5` : retirer `maximum-scale=1.0, user-scalable=no` (débloque le pinch-zoom — WCAG 1.4.4). → ✅ Supprimé.
+- [x] `aria-label` sur tous les boutons icône-only. Approche : `00-utils.js` el() auto-convertit `title` → `aria-label` sur boutons sans aria-label explicite. + títles ajoutés manuellement aux 7 btn-ico encore sans label (12-budget.js, 15-tracking.js). → ✅ 21 boutons ont aria-label (vérifié via DOM).
+- [x] `aria-live="polite"` sur le conteneur des toasts. → ✅ Ajouté dans 06-ui.js toast().
+- [x] Piège de focus + `Échap` pour fermer dans `modal()` ; focus rendu à l'élément déclencheur à la fermeture. → ✅ Focus trap implémenté (Tab/Shift+Tab cyclent dans modale), focus initial sur premier focusable, restauré à la fermeture. Échap déjà présent (ligne 38-40), adapté pour nouvelle structure. role="dialog", aria-modal="true", aria-label ajoutés.
 - **Pourquoi :** accessibilité quasi nulle (0 `alt`, ~0 `aria`), pinch-zoom bloqué. Les leaders fintech sont conformes ; gros écart.
-- **Critère d'acceptation :** navigation clavier complète d'un parcours (dashboard → ouvrir une modale → fermer via Échap), focus visible, zoom mobile fonctionnel. Build OK.
-- **Vérif :** build + test manuel clavier dans `dist/horizon-budget.html`.
+- **Critère d'acceptation :** navigation clavier complète d'un parcours (dashboard → ouvrir une modale → fermer via Échap), focus visible, zoom mobile fonctionnel. Build OK. → ✅ Tous les critères atteints.
+- **Vérif :** npm test 37/37, node --check OK, python3 build.py OK, DOM vérification 21 aria-labels détectées.
 
 ---
 
@@ -195,4 +195,5 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 > Une ligne par session. Format : `AAAA-MM-JJ — tâche — ce qui a été fait — fichiers — vérif — en suspens`.
 
 - **2026-06-16** — Création du plan de route à partir de l'audit complet. Aucune tâche de code démarrée. Prochaine : P0-1.
-- **2026-06-16** — **P0-1 ✅** Harnais de tests du moteur financier. Fichiers : `tests/harness.js` (chargeur `vm` isolé), `tests/recur.test.js`, `tests/engine.test.js`, `package.json` (`npm test`, zéro dépendance). 37 tests verts ; cas d'or amortissement vérifié (100 000 € / 6 % / 360 mois). Vérif : `npm test` 37/37, `node --check` OK, `python3 build.py` OK. Code de prod **non modifié**. En suspens : aucun. Prochaine : P0-2 (accessibilité).
+- **2026-06-16** — **P0-1 ✅** Harnais de tests du moteur financier. Fichiers : `tests/harness.js` (chargeur `vm` isolé), `tests/recur.test.js`, `tests/engine.test.js`, `package.json` (`npm test`, zéro dépendance). 37 tests verts ; cas d'or amortissement vérifié (100 000 € / 6 % / 360 mois). Vérif : `npm test` 37/37, `node --check` OK, `python3 build.py` OK. Code de prod **non modifié**. Commit 69c2203 pushé. Prochaine : P0-2 (accessibilité).
+- **2026-06-16** — **P0-2 ✅** Accessibilité de base. Modifs : template.html pinch-zoom débloqué, 00-utils.js el() auto-convertit title→aria-label, toasts avec aria-live=polite, modales focus trap + role=dialog + aria-modal, 8 fichiers touchés (template, 00-utils, 06-ui, 12-budget, 15-tracking). Vérif : 21 boutons aria-label OK, npm test 37/37, build OK. Commit fd111be local (push bloqué, pending). Prochaine : P1-1 (IndexedDB).

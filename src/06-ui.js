@@ -4,7 +4,7 @@
 function toast(msg, opts) {
   opts = opts || {};
   let wrap = $(".toasts");
-  if (!wrap) { wrap = el("div", { class: "toasts" }); document.body.append(wrap); }
+  if (!wrap) { wrap = el("div", { class: "toasts", "aria-live": "polite", "aria-atomic": "true" }); document.body.append(wrap); }
   const t = el("div", { class: "toast" }, el("span", {}, msg));
   if (opts.action) {
     t.append(el("button", { onclick: () => { opts.onAction && opts.onAction(); t.remove(); } }, opts.action));
@@ -14,29 +14,50 @@ function toast(msg, opts) {
 }
 
 let _openModals = [];
+let _focusedBefore = null;
 function modal(opts) {
   const veil = el("div", { class: "modal-veil" });
   const head = el("div", { class: "modal-head" },
     el("h3", {}, opts.title || ""),
-    el("button", { class: "btn btn-ghost btn-ico", html: ico("x", 19), onclick: close })
+    el("button", { class: "btn btn-ghost btn-ico", title: "Fermer", html: ico("x", 19), onclick: close })
   );
   const body = el("div", { class: "modal-body" });
   if (opts.body) body.append(...[].concat(opts.body));
   const m = el("div", { class: "modal" + (opts.lg ? " modal-lg" : "") }, head, body);
   if (opts.foot) m.append(el("div", { class: "modal-foot" }, ...[].concat(opts.foot)));
+  m.setAttribute("role", "dialog");
+  m.setAttribute("aria-modal", "true");
+  if (opts.title) m.setAttribute("aria-label", opts.title);
   veil.append(m);
   veil.addEventListener("mousedown", e => { if (e.target === veil) close(); });
   document.body.append(veil);
-  _openModals.push(close);
+  // piège de focus : sauvegarde l'élément focus avant, redirige dans la modale, restaure après fermeture
+  _focusedBefore = document.activeElement;
+  const focusables = "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])";
+  const inModal = m.querySelectorAll(focusables);
+  const first = inModal[0], last = inModal[inModal.length - 1];
+  const trapTab = e => {
+    if (e.key !== "Tab") return;
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  };
+  m.addEventListener("keydown", trapTab);
+  if (first) first.focus();
+  _openModals.push({ close, trapTab, m });
   function close() {
+    m.removeEventListener("keydown", trapTab);
     veil.remove();
-    _openModals = _openModals.filter(c => c !== close);
+    _openModals = _openModals.filter(x => x.close !== close);
+    if (_focusedBefore) _focusedBefore.focus();
     opts.onClose && opts.onClose();
   }
   return { close, body, root: m };
 }
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && _openModals.length) _openModals[_openModals.length - 1]();
+  if (e.key === "Escape" && _openModals.length) _openModals[_openModals.length - 1].close();
 });
 
 function confirmDialog(opts) {

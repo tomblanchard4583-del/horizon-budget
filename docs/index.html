@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -691,14 +691,18 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 
 function el(tag, attrs, ...children) {
   const node = document.createElement(tag);
-  if (attrs) for (const [k, v] of Object.entries(attrs)) {
-    if (v == null || v === false) continue;
-    if (k === "class") node.className = v;
-    else if (k === "html") node.innerHTML = v;
-    else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
-    else if (k === "style") node.style.cssText = v;
-    else if (k in node && k !== "list" && typeof v !== "string") node[k] = v;
-    else node.setAttribute(k, v === true ? "" : v);
+  if (attrs) {
+    // titre sur bouton sans aria-label : en faire un aria-label (WCAG 1.4.4)
+    if (tag === "button" && attrs.title && !attrs["aria-label"]) attrs["aria-label"] = attrs.title;
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v == null || v === false) continue;
+      if (k === "class") node.className = v;
+      else if (k === "html") node.innerHTML = v;
+      else if (k.startsWith("on")) node.addEventListener(k.slice(2), v);
+      else if (k === "style") node.style.cssText = v;
+      else if (k in node && k !== "list" && typeof v !== "string") node[k] = v;
+      else node.setAttribute(k, v === true ? "" : v);
+    }
   }
   for (const c of children.flat(9)) {
     if (c == null || c === false) continue;
@@ -1905,7 +1909,7 @@ function drawMarkers(svg, plot, markers, X) {
 function toast(msg, opts) {
   opts = opts || {};
   let wrap = $(".toasts");
-  if (!wrap) { wrap = el("div", { class: "toasts" }); document.body.append(wrap); }
+  if (!wrap) { wrap = el("div", { class: "toasts", "aria-live": "polite", "aria-atomic": "true" }); document.body.append(wrap); }
   const t = el("div", { class: "toast" }, el("span", {}, msg));
   if (opts.action) {
     t.append(el("button", { onclick: () => { opts.onAction && opts.onAction(); t.remove(); } }, opts.action));
@@ -1915,29 +1919,50 @@ function toast(msg, opts) {
 }
 
 let _openModals = [];
+let _focusedBefore = null;
 function modal(opts) {
   const veil = el("div", { class: "modal-veil" });
   const head = el("div", { class: "modal-head" },
     el("h3", {}, opts.title || ""),
-    el("button", { class: "btn btn-ghost btn-ico", html: ico("x", 19), onclick: close })
+    el("button", { class: "btn btn-ghost btn-ico", title: "Fermer", html: ico("x", 19), onclick: close })
   );
   const body = el("div", { class: "modal-body" });
   if (opts.body) body.append(...[].concat(opts.body));
   const m = el("div", { class: "modal" + (opts.lg ? " modal-lg" : "") }, head, body);
   if (opts.foot) m.append(el("div", { class: "modal-foot" }, ...[].concat(opts.foot)));
+  m.setAttribute("role", "dialog");
+  m.setAttribute("aria-modal", "true");
+  if (opts.title) m.setAttribute("aria-label", opts.title);
   veil.append(m);
   veil.addEventListener("mousedown", e => { if (e.target === veil) close(); });
   document.body.append(veil);
-  _openModals.push(close);
+  // piège de focus : sauvegarde l'élément focus avant, redirige dans la modale, restaure après fermeture
+  _focusedBefore = document.activeElement;
+  const focusables = "button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])";
+  const inModal = m.querySelectorAll(focusables);
+  const first = inModal[0], last = inModal[inModal.length - 1];
+  const trapTab = e => {
+    if (e.key !== "Tab") return;
+    if (e.shiftKey) {
+      if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+    } else {
+      if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  };
+  m.addEventListener("keydown", trapTab);
+  if (first) first.focus();
+  _openModals.push({ close, trapTab, m });
   function close() {
+    m.removeEventListener("keydown", trapTab);
     veil.remove();
-    _openModals = _openModals.filter(c => c !== close);
+    _openModals = _openModals.filter(x => x.close !== close);
+    if (_focusedBefore) _focusedBefore.focus();
     opts.onClose && opts.onClose();
   }
   return { close, body, root: m };
 }
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && _openModals.length) _openModals[_openModals.length - 1]();
+  if (e.key === "Escape" && _openModals.length) _openModals[_openModals.length - 1].close();
 });
 
 function confirmDialog(opts) {
@@ -3164,7 +3189,7 @@ function openItemEditor(b, item, isNew, onSaved) {
       const typeI = selectInput([{ value: "set", label: "nouveau montant" }, { value: "pct", label: "variation en %" }], s.type || "set", { style: "max-width:170px", onchange: e => s.type = e.target.value });
       const valI = el("input", { class: "input", type: "text", inputmode: "decimal", value: s.value ?? "", placeholder: "valeur", style: "max-width:110px", oninput: e => s.value = parseAmount(e.target.value) });
       stepsBox.append(el("div", { class: "evo-row" }, dateI, typeI, valI,
-        el("button", { class: "btn btn-ghost btn-ico", html: ico("trash", 15), onclick: () => { steps.splice(i, 1); renderSteps(); } })));
+        el("button", { class: "btn btn-ghost btn-ico", title: "Supprimer", html: ico("trash", 15), onclick: () => { steps.splice(i, 1); renderSteps(); } })));
     });
     stepsBox.append(el("button", {
       class: "btn btn-sm btn-ghost mt8", html: ico("plus", 14) + "<span>Ajouter un palier (ex. augmentation prévue)</span>",
@@ -3284,15 +3309,15 @@ function openCategoryManager(b) {
         el("span", { class: "cat-dot", style: "background:" + r.color }),
         el("span", { class: "spacer" }),
         el("button", { class: "btn btn-ghost btn-ico", html: ico("plus", 14), title: "Ajouter une sous-catégorie", onclick: () => editCat(null, r) }),
-        el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 14), onclick: () => editCat(r, null) }),
-        el("button", { class: "btn btn-ghost btn-ico", html: ico("trash", 14), onclick: () => removeCat(r) })
+        el("button", { class: "btn btn-ghost btn-ico", title: "Modifier", html: ico("edit", 14), onclick: () => editCat(r, null) }),
+        el("button", { class: "btn btn-ghost btn-ico", title: "Supprimer", html: ico("trash", 14), onclick: () => removeCat(r) })
       ));
       for (const c of b.categories.filter(c => c.parentId === r.id)) {
         body.append(el("div", { class: "flex small", style: "padding:3px 2px 3px 30px; color:var(--tx2)" },
           el("span", {}, c.name),
           el("span", { class: "spacer" }),
-          el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 13), onclick: () => editCat(c, r) }),
-          el("button", { class: "btn btn-ghost btn-ico", html: ico("trash", 13), onclick: () => removeCat(c) })
+          el("button", { class: "btn btn-ghost btn-ico", title: "Modifier", html: ico("edit", 13), onclick: () => editCat(c, r) }),
+          el("button", { class: "btn btn-ghost btn-ico", title: "Supprimer", html: ico("trash", 13), onclick: () => removeCat(c) })
         ));
       }
     }
@@ -4502,9 +4527,9 @@ function viewTracking(root) {
   const remaining = planned.expense - real.expense;
 
   const head = el("div", { class: "flex", style: "flex-wrap:wrap; gap:10px" },
-    el("button", { class: "btn btn-ico", html: ico("chevL", 18), onclick: () => { _trackYm = addMonths(ym, -1); renderApp(); } }),
+    el("button", { class: "btn btn-ico", title: "Mois précédent", html: ico("chevL", 18), onclick: () => { _trackYm = addMonths(ym, -1); renderApp(); } }),
     el("h3", { style: "min-width:170px; text-align:center" }, fmtYm(ym)),
-    el("button", { class: "btn btn-ico", html: ico("chevR", 18), onclick: () => { _trackYm = addMonths(ym, 1); renderApp(); } }),
+    el("button", { class: "btn btn-ico", title: "Mois suivant", html: ico("chevR", 18), onclick: () => { _trackYm = addMonths(ym, 1); renderApp(); } }),
     el("span", { class: "spacer" }),
     el("button", { class: "btn btn-sm", html: ico("up", 15) + "<span>Importer CSV</span>", onclick: () => openCsvImport(b) }),
     el("button", { class: "btn btn-sm", html: ico("down", 15) + "<span>Exporter</span>", onclick: exportTransactionsCSV }),
@@ -4680,7 +4705,7 @@ function openTxEditor(b, tx, defaultDate) {
       cs.addEventListener("change", () => sp.categoryId = cs.value || null);
       list.append(el("div", { class: "flex", style: "gap:8px" },
         el("div", { style: "width:130px; flex:none" }, amtI), cs,
-        el("button", { class: "btn btn-ico btn-ghost", html: ico("x", 15), onclick: () => { splits.splice(i, 1); renderCatZone(); } })));
+        el("button", { class: "btn btn-ico btn-ghost", title: "Supprimer", html: ico("x", 15), onclick: () => { splits.splice(i, 1); renderCatZone(); } })));
     });
     catZone.append(list,
       el("div", { class: "flex", style: "gap:8px; margin-top:8px; flex-wrap:wrap" },
@@ -4918,7 +4943,7 @@ function openCsvImport(b) {
             cs2.addEventListener("change", () => sp.categoryId = cs2.value || null);
             lst.append(el("div", { class: "flex", style: "gap:6px" },
               el("div", { style: "width:110px; flex:none" }, amtI), cs2,
-              el("button", { class: "btn btn-ico btn-ghost", html: ico("x", 14), onclick: () => { p.splits.splice(i, 1); editSplits(); } })));
+              el("button", { class: "btn btn-ico btn-ghost", title: "Supprimer", html: ico("x", 14), onclick: () => { p.splits.splice(i, 1); editSplits(); } })));
           });
           zone.append(lst, el("div", { class: "flex", style: "gap:6px; margin-top:6px" },
             el("button", { class: "btn btn-sm", onclick: () => { p.splits.push({ categoryId: null, amount: 0 }); editSplits(); } }, "+ Ligne"),

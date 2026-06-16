@@ -16,9 +16,9 @@ function viewTracking(root) {
   const remaining = planned.expense - real.expense;
 
   const head = el("div", { class: "flex", style: "flex-wrap:wrap; gap:10px" },
-    el("button", { class: "btn btn-ico", html: ico("chevL", 18), onclick: () => { _trackYm = addMonths(ym, -1); renderApp(); } }),
+    el("button", { class: "btn btn-ico", title: "Mois précédent", html: ico("chevL", 18), onclick: () => { _trackYm = addMonths(ym, -1); renderApp(); } }),
     el("h3", { style: "min-width:170px; text-align:center" }, fmtYm(ym)),
-    el("button", { class: "btn btn-ico", html: ico("chevR", 18), onclick: () => { _trackYm = addMonths(ym, 1); renderApp(); } }),
+    el("button", { class: "btn btn-ico", title: "Mois suivant", html: ico("chevR", 18), onclick: () => { _trackYm = addMonths(ym, 1); renderApp(); } }),
     el("span", { class: "spacer" }),
     el("button", { class: "btn btn-sm", html: ico("up", 15) + "<span>Importer CSV</span>", onclick: () => openCsvImport(b) }),
     el("button", { class: "btn btn-sm", html: ico("down", 15) + "<span>Exporter</span>", onclick: exportTransactionsCSV }),
@@ -194,7 +194,7 @@ function openTxEditor(b, tx, defaultDate) {
       cs.addEventListener("change", () => sp.categoryId = cs.value || null);
       list.append(el("div", { class: "flex", style: "gap:8px" },
         el("div", { style: "width:130px; flex:none" }, amtI), cs,
-        el("button", { class: "btn btn-ico btn-ghost", html: ico("x", 15), onclick: () => { splits.splice(i, 1); renderCatZone(); } })));
+        el("button", { class: "btn btn-ico btn-ghost", title: "Supprimer", html: ico("x", 15), onclick: () => { splits.splice(i, 1); renderCatZone(); } })));
     });
     catZone.append(list,
       el("div", { class: "flex", style: "gap:8px; margin-top:8px; flex-wrap:wrap" },
@@ -432,7 +432,7 @@ function openCsvImport(b) {
             cs2.addEventListener("change", () => sp.categoryId = cs2.value || null);
             lst.append(el("div", { class: "flex", style: "gap:6px" },
               el("div", { style: "width:110px; flex:none" }, amtI), cs2,
-              el("button", { class: "btn btn-ico btn-ghost", html: ico("x", 14), onclick: () => { p.splits.splice(i, 1); editSplits(); } })));
+              el("button", { class: "btn btn-ico btn-ghost", title: "Supprimer", html: ico("x", 14), onclick: () => { p.splits.splice(i, 1); editSplits(); } })));
           });
           zone.append(lst, el("div", { class: "flex", style: "gap:6px; margin-top:6px" },
             el("button", { class: "btn btn-sm", onclick: () => { p.splits.push({ categoryId: null, amount: 0 }); editSplits(); } }, "+ Ligne"),
