@@ -594,13 +594,21 @@ svg:has(.dslice:hover) .dslice:not(:hover){opacity:.45}
 @media(max-width:880px){.fab-bl{right:auto; left:16px}}
 
 /* densité compacte */
-[data-density="compact"]{font-size:14px}
-[data-density="compact"] .card-pad{padding:13px 15px}
-[data-density="compact"] .content{padding:16px 18px 90px}
-[data-density="compact"] .dash-grid,[data-density="compact"] .grid{gap:12px}
-[data-density="compact"] .kpi{padding:13px 15px}
-[data-density="compact"] .kpi .k-value{font-size:21px}
-[data-density="compact"] .topbar{min-height:54px; padding:10px 18px}
+[data-density="compact"] body{font-size:13.5px}
+[data-density="compact"]{--radius:12px; --radius-sm:8px}
+[data-density="compact"] .card-pad{padding:12px 14px}
+[data-density="compact"] .content{padding:14px 16px 88px}
+[data-density="compact"] .dash-grid,[data-density="compact"] .grid{gap:11px}
+[data-density="compact"] .kpi{padding:11px 13px; gap:2px}
+[data-density="compact"] .kpi .k-value{font-size:20px}
+[data-density="compact"] .kpi .k-label{font-size:10.5px}
+[data-density="compact"] .topbar{min-height:50px; padding:9px 16px}
+[data-density="compact"] .topbar h1{font-size:17px}
+[data-density="compact"] .card-head{padding:11px 14px}
+[data-density="compact"] h3{font-size:15px}
+[data-density="compact"] .item-row{padding:8px 12px}
+[data-density="compact"] .nav-item{padding:7.5px 11px}
+[data-density="compact"] .alert{padding:9px 12px}
 
 /* ---- mode édition ---- */
 .cz-banner{position:fixed; top:0; left:0; right:0; z-index:120; display:flex; align-items:center; gap:12px;
