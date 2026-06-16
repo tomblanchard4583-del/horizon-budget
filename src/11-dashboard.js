@@ -11,6 +11,8 @@ function viewDashboard(root) {
   const reste = remainingPlanned(b, ymNow);
   const disponible = balNow - reste.total;
   const alerts = computeAlerts(b);
+  const insights = (typeof Insights !== "undefined") ? Insights.compute(b) : [];
+  const sts = Insights.safeToSpend(b);
   const cur = b.currency;
 
   const plannedLeft = m0.income - m0.expense;
@@ -23,8 +25,23 @@ function viewDashboard(root) {
     kpi("Solde réel aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
     kpi("Solde prévu fin " + MOIS[+ymNow.slice(5, 7) - 1], fmtMoney(endOfMonth, cur), plannedLeft >= 0 ? `+${fmtMoney(plannedLeft, cur)} ce mois-ci` : `${fmtMoney(plannedLeft, cur)} ce mois-ci`, endOfMonth < 0 ? "neg" : "pos"),
     kpi("Taux d'épargne prévu", m0.income > 0 ? fmtPct(savingRate) : "—", m0.saving > 0 ? `dont ${fmtMoney(m0.saving, cur)} d'épargne versée` : "revenus − dépenses, en % des revenus", savingRate < 0 ? "neg" : ""),
-    kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : "")
+    kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : ""),
+    kpi("Reste à vivre par jour", fmtMoney(sts.perDay, cur), `${fmtMoney(sts.dispo, cur)} sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`, sts.perDay < 0 ? "neg" : "pos")
   );
+
+  // analyse intelligente : constats chiffrés, prédictifs & actionnables
+  const toneCls = { danger: "danger", warn: "warn", good: "ok", info: "info", opp: "info" };
+  const insightCard = insights.length ? el("div", { class: "card" },
+    el("div", { class: "card-head" }, el("h3", {}, "💡 Analyse intelligente"),
+      el("span", { class: "spacer" }), el("span", { class: "xs muted" }, "d'après vos données")),
+    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:10px" },
+      insights.map(it => el("div", { class: "insight" },
+        el("div", { class: "alert a-" + (toneCls[it.tone] || "info"), style: "flex:1; min-width:0" },
+          el("span", { class: "a-ico", html: ico(it.icon, 17) }), el("span", {}, it.text)),
+        el("div", { class: "insight-act" },
+          it.action ? el("button", { class: "btn btn-sm btn-p", onclick: () => { const r = it.action.run(); if (typeof r === "string") toast("✅ " + r); } }, it.action.label) : null,
+          el("button", { class: "btn btn-sm btn-ghost btn-ico", title: "Ignorer", html: ico("x", 15), onclick: () => { Intel.dismiss(it.id); persist(); renderApp(); } })))))
+  ) : null;
 
   // dépenses prévues pas encore débitées (réservées, non comptées comme disponibles)
   const resteCard = reste.rows.length ? el("div", { class: "card" },
@@ -131,6 +148,7 @@ function viewDashboard(root) {
   root.append(
     el("div", { class: "content-inner grid", style: "gap:16px" },
       kpis,
+      insightCard,
       alertBox,
       resteCard,
       el("div", { class: "grid g23" }, chartCard, donutCard),

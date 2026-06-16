@@ -439,6 +439,12 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 .alert.a-danger{background:var(--danger-soft); color:var(--danger)}
 .alert.a-info{background:var(--info-soft); color:var(--info)}
 .alert.a-ok{background:var(--accent-soft); color:var(--accent)}
+.insight{display:flex; gap:10px; align-items:stretch}
+.insight .alert{flex:1}
+.insight-act{display:flex; gap:6px; align-items:center; flex:none}
+.predict-hint{margin-top:5px; min-height:15px; color:var(--accent); font-weight:600}
+.predict-hint:empty{margin-top:0}
+@media (max-width:560px){ .insight{flex-direction:column} .insight-act{justify-content:flex-end} }
 .scroll-x{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch}
 .evo-row{display:flex; gap:8px; align-items:center; padding:7px 0; border-bottom:1px dashed var(--line)}
 .searchbar{position:relative; flex:1; max-width:300px}
@@ -937,6 +943,7 @@ const State = {
   intel: {                    // apprentissage local — propre à cet appareil, NON synchronisé
     rules: {},                // "budgetId|clé marchand" → {kind,categoryId,confirms,amounts,days,itemId}
     catUsage: {},             // "budgetId|categoryId" → nombre d'utilisations
+    catLast: {},              // "budgetId|categoryId" → horodatage du dernier usage (récence)
     splitMemory: {},          // "budgetId|clé marchand" → [{categoryId, share}] (méthode des enveloppes)
     csvMaps: {},              // empreinte d'en-tête CSV → mapping de colonnes mémorisé
     dismissed: {},            // suggestions écartées
@@ -1892,15 +1899,29 @@ function selectInput(options, value, attrs) {
 }
 
 /* Sélecteur de catégorie groupé (avec sous-catégories indentées).
-   Les catégories les plus utilisées remontent dans un groupe « Fréquentes ». */
-function catSelect(budget, kind, value, attrs) {
+   Tri intelligent : la catégorie prédite pour le libellé saisi remonte tout en haut,
+   suivie des catégories fréquentes (usage récent pondéré). ctx = { label } optionnel. */
+function catSelect(budget, kind, value, attrs, ctx) {
   const roots = budget.categories.filter(c => c.kind === kind && !c.parentId);
   const s = el("select", { class: "input", ...attrs });
   s.append(el("option", { value: "" }, "— Sans catégorie —"));
+  // prédiction selon le libellé en cours de saisie (règle apprise ou mots-clés)
+  let predId = null;
+  if (ctx && ctx.label && typeof Intel !== "undefined") {
+    const pred = Intel.suggest(budget, ctx.label, kind);
+    if (pred && pred.categoryId && catById(budget, pred.categoryId)) predId = pred.categoryId;
+  }
+  if (predId) {
+    const c = catById(budget, predId), p = c.parentId ? catById(budget, c.parentId) : null;
+    const g = el("optgroup", { label: "✨ Suggéré" });
+    g.append(el("option", { value: c.id, selected: !value }, `${(p || c).emoji} ${p ? p.name + " · " : ""}${c.name}`));
+    s.append(g);
+  }
   const freq = (typeof Intel !== "undefined") ? Intel.topCats(budget, kind, 5) : [];
   if (freq.length) {
     const g = el("optgroup", { label: "★ Fréquentes" });
     freq.forEach(c => {
+      if (c.id === predId) return;
       const p = c.parentId ? catById(budget, c.parentId) : null;
       g.append(el("option", { value: c.id }, `${(p || c).emoji} ${c.name}`));
     });
@@ -2093,13 +2114,22 @@ const Intel = (() => {
     if (!catId) return;
     const k = b.id + "|" + catId;
     State.intel.catUsage[k] = (State.intel.catUsage[k] || 0) + 1;
+    (State.intel.catLast || (State.intel.catLast = {}))[k] = Date.now();
   }
+  /* Catégories les plus pertinentes : usage fréquent + récence (les habitudes récentes
+     remontent plus vite que de vieilles utilisations massives). */
   function topCats(b, kind, n) {
+    const now = Date.now();
+    const last = State.intel.catLast || {};
     return Object.entries(State.intel.catUsage)
       .filter(([k]) => k.startsWith(b.id + "|"))
-      .map(([k, count]) => ({ cat: catById(b, k.slice(b.id.length + 1)), count }))
+      .map(([k, count]) => {
+        const days = last[k] ? (now - last[k]) / 86400000 : 999;
+        const rec = days < 30 ? (1 - days / 30) : 0;       // boost de récence sur 30 jours
+        return { cat: catById(b, k.slice(b.id.length + 1)), count, score: count + rec * 3 };
+      })
       .filter(x => x.cat && x.cat.kind === kind && x.count >= 2)
-      .sort((a, z) => z.count - a.count)
+      .sort((a, z) => z.score - a.score)
       .slice(0, n || 5).map(x => x.cat);
   }
 
@@ -2306,6 +2336,240 @@ Réponds UNIQUEMENT un tableau JSON, sans autre texte : [{"i":1,"cat":"<nom exac
 })();
 
 
+/* ===== 09-insights.js ===== */
+"use strict";
+/* ============ moteur d'analyse : insights factuels, prédictifs & contextuels ============
+ * Produit des constats chiffrés, jamais d'encouragement. Chaque insight est rangé par
+ * priorité et peut porter une action concrète. Alimente le tableau de bord et le suivi.
+ */
+
+const Insights = (() => {
+
+  const DAY = 86400000;
+  const shiftDay = (s, n) => new Date(toDate(s).getTime() + n * DAY).toISOString().slice(0, 10);
+  const med = arr => {
+    if (!arr || !arr.length) return 0;
+    const s = [...arr].map(Number).sort((a, z) => a - z);
+    return s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+  };
+  const txOf = b => State.transactions.filter(t => t.budgetId === b.id);
+
+  /* priorité de tri : plus c'est haut, plus c'est urgent/actionnable */
+  const RANK = { danger: 0, warn: 1, opp: 2, info: 3, good: 4 };
+
+  /* ---------- 1. rythme de dépenses & prévision de fin de mois ---------- */
+  function pace(b, ctx, out) {
+    const { ymNow, dayN, dim, real, planned, reste } = ctx;
+    if (planned.expense <= 0 || real.expense <= 0 || dayN < 4) return;
+    // deux estimations : (réel + prévu non débité) et la simple extrapolation linéaire
+    const reserveEst = real.expense + reste.total;
+    const linearEst = dayN >= 7 ? real.expense / dayN * dim : 0;
+    const forecast = Math.max(reserveEst, linearEst);
+    const diff = forecast - planned.expense;
+    const mois = MOIS[+ymNow.slice(5, 7) - 1];
+    if (diff > Math.max(20, planned.expense * 0.06)) {
+      out.push({
+        id: "pace-over", tone: "warn", icon: "trend",
+        text: `À ce rythme, environ ${fmtMoney(forecast, b.currency, { dec: 0 })} de dépenses d'ici la fin ${mois} — soit ${fmtMoney(diff, b.currency, { dec: 0 })} de plus que les ${fmtMoney(planned.expense, b.currency, { dec: 0 })} prévus.`,
+      });
+    } else if (forecast < planned.expense * 0.9 && dayN >= 12) {
+      out.push({
+        id: "pace-under", tone: "good", icon: "check",
+        text: `Dépenses sous contrôle : ~${fmtMoney(forecast, b.currency, { dec: 0 })} attendus d'ici fin ${mois}, soit ${fmtMoney(planned.expense - forecast, b.currency, { dec: 0 })} sous le budget prévu.`,
+      });
+    }
+  }
+
+  /* ---------- 2. point bas de trésorerie (jour près) sur ~45 jours ---------- */
+  function cashflowLow(b, ctx, out) {
+    const { ymNow, balNow, planned } = ctx;
+    const today = todayStr();
+    const flowByDate = {};
+    for (const ym of [ymNow, addMonths(ymNow, 1), addMonths(ymNow, 2)]) {
+      const f = dayFlows(b, ym);
+      for (const [d, list] of Object.entries(f)) {
+        let net = 0;
+        list.forEach(x => { net += x.item.kind === "income" ? x.amount : -x.amount; });
+        flowByDate[d] = (flowByDate[d] || 0) + net;
+      }
+    }
+    let run = balNow, minV = balNow, minD = today;
+    for (let i = 1; i <= 45; i++) {
+      const d = shiftDay(today, i);
+      run += flowByDate[d] || 0;
+      if (run < minV) { minV = run; minD = d; }
+    }
+    if (minV >= balNow - 0.5) return;                  // jamais sous le solde actuel : rien à signaler
+    const oneWeek = planned.expense / 30 * 7;
+    if (minV < 0) {
+      out.push({
+        id: "cash-neg", tone: "danger", icon: "alert",
+        text: `Trésorerie : point bas le ${fmtDate(minD)} à environ ${fmtMoney(minV, b.currency, { dec: 0 })}. Une rentrée ou un report d'échéance sera nécessaire avant cette date.`,
+      });
+    } else if (minV < oneWeek && oneWeek > 0) {
+      out.push({
+        id: "cash-tight", tone: "warn", icon: "wallet",
+        text: `Trésorerie tendue autour du ${fmtDate(minD)} : il ne resterait qu'environ ${fmtMoney(minV, b.currency, { dec: 0 })} sur le compte à ce moment-là.`,
+      });
+    }
+  }
+
+  /* ---------- 3. anomalie de montant sur un marchand connu (40 derniers jours) ---------- */
+  function anomalies(b, ctx, out) {
+    const since = shiftDay(todayStr(), -40);
+    const seen = {};
+    const hits = [];
+    for (const t of txOf(b)) {
+      if (t.kind !== "expense" || t.date < since || !t.label || t.splits) continue;
+      const k = Intel.merchantKey(t.label);
+      if (!k || k === "RETRAIT" || seen[k]) continue;
+      const rule = State.intel.rules[b.id + "|" + k];
+      if (!rule || !rule.amounts || rule.amounts.length < 4) continue;
+      const m = med(rule.amounts);
+      if (m < 8) continue;
+      const amt = +t.amount;
+      if (amt > m * 2.2 && amt - m > 25) {
+        seen[k] = 1;
+        hits.push({ t, m, amt, gap: amt - m, name: titleCase(k) });
+      }
+    }
+    hits.sort((a, z) => z.gap - a.gap);
+    hits.slice(0, 2).forEach(h => {
+      out.push({
+        id: "anom-" + h.t.id, tone: "warn", icon: "alert",
+        text: `« ${h.name} » : ${fmtMoney(h.amt, b.currency, { dec: 0 })} le ${fmtDate(h.t.date)}, inhabituel (≈ ${fmtMoney(h.m, b.currency, { dec: 0 })} d'ordinaire).`,
+        action: { label: "Voir", run: () => { go("tracking"); setTimeout(() => openTxEditor(b, h.t), 60); } },
+      });
+    });
+  }
+
+  /* ---------- 4. catégorie en forte variation vs moyenne des 3 mois pleins ---------- */
+  function categoryMovers(b, ctx, out) {
+    const { ymNow, dayN, dim, real } = ctx;
+    if (dayN < 6) return;
+    const past = [1, 2, 3].map(n => realMonthByCat(b, addMonths(ymNow, -n)).byCat);
+    const movers = [];
+    for (const [catId, spent] of Object.entries(real.byCat)) {
+      if (catId === "_" || catId === "_debt") continue;
+      const hist = past.map(p => p[catId] || 0);
+      if (!hist.some(v => v > 0)) continue;
+      const avg = hist.reduce((s, v) => s + v, 0) / 3;
+      if (avg < 15) continue;
+      const proj = spent / dayN * dim;                 // extrapolation du mois en cours
+      if (proj > avg * 1.3 && proj - avg > 30) {
+        const c = catById(b, catId);
+        movers.push({ catId, c, avg, proj, pct: (proj - avg) / avg });
+      }
+    }
+    movers.sort((a, z) => (z.proj - z.avg) - (a.proj - a.avg));
+    const top = movers[0];
+    if (top) {
+      out.push({
+        id: "mover-" + top.catId, tone: "info", icon: "trend",
+        text: `${top.c ? top.c.emoji + " " + top.c.name : "Catégorie"} : ~${fmtMoney(top.proj, b.currency, { dec: 0 })} ce mois-ci, soit +${Math.round(top.pct * 100)} % par rapport à votre moyenne des 3 mois (${fmtMoney(top.avg, b.currency, { dec: 0 })}).`,
+      });
+    }
+  }
+
+  /* ---------- 5. capacité d'épargne dégagée non affectée ---------- */
+  function savingsCapacity(b, ctx, out) {
+    const { planned } = ctx;
+    const net = planned.income - planned.expense;
+    if (net < 60) return;
+    const unalloc = net - (planned.saving || 0);
+    if (unalloc < 50 || unalloc < planned.income * 0.05) return;
+    out.push({
+      id: "save-cap", tone: "opp", icon: "pig",
+      text: `Vous dégagez environ ${fmtMoney(net, b.currency, { dec: 0 })} par mois, dont ${fmtMoney(unalloc, b.currency, { dec: 0 })} non affectés à de l'épargne. Un virement automatique permettrait de les mettre de côté sans y penser.`,
+      action: { label: "Programmer", run: () => go("goals") },
+    });
+  }
+
+  /* ---------- 6. poste planifié jamais constaté dans le réel (2 mois) ---------- */
+  function dormantItems(b, ctx, out) {
+    const recent = txOf(b).filter(t => t.date >= shiftDay(todayStr(), -62));
+    if (recent.length < 8) return;                     // pas assez de suivi réel pour conclure
+    const usedCats = new Set();
+    recent.forEach(t => {
+      const parts = (t.splits && t.splits.length) ? t.splits : [{ categoryId: t.categoryId }];
+      parts.forEach(p => { const top = catTop(b, p.categoryId); if (top) usedCats.add(top.id); });
+    });
+    for (const it of b.items) {
+      if (it.kind !== "expense" || it.endDate || !FREQ_MONTHS[it.freq] || !(+it.amount > 0)) continue;
+      if (monthIndex(ymOf(it.startDate)) > monthIndex(ymOf(todayStr())) - 2) continue;
+      const top = catTop(b, it.categoryId);
+      if (top && !usedCats.has(top.id)) {
+        out.push({
+          id: "dormant-" + it.id, tone: "info", icon: "info",
+          text: `Poste « ${it.name} » (${fmtMoney(+it.amount, b.currency, { dec: 0 })}/mois) : aucune dépense constatée dans « ${top.name} » depuis 2 mois. Toujours d'actualité ?`,
+          action: { label: "Vérifier", run: () => go("budget") },
+        });
+        break;                                          // un seul à la fois, pour ne pas noyer
+      }
+    }
+  }
+
+  /* ---------- 7. meilleure suggestion de récurrence (remontée depuis le suivi) ---------- */
+  function recurringTop(b, ctx, out) {
+    let list = [];
+    try { list = Intel.detectRecurring(b); } catch (e) { return; }
+    const sg = list.find(s => s.type === "new") || list[0];
+    if (!sg) return;
+    out.push({
+      id: "rec-" + sg.id, tone: "opp", icon: "spark", text: sg.text,
+      action: {
+        label: sg.type === "new" ? "Créer le poste" : "Appliquer",
+        run: () => { const msg = sg.apply(); Intel.dismiss(sg.id); persist(); renderApp(); toast("✅ " + msg); },
+      },
+    });
+  }
+
+  function titleCase(s) { return String(s).toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase()); }
+
+  /* ---------- assemblage ---------- */
+  function compute(b) {
+    if (!b) return [];
+    const ymNow = ymOf(todayStr());
+    const today = todayStr();
+    const real = realMonthByCat(b, ymNow);
+    const planned = plannedMonth(b, ymNow);
+    const reste = remainingPlanned(b, ymNow);
+    const balNow = balanceAtMonthStart(b, ymNow) + real.income - real.expense;
+    const ctx = {
+      ymNow, today, dayN: +today.slice(8), dim: daysInMonth(ymNow),
+      real, planned, reste, balNow,
+    };
+    const out = [];
+    cashflowLow(b, ctx, out);
+    pace(b, ctx, out);
+    anomalies(b, ctx, out);
+    categoryMovers(b, ctx, out);
+    recurringTop(b, ctx, out);
+    savingsCapacity(b, ctx, out);
+    dormantItems(b, ctx, out);
+
+    const skip = State.intel.dismissed || {};
+    return out
+      .filter(i => !skip[i.id])
+      .sort((a, z) => (RANK[a.tone] - RANK[z.tone]))
+      .slice(0, 5);
+  }
+
+  /* reste-à-vivre par jour : disponible réparti sur les jours restants du mois */
+  function safeToSpend(b) {
+    const ymNow = ymOf(todayStr());
+    const real = realMonthByCat(b, ymNow);
+    const balNow = balanceAtMonthStart(b, ymNow) + real.income - real.expense;
+    const reste = remainingPlanned(b, ymNow);
+    const dispo = balNow - reste.total;
+    const daysLeft = Math.max(1, daysInMonth(ymNow) - +todayStr().slice(8) + 1);
+    return { dispo, perDay: dispo / daysLeft, daysLeft };
+  }
+
+  return { compute, safeToSpend, shiftDay };
+})();
+
+
 /* ===== 10-onboarding.js ===== */
 "use strict";
 /* ============ onboarding : premier lancement ============ */
@@ -2446,6 +2710,8 @@ function viewDashboard(root) {
   const reste = remainingPlanned(b, ymNow);
   const disponible = balNow - reste.total;
   const alerts = computeAlerts(b);
+  const insights = (typeof Insights !== "undefined") ? Insights.compute(b) : [];
+  const sts = Insights.safeToSpend(b);
   const cur = b.currency;
 
   const plannedLeft = m0.income - m0.expense;
@@ -2458,8 +2724,23 @@ function viewDashboard(root) {
     kpi("Solde réel aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
     kpi("Solde prévu fin " + MOIS[+ymNow.slice(5, 7) - 1], fmtMoney(endOfMonth, cur), plannedLeft >= 0 ? `+${fmtMoney(plannedLeft, cur)} ce mois-ci` : `${fmtMoney(plannedLeft, cur)} ce mois-ci`, endOfMonth < 0 ? "neg" : "pos"),
     kpi("Taux d'épargne prévu", m0.income > 0 ? fmtPct(savingRate) : "—", m0.saving > 0 ? `dont ${fmtMoney(m0.saving, cur)} d'épargne versée` : "revenus − dépenses, en % des revenus", savingRate < 0 ? "neg" : ""),
-    kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : "")
+    kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : ""),
+    kpi("Reste à vivre par jour", fmtMoney(sts.perDay, cur), `${fmtMoney(sts.dispo, cur)} sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`, sts.perDay < 0 ? "neg" : "pos")
   );
+
+  // analyse intelligente : constats chiffrés, prédictifs & actionnables
+  const toneCls = { danger: "danger", warn: "warn", good: "ok", info: "info", opp: "info" };
+  const insightCard = insights.length ? el("div", { class: "card" },
+    el("div", { class: "card-head" }, el("h3", {}, "💡 Analyse intelligente"),
+      el("span", { class: "spacer" }), el("span", { class: "xs muted" }, "d'après vos données")),
+    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:10px" },
+      insights.map(it => el("div", { class: "insight" },
+        el("div", { class: "alert a-" + (toneCls[it.tone] || "info"), style: "flex:1; min-width:0" },
+          el("span", { class: "a-ico", html: ico(it.icon, 17) }), el("span", {}, it.text)),
+        el("div", { class: "insight-act" },
+          it.action ? el("button", { class: "btn btn-sm btn-p", onclick: () => { const r = it.action.run(); if (typeof r === "string") toast("✅ " + r); } }, it.action.label) : null,
+          el("button", { class: "btn btn-sm btn-ghost btn-ico", title: "Ignorer", html: ico("x", 15), onclick: () => { Intel.dismiss(it.id); persist(); renderApp(); } })))))
+  ) : null;
 
   // dépenses prévues pas encore débitées (réservées, non comptées comme disponibles)
   const resteCard = reste.rows.length ? el("div", { class: "card" },
@@ -2566,6 +2847,7 @@ function viewDashboard(root) {
   root.append(
     el("div", { class: "content-inner grid", style: "gap:16px" },
       kpis,
+      insightCard,
       alertBox,
       resteCard,
       el("div", { class: "grid g23" }, chartCard, donutCard),
@@ -4223,10 +4505,27 @@ function openTxEditor(b, tx, defaultDate) {
   const amountInp = moneyInput({ value: t.amount || "", autofocus: true });
   const labelInp = el("input", { class: "input", value: t.label, placeholder: "ex. Courses Carrefour" });
   const dateInp = el("input", { class: "input", type: "date", value: t.date });
-  let catSel = catSelect(b, kind, t.categoryId);
+  let catTouched = !!t.categoryId;
+  const hint = el("div", { class: "xs predict-hint" });
+  let catSel = catSelect(b, kind, t.categoryId, {}, { label: t.label });
   const catWrap = el("div", {}, catSel);
+  const bindCat = () => catSel.addEventListener("change", () => catTouched = true);
+  bindCat();
   let splits = (t.splits || []).map(s => ({ ...s }));
   const catZone = el("div", { class: "field full" });
+
+  // prédiction live : en tapant le libellé, la catégorie et le montant habituel se proposent
+  function predict() {
+    const label = labelInp.value.trim();
+    const s = label ? Intel.suggest(b, label, kind) : null;
+    if (!s || !s.categoryId) { hint.textContent = ""; return; }
+    if (!catTouched && !splits.length) catSel.value = s.categoryId;
+    const usual = s.usual > 0 ? ` · ~${fmtMoney(s.usual, b.currency, { dec: 0 })} d'habitude` : "";
+    hint.textContent = `✨ ${s.source === "appris" ? "Appris" : "Suggéré"} : ${catLabel(b, s.categoryId)}${usual}`;
+    if (s.usual > 0 && !numVal(amountInp)) amountInp.input.placeholder = String(round2(s.usual)).replace(".", ",");
+  }
+  labelInp.addEventListener("input", debounce(predict, 250));
+  predict();
 
   function renderCatZone() {
     catZone.innerHTML = "";
@@ -4270,10 +4569,12 @@ function openTxEditor(b, tx, defaultDate) {
 
   const seg = segControl([{ value: "expense", label: "Dépense" }, { value: "income", label: "Revenu" }], kind, v => {
     kind = v;
-    const ns = catSelect(b, kind, null);
+    const ns = catSelect(b, kind, null, {}, { label: labelInp.value });
     catWrap.innerHTML = ""; catWrap.append(ns); catSel = ns;
+    catTouched = false; bindCat();
     splits = [];                        // les catégories de l'autre type ne s'appliquent plus
     renderCatZone();
+    predict();
   });
 
   const m = modal({
@@ -4283,7 +4584,7 @@ function openTxEditor(b, tx, defaultDate) {
       el("div", { class: "form-grid" },
         fField("Montant", amountInp),
         fField("Date", dateInp),
-        fField("Libellé", labelInp, { full: true }),
+        fField("Libellé", el("div", {}, labelInp, hint), { full: true }),
         catZone)),
     foot: [
       !isNew ? el("button", {

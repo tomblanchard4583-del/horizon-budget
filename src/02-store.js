@@ -19,6 +19,7 @@ const State = {
   intel: {                    // apprentissage local — propre à cet appareil, NON synchronisé
     rules: {},                // "budgetId|clé marchand" → {kind,categoryId,confirms,amounts,days,itemId}
     catUsage: {},             // "budgetId|categoryId" → nombre d'utilisations
+    catLast: {},              // "budgetId|categoryId" → horodatage du dernier usage (récence)
     splitMemory: {},          // "budgetId|clé marchand" → [{categoryId, share}] (méthode des enveloppes)
     csvMaps: {},              // empreinte d'en-tête CSV → mapping de colonnes mémorisé
     dismissed: {},            // suggestions écartées

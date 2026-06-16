@@ -425,6 +425,12 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 .alert.a-danger{background:var(--danger-soft); color:var(--danger)}
 .alert.a-info{background:var(--info-soft); color:var(--info)}
 .alert.a-ok{background:var(--accent-soft); color:var(--accent)}
+.insight{display:flex; gap:10px; align-items:stretch}
+.insight .alert{flex:1}
+.insight-act{display:flex; gap:6px; align-items:center; flex:none}
+.predict-hint{margin-top:5px; min-height:15px; color:var(--accent); font-weight:600}
+.predict-hint:empty{margin-top:0}
+@media (max-width:560px){ .insight{flex-direction:column} .insight-act{justify-content:flex-end} }
 .scroll-x{display:flex; gap:10px; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch}
 .evo-row{display:flex; gap:8px; align-items:center; padding:7px 0; border-bottom:1px dashed var(--line)}
 .searchbar{position:relative; flex:1; max-width:300px}

@@ -81,15 +81,29 @@ function selectInput(options, value, attrs) {
 }
 
 /* Sélecteur de catégorie groupé (avec sous-catégories indentées).
-   Les catégories les plus utilisées remontent dans un groupe « Fréquentes ». */
-function catSelect(budget, kind, value, attrs) {
+   Tri intelligent : la catégorie prédite pour le libellé saisi remonte tout en haut,
+   suivie des catégories fréquentes (usage récent pondéré). ctx = { label } optionnel. */
+function catSelect(budget, kind, value, attrs, ctx) {
   const roots = budget.categories.filter(c => c.kind === kind && !c.parentId);
   const s = el("select", { class: "input", ...attrs });
   s.append(el("option", { value: "" }, "— Sans catégorie —"));
+  // prédiction selon le libellé en cours de saisie (règle apprise ou mots-clés)
+  let predId = null;
+  if (ctx && ctx.label && typeof Intel !== "undefined") {
+    const pred = Intel.suggest(budget, ctx.label, kind);
+    if (pred && pred.categoryId && catById(budget, pred.categoryId)) predId = pred.categoryId;
+  }
+  if (predId) {
+    const c = catById(budget, predId), p = c.parentId ? catById(budget, c.parentId) : null;
+    const g = el("optgroup", { label: "✨ Suggéré" });
+    g.append(el("option", { value: c.id, selected: !value }, `${(p || c).emoji} ${p ? p.name + " · " : ""}${c.name}`));
+    s.append(g);
+  }
   const freq = (typeof Intel !== "undefined") ? Intel.topCats(budget, kind, 5) : [];
   if (freq.length) {
     const g = el("optgroup", { label: "★ Fréquentes" });
     freq.forEach(c => {
+      if (c.id === predId) return;
       const p = c.parentId ? catById(budget, c.parentId) : null;
       g.append(el("option", { value: c.id }, `${(p || c).emoji} ${c.name}`));
     });

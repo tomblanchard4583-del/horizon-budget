@@ -77,13 +77,22 @@ const Intel = (() => {
     if (!catId) return;
     const k = b.id + "|" + catId;
     State.intel.catUsage[k] = (State.intel.catUsage[k] || 0) + 1;
+    (State.intel.catLast || (State.intel.catLast = {}))[k] = Date.now();
   }
+  /* Catégories les plus pertinentes : usage fréquent + récence (les habitudes récentes
+     remontent plus vite que de vieilles utilisations massives). */
   function topCats(b, kind, n) {
+    const now = Date.now();
+    const last = State.intel.catLast || {};
     return Object.entries(State.intel.catUsage)
       .filter(([k]) => k.startsWith(b.id + "|"))
-      .map(([k, count]) => ({ cat: catById(b, k.slice(b.id.length + 1)), count }))
+      .map(([k, count]) => {
+        const days = last[k] ? (now - last[k]) / 86400000 : 999;
+        const rec = days < 30 ? (1 - days / 30) : 0;       // boost de récence sur 30 jours
+        return { cat: catById(b, k.slice(b.id.length + 1)), count, score: count + rec * 3 };
+      })
       .filter(x => x.cat && x.cat.kind === kind && x.count >= 2)
-      .sort((a, z) => z.count - a.count)
+      .sort((a, z) => z.score - a.score)
       .slice(0, n || 5).map(x => x.cat);
   }
 

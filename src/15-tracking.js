@@ -139,10 +139,27 @@ function openTxEditor(b, tx, defaultDate) {
   const amountInp = moneyInput({ value: t.amount || "", autofocus: true });
   const labelInp = el("input", { class: "input", value: t.label, placeholder: "ex. Courses Carrefour" });
   const dateInp = el("input", { class: "input", type: "date", value: t.date });
-  let catSel = catSelect(b, kind, t.categoryId);
+  let catTouched = !!t.categoryId;
+  const hint = el("div", { class: "xs predict-hint" });
+  let catSel = catSelect(b, kind, t.categoryId, {}, { label: t.label });
   const catWrap = el("div", {}, catSel);
+  const bindCat = () => catSel.addEventListener("change", () => catTouched = true);
+  bindCat();
   let splits = (t.splits || []).map(s => ({ ...s }));
   const catZone = el("div", { class: "field full" });
+
+  // prédiction live : en tapant le libellé, la catégorie et le montant habituel se proposent
+  function predict() {
+    const label = labelInp.value.trim();
+    const s = label ? Intel.suggest(b, label, kind) : null;
+    if (!s || !s.categoryId) { hint.textContent = ""; return; }
+    if (!catTouched && !splits.length) catSel.value = s.categoryId;
+    const usual = s.usual > 0 ? ` · ~${fmtMoney(s.usual, b.currency, { dec: 0 })} d'habitude` : "";
+    hint.textContent = `✨ ${s.source === "appris" ? "Appris" : "Suggéré"} : ${catLabel(b, s.categoryId)}${usual}`;
+    if (s.usual > 0 && !numVal(amountInp)) amountInp.input.placeholder = String(round2(s.usual)).replace(".", ",");
+  }
+  labelInp.addEventListener("input", debounce(predict, 250));
+  predict();
 
   function renderCatZone() {
     catZone.innerHTML = "";
@@ -186,10 +203,12 @@ function openTxEditor(b, tx, defaultDate) {
 
   const seg = segControl([{ value: "expense", label: "Dépense" }, { value: "income", label: "Revenu" }], kind, v => {
     kind = v;
-    const ns = catSelect(b, kind, null);
+    const ns = catSelect(b, kind, null, {}, { label: labelInp.value });
     catWrap.innerHTML = ""; catWrap.append(ns); catSel = ns;
+    catTouched = false; bindCat();
     splits = [];                        // les catégories de l'autre type ne s'appliquent plus
     renderCatZone();
+    predict();
   });
 
   const m = modal({
@@ -199,7 +218,7 @@ function openTxEditor(b, tx, defaultDate) {
       el("div", { class: "form-grid" },
         fField("Montant", amountInp),
         fField("Date", dateInp),
-        fField("Libellé", labelInp, { full: true }),
+        fField("Libellé", el("div", {}, labelInp, hint), { full: true }),
         catZone)),
     foot: [
       !isNew ? el("button", {
