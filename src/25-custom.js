@@ -74,18 +74,26 @@ const Custom = (() => {
     };
   }
 
+  /* Normalise SANS jamais remplacer l'objet : l'identité de State.settings.custom
+     reste stable, sinon les références capturées par l'UI deviennent obsolètes. */
   function ensure() {
-    const d = defaults();
-    const c = State.settings.custom = Object.assign(d, State.settings.custom || {});
-    c.order = c.order || {}; c.hidden = c.hidden || {};
-    c.fab = Object.assign({ enabled: true, pos: "br", actions: QUICK.map(q => q.id) }, c.fab || {});
-    c.fab.actions = (c.fab.actions || []).filter(id => QUICK.some(q => q.id === id));
+    const c = State.settings.custom || (State.settings.custom = {});
+    if (c.v == null) c.v = 1;
+    if (c.accent === undefined) c.accent = null;
+    if (c.density !== "compact" && c.density !== "comfortable") c.density = "comfortable";
+    if (!c.order) c.order = {};
+    if (!c.hidden) c.hidden = {};
+    if (!c.fab) c.fab = {};
+    if (typeof c.fab.enabled !== "boolean") c.fab.enabled = true;
+    c.fab.actions = (Array.isArray(c.fab.actions) ? c.fab.actions : QUICK.map(q => q.id)).filter(id => QUICK.some(q => q.id === id));
     if (!c.fab.actions.length) c.fab.actions = QUICK.map(q => q.id);
     if (c.fab.pos !== "bl") c.fab.pos = "br";
-    c.nav = Object.assign({ mobile: DEFAULT_MOBILE.slice() }, c.nav || {});
-    c.dash = Object.assign({ chart: {} }, c.dash || {});
-    c.dash.chart = Object.assign({ projection: "line", breakdown: "donut" }, c.dash.chart || {});
-    if (c.density !== "compact") c.density = "comfortable";
+    if (!c.nav) c.nav = {};
+    if (!Array.isArray(c.nav.mobile)) c.nav.mobile = DEFAULT_MOBILE.slice();
+    if (!c.dash) c.dash = {};
+    if (!c.dash.chart) c.dash.chart = {};
+    if (c.dash.chart.projection !== "bars") c.dash.chart.projection = "line";
+    if (c.dash.chart.breakdown !== "bars") c.dash.chart.breakdown = "donut";
     return c;
   }
 
