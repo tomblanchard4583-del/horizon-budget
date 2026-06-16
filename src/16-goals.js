@@ -104,22 +104,26 @@ function viewGoals(root) {
     }
   });
 
-  root.append(el("div", { class: "content-inner" },
+  const goalsSec = el("div", {},
     el("div", { class: "flex mb12" },
       el("h3", {}, "🎯 Objectifs d'épargne"),
       el("span", { class: "spacer" }),
       el("button", { class: "btn btn-p btn-sm", html: ico("plus", 14) + "<span>Objectif</span>", onclick: () => openGoalEditor(b, null) })),
     goalCards.length ? el("div", { class: "grid g3" }, goalCards)
       : el("div", { class: "card" }, emptyState("🎯", "Aucun objectif", "Fonds d'urgence, vacances, permis, apport immobilier… définissez un montant cible et, si vous voulez, une date limite. L'app calcule combien mettre de côté chaque mois.",
-        el("button", { class: "btn btn-p btn-sm", onclick: () => openGoalEditor(b, null) }, "Créer un objectif"))),
-    el("div", { class: "flex mb12 mt28" },
+        el("button", { class: "btn btn-p btn-sm", onclick: () => openGoalEditor(b, null) }, "Créer un objectif"))));
+  const accSec = el("div", {},
+    el("div", { class: "flex mb12" },
       el("h3", {}, "🏦 Comptes épargne rémunérés"),
       el("span", { class: "spacer" }),
       el("button", { class: "btn btn-sm", html: ico("plus", 14) + "<span>Compte</span>", onclick: () => openAccountEditor(b, null) })),
     accCards.length ? el("div", { class: "grid g3" }, accCards)
       : el("div", { class: "card" }, emptyState("🏦", "Aucun compte épargne", "Livret A, LEP, LDDS, assurance-vie… ajoutez vos comptes avec leur taux : les intérêts composés sont intégrés aux projections de patrimoine.",
         el("button", { class: "btn btn-sm", onclick: () => openAccountEditor(b, null) }, "Ajouter un compte")))
-  ));
+  );
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.goals", [{ id: "goals", node: goalsSec }, { id: "accounts", node: accSec }], { axis: "y" });
+  root.append(inner);
 }
 
 function addContribution(b, g) {

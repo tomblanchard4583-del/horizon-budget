@@ -43,13 +43,15 @@ function viewEvents(root) {
     "Anticipez les grands changements : fin d'études, nouvel emploi, déménagement, naissance, retraite… et observez leur impact sur vos projections.",
     el("button", { class: "btn btn-p btn-sm", onclick: () => openEventEditor(b, null) }, "Planifier un événement")));
 
-  root.append(el("div", { class: "content-inner" },
-    intro,
-    el("div", { class: "flex mb12 mt16" },
+  const listSec = el("div", {},
+    el("div", { class: "flex mb12" },
       el("h3", {}, "🧭 Ligne de vie"),
       el("span", { class: "spacer" }),
       el("button", { class: "btn btn-p btn-sm", html: ico("plus", 14) + "<span>Événement</span>", onclick: () => openEventEditor(b, null) })),
-    list));
+    list);
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.events", [{ id: "intro", node: intro }, { id: "list", node: listSec }], { axis: "y" });
+  root.append(inner);
 }
 
 function openEventEditor(b, ev) {

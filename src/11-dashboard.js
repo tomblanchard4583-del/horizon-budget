@@ -18,16 +18,20 @@ function viewDashboard(root) {
   const plannedLeft = m0.income - m0.expense;
   const endOfMonth = m0.balance;
   const savingRate = m0.income > 0 ? (m0.income - m0.expense + m0.saving) / m0.income : 0;
-  // KPIs
-  const kpis = el("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit,minmax(190px,1fr))" },
-    kpi("Argent réellement disponible", fmtMoney(disponible, cur),
+  // KPIs — sélection & ordre personnalisables (scope "dash.kpi")
+  const kpiDefs = {
+    dispo: () => kpi("Argent réellement disponible", fmtMoney(disponible, cur),
       reste.total > 0.5 ? `solde ${fmtMoney(balNow, cur)} − ${fmtMoney(reste.total, cur)} déjà prévus, pas encore débités` : "rien de prévu n'est encore en attente de débit", disponible < 0 ? "neg" : "pos"),
-    kpi("Solde réel aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
-    kpi("Solde prévu fin " + MOIS[+ymNow.slice(5, 7) - 1], fmtMoney(endOfMonth, cur), plannedLeft >= 0 ? `+${fmtMoney(plannedLeft, cur)} ce mois-ci` : `${fmtMoney(plannedLeft, cur)} ce mois-ci`, endOfMonth < 0 ? "neg" : "pos"),
-    kpi("Taux d'épargne prévu", m0.income > 0 ? fmtPct(savingRate) : "—", m0.saving > 0 ? `dont ${fmtMoney(m0.saving, cur)} d'épargne versée` : "revenus − dépenses, en % des revenus", savingRate < 0 ? "neg" : ""),
-    kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : ""),
-    kpi("Reste à vivre par jour", fmtMoney(sts.perDay, cur), `${fmtMoney(sts.dispo, cur)} sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`, sts.perDay < 0 ? "neg" : "pos")
-  );
+    soldeNow: () => kpi("Solde réel aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
+    finMois: () => kpi("Solde prévu fin " + MOIS[+ymNow.slice(5, 7) - 1], fmtMoney(endOfMonth, cur), plannedLeft >= 0 ? `+${fmtMoney(plannedLeft, cur)} ce mois-ci` : `${fmtMoney(plannedLeft, cur)} ce mois-ci`, endOfMonth < 0 ? "neg" : "pos"),
+    epargne: () => kpi("Taux d'épargne prévu", m0.income > 0 ? fmtPct(savingRate) : "—", m0.saving > 0 ? `dont ${fmtMoney(m0.saving, cur)} d'épargne versée` : "revenus − dépenses, en % des revenus", savingRate < 0 ? "neg" : ""),
+    depReelles: () => kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : ""),
+    resteJour: () => kpi("Reste à vivre par jour", fmtMoney(sts.perDay, cur), `${fmtMoney(sts.dispo, cur)} sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`, sts.perDay < 0 ? "neg" : "pos"),
+  };
+  const kpiIds = Custom.catalogIds("dash.kpi");
+  const kpiVisible = Custom.order("dash.kpi", kpiIds).filter(id => !Custom.isHidden("dash.kpi", id) && kpiDefs[id]);
+  const kpis = el("div", { class: "grid kpi-grid", style: "grid-template-columns:repeat(auto-fit,minmax(190px,1fr))" },
+    (kpiVisible.length ? kpiVisible : kpiIds).map(id => kpiDefs[id]()));
 
   // analyse intelligente : constats chiffrés, prédictifs & actionnables
   const toneCls = { danger: "danger", warn: "warn", good: "ok", info: "info", opp: "info" };
@@ -64,12 +68,12 @@ function viewDashboard(root) {
       el("span", { class: "a-ico", html: ico(a.icon, 17) }), el("span", {}, a.text)))
   ) : null;
 
-  // graphique projection 12 mois
+  // graphique projection 12 mois — type personnalisable (courbe / barres)
   const horizon = Math.min(proj.length, 13);
-  const chartCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Projection du solde"), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("projection") }, "Tout voir →")),
-    el("div", { class: "card-pad" }, chartLine({
+  const projType = Custom.get().dash.chart.projection;
+  const projGraph = projType === "bars"
+    ? chartBars({ labels: proj.slice(0, horizon).map(r => r.ym), pos: proj.slice(0, horizon).map(r => r.income), neg: proj.slice(0, horizon).map(r => r.expense), cur, height: 230 })
+    : chartLine({
       labels: proj.slice(0, horizon).map(r => r.ym),
       series: [
         { name: "Solde", color: "#10b981", values: proj.slice(0, horizon).map(r => r.balance), fill: true },
@@ -77,7 +81,12 @@ function viewDashboard(root) {
       ],
       markers: proj.slice(0, horizon).flatMap((r, i) => r.events.map(e => ({ idx: i, label: e.name, emoji: e.emoji }))),
       cur, height: 230,
-    }))
+    });
+  const chartCard = el("div", { class: "card" },
+    el("div", { class: "card-head" }, el("h3", {}, projType === "bars" ? "Revenus & dépenses" : "Projection du solde"), el("span", { class: "spacer" }),
+      chartTypeBtn("projection", projType === "bars" ? "line" : "bars", projType === "bars" ? "Voir en courbe" : "Voir en barres"),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("projection") }, "Tout voir →")),
+    el("div", { class: "card-pad" }, projGraph)
   );
 
   // donut répartition du mois
@@ -85,17 +94,26 @@ function viewDashboard(root) {
     const c = catById(b, id);
     return { label: c ? c.name : "Crédits & autres", emoji: c ? c.emoji : "💳", color: c ? c.color : "#dc2626", value: v };
   }).sort((a, z) => z.value - a.value);
-  const donutCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Dépenses prévues du mois")),
-    parts.length ? el("div", { class: "card-pad" },
+  const breakdownType = Custom.get().dash.chart.breakdown;
+  const breakMax = Math.max(1, ...parts.map(p => p.value));
+  const breakBody = breakdownType === "bars"
+    ? el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:11px" },
+      parts.slice(0, 8).map(p => el("div", {},
+        el("div", { class: "flex", style: "font-size:13px; margin-bottom:5px" }, el("span", {}, `${p.emoji} ${p.label}`),
+          el("span", { class: "spacer" }), el("b", { class: "mono" }, fmtMoney(p.value, cur))),
+        el("div", { class: "pbar" }, el("i", { style: `width:${p.value / breakMax * 100}%; background:${p.color}` })))))
+    : el("div", { class: "card-pad" },
       chartDonut({ parts, cur, height: 195, centerLabel: "ce mois-ci" }),
       el("div", { class: "mt12" }, parts.slice(0, 6).map(p => el("div", { class: "flex", style: "padding:3.5px 0; font-size:13px" },
         el("span", { class: "cat-dot", style: "background:" + p.color }),
         el("span", {}, `${p.emoji} ${p.label}`),
         el("span", { class: "spacer" }),
         el("b", { class: "mono" }, fmtMoney(p.value, cur))
-      )))
-    ) : emptyState("🌱", "Aucune dépense prévue", "Ajoutez vos charges dans l'onglet Budget.")
+      ))));
+  const donutCard = el("div", { class: "card" },
+    el("div", { class: "card-head" }, el("h3", {}, "Dépenses prévues du mois"), el("span", { class: "spacer" }),
+      parts.length ? chartTypeBtn("breakdown", breakdownType === "bars" ? "donut" : "bars", breakdownType === "bars" ? "Voir en anneau" : "Voir en barres") : null),
+    parts.length ? breakBody : emptyState("🌱", "Aucune dépense prévue", "Ajoutez vos charges dans l'onglet Budget.")
   );
 
   // prochaines échéances (14 jours)
@@ -145,19 +163,30 @@ function viewDashboard(root) {
     )
   ) : null;
 
-  root.append(
-    el("div", { class: "content-inner grid", style: "gap:16px" },
-      kpis,
-      insightCard,
-      alertBox,
-      resteCard,
-      el("div", { class: "grid g23" }, chartCard, donutCard),
-      el("div", { class: "grid g2" }, upCard, goalCard || el("div", { class: "card" },
-        el("div", { class: "card-head" }, el("h3", {}, "Objectifs d'épargne")),
-        emptyState("🎯", "Aucun objectif", "Vacances, permis, apport immobilier… fixez un cap et suivez votre progression.",
-          el("button", { class: "btn btn-p btn-sm", onclick: () => go("goals") }, "Créer un objectif"))))
-    )
-  );
+  const goalsNode = goalCard || el("div", { class: "card" },
+    el("div", { class: "card-head" }, el("h3", {}, "Objectifs d'épargne")),
+    emptyState("🎯", "Aucun objectif", "Vacances, permis, apport immobilier… fixez un cap et suivez votre progression.",
+      el("button", { class: "btn btn-p btn-sm", onclick: () => go("goals") }, "Créer un objectif")));
+
+  const grid = el("div", { class: "dash-grid" });
+  Custom.renderInto(grid, "dash.sec", [
+    { id: "kpis", node: kpis, span: 12 },
+    { id: "insight", node: insightCard, span: 12 },
+    { id: "alerts", node: alertBox, span: 12 },
+    { id: "reste", node: resteCard, span: 12 },
+    { id: "projection", node: chartCard, span: 6 },
+    { id: "breakdown", node: donutCard, span: 6 },
+    { id: "upcoming", node: upCard, span: 6 },
+    { id: "goals", node: goalsNode, span: 6 },
+  ], { axis: "grid" });
+  root.append(el("div", { class: "content-inner" }, grid));
+
+  function chartTypeBtn(which, to, title) {
+    return el("button", {
+      class: "btn btn-sm btn-ghost btn-ico", title, html: ico("layers", 15),
+      onclick: () => { Custom.get().dash.chart[which] = to; Custom.save(); }
+    });
+  }
 
   function kpi(label, value, sub, tone) {
     return el("div", { class: "card kpi" },

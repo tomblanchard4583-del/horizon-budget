@@ -18,10 +18,6 @@ const VIEWS = {
   settings:   { label: "Réglages",        icon: "gear",    sub: () => "Personnalisation, sauvegarde & partage", render: viewSettings },
   help:       { label: "Aide",            icon: "info",    sub: () => "Tutoriels & questions fréquentes", render: viewHelp },
 };
-const NAV_ORDER = ["dashboard", "budget", "projection", "calendar", "tracking", "goals", "debts", "events"];
-const NAV_FOOT = ["budgets", "help", "settings"];
-const MOBILE_NAV = ["dashboard", "budget", "projection", "tracking"];
-
 let _view = "dashboard";
 
 function go(view) {
@@ -48,12 +44,16 @@ function renderApp() {
   const v = VIEWS[_view];
   app.innerHTML = "";
 
-  // barre latérale (desktop)
+  // barre latérale (desktop) — navigation personnalisable
+  const navMainBox = el("div", { class: "nav-main" });
+  Custom.renderInto(navMainBox, "nav", Custom.navMainAll().map(k => ({ id: k, node: navBtn(k) })), { axis: "y", onActivate: go });
+  const footBox = el("div", { class: "nav-foot-list" });
+  (Custom.isEditing() ? Custom.FOOT : Custom.navFoot()).forEach(k => footBox.append(Custom.deco(navBtn(k), "nav", k, go)));
   const sidebar = el("aside", { class: "sidebar" },
     el("div", { class: "brand", html: I.logo + "<span>Horizon<br>Budget</span>" }),
-    NAV_ORDER.map(k => navBtn(k)),
+    navMainBox,
     el("div", { class: "nav-sep" }),
-    NAV_FOOT.map(k => navBtn(k)),
+    footBox,
     el("div", { class: "nav-foot" },
       el("button", { class: "budget-pill", onclick: openBudgetSwitcher, title: "Changer de budget" },
         el("span", { class: "b-ico" }, b.emoji),
@@ -84,19 +84,23 @@ function renderApp() {
   const content = el("div", { class: "content" });
   const main = el("main", { class: "main" }, topbar, content);
 
-  // navigation mobile
+  // navigation mobile (slots personnalisables)
+  const mobNav = Custom.mobileNav();
   const bottomnav = el("nav", { class: "bottomnav" },
-    MOBILE_NAV.map(k => el("button", {
+    mobNav.map(k => el("button", {
       class: _view === k ? "active" : "",
       onclick: () => go(k)
     }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), VIEWS[k].label.split(" ")[0])),
     el("button", {
-      class: !MOBILE_NAV.includes(_view) ? "active" : "",
+      class: !mobNav.includes(_view) ? "active" : "",
       onclick: openMobileMenu
     }, el("span", { class: "ico", html: I.menu }), "Plus"));
 
-  // bouton d'action rapide
-  const fab = el("button", { class: "fab", html: ico("plus", 24), title: "Ajout rapide", onclick: openQuickAdd });
+  // bouton d'action rapide (activable, positionnable)
+  const fc = Custom.get().fab;
+  const fab = fc.enabled
+    ? el("button", { class: "fab fab-" + fc.pos, html: ico("plus", 24), title: "Ajout rapide", onclick: openQuickAdd })
+    : null;
 
   app.append(sidebar, main, bottomnav, fab);
   v.render(content);
@@ -112,10 +116,11 @@ function renderApp() {
 }
 
 function openMobileMenu() {
+  const keys = Custom.navMain().concat(Custom.navFoot());
   const m = modal({
     title: "Navigation",
     body: el("div", { style: "display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:4px 0 8px" },
-      [...NAV_ORDER, ...NAV_FOOT].map(k => el("button", {
+      keys.map(k => el("button", {
         class: "btn", style: "justify-content:flex-start; padding:12px 14px",
         onclick: () => { m.close(); go(k); }
       }, el("span", { class: "ico", html: I[VIEWS[k].icon], style: "width:18px;height:18px" }), VIEWS[k].label)))
@@ -124,14 +129,13 @@ function openMobileMenu() {
 
 function openQuickAdd() {
   const b = curBudget();
+  const acts = Custom.get().fab.actions;
+  const byId = {}; Custom.quick().forEach(q => byId[q.id] = q);
   const m = modal({
     title: "Ajout rapide",
     body: el("div", { style: "display:flex; flex-direction:column; gap:8px; padding:4px 0 8px" },
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openTxEditor(b, null); } }, "🧾 Transaction réelle (dépense / revenu du jour)"),
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openItemEditor(b, newItem("expense"), true); } }, "📉 Dépense planifiée (récurrente ou ponctuelle)"),
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openItemEditor(b, newItem("income"), true); } }, "📈 Revenu planifié"),
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openGoalEditor(b, null); } }, "🎯 Objectif d'épargne"),
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openEventEditor(b, null); } }, "🧭 Événement de vie"))
+      acts.map(id => byId[id]).filter(Boolean).map(q =>
+        el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => q.run(b, m.close) }, `${q.emoji} ${q.label}`)))
   });
 }
 
@@ -159,7 +163,9 @@ document.addEventListener("keydown", e => {
 
 /* ---- démarrage ---- */
 loadState();
+Custom.ensure();
 applyTheme();
+Custom.apply();
 Sync.init();
 if (!State.onboarded || !State.budgets.length) showOnboarding();
 else renderApp();

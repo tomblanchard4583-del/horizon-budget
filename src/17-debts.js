@@ -44,11 +44,11 @@ function viewDebts(root) {
     );
   });
 
-  root.append(el("div", { class: "content-inner" },
-    el("div", { class: "grid g3 mb16" },
-      el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Dette totale restante"), el("div", { class: "k-value" }, fmtMoney(totalRemaining, cur, { dec: 0 }))),
-      el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Mensualités totales"), el("div", { class: "k-value" }, fmtMoney(totalMonthly, cur)), el("div", { class: "k-sub" }, "intégrées automatiquement aux projections")),
-      el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Crédits en cours"), el("div", { class: "k-value" }, String(b.debts.length)))),
+  const summarySec = el("div", { class: "grid g3" },
+    el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Dette totale restante"), el("div", { class: "k-value" }, fmtMoney(totalRemaining, cur, { dec: 0 }))),
+    el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Mensualités totales"), el("div", { class: "k-value" }, fmtMoney(totalMonthly, cur)), el("div", { class: "k-sub" }, "intégrées automatiquement aux projections")),
+    el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Crédits en cours"), el("div", { class: "k-value" }, String(b.debts.length))));
+  const listSec = el("div", {},
     el("div", { class: "flex mb12" },
       el("h3", {}, "💳 Crédits & dettes"),
       el("span", { class: "spacer" }),
@@ -56,8 +56,10 @@ function viewDebts(root) {
     cards.length ? el("div", { class: "grid g3" }, cards)
       : el("div", { class: "card" }, emptyState("💳", "Aucun crédit",
         "Prêt immobilier, crédit auto, prêt étudiant, dette à un proche… L'app calcule la mensualité, la date de fin et le coût des intérêts, et intègre tout aux projections.",
-        el("button", { class: "btn btn-p btn-sm", onclick: () => openDebtEditor(b, null) }, "Ajouter un crédit")))
-  ));
+        el("button", { class: "btn btn-p btn-sm", onclick: () => openDebtEditor(b, null) }, "Ajouter un crédit"))));
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.debts", [{ id: "summary", node: summarySec }, { id: "list", node: listSec }], { axis: "y" });
+  root.append(inner);
 }
 
 function openDebtEditor(b, debt) {

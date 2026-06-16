@@ -496,9 +496,13 @@ function viewProjection(root) {
       el("button", { class: "btn btn-sm", onclick: () => { _projTableAll = !_projTableAll; renderApp(); } },
         _projTableAll ? "Réduire" : `Afficher les ${slice.length} mois`)) : null);
 
-  root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
-    controls, chartCard, synthCard, reperesCard, chaptersCard,
-    el("div", { class: "grid g2" }, fluxCard, tableCard)));
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.projection", [
+    { id: "controls", node: controls }, { id: "chart", node: chartCard }, { id: "synth", node: synthCard },
+    { id: "reperes", node: reperesCard }, { id: "chapters", node: chaptersCard },
+    { id: "flux", node: fluxCard }, { id: "table", node: tableCard },
+  ], { axis: "y" });
+  root.append(inner);
 }
 
 /* Phrases de synthèse — factuelles, chiffrées. */

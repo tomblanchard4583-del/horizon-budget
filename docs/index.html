@@ -594,6 +594,77 @@ svg:has(.dslice:hover) .dslice:not(:hover){opacity:.45}
   .budget-pill .ico{display:none !important}
 }
 
+/* ============ personnalisation : grille dashboard, mode édition, apparence ============ */
+.nav-main,.nav-foot-list{display:flex; flex-direction:column; gap:3px}
+
+/* grille 12 colonnes du tableau de bord (sections réordonnables) */
+.dash-grid{display:grid; grid-template-columns:repeat(12,1fr); gap:16px; align-items:start}
+.dash-grid>*{min-width:0}
+.dz-12{grid-column:span 12}.dz-8{grid-column:span 8}.dz-7{grid-column:span 7}
+.dz-6{grid-column:span 6}.dz-5{grid-column:span 5}.dz-4{grid-column:span 4}
+@media(max-width:980px){.dz-8,.dz-7,.dz-5,.dz-4{grid-column:span 12}}
+@media(max-width:620px){.dz-6{grid-column:span 12}; .dash-grid{gap:12px}}
+
+/* position du bouton d'ajout rapide */
+.fab-bl{right:auto; left:22px}
+@media(max-width:880px){.fab-bl{right:auto; left:16px}}
+
+/* densité compacte */
+[data-density="compact"]{font-size:14px}
+[data-density="compact"] .card-pad{padding:13px 15px}
+[data-density="compact"] .content{padding:16px 18px 90px}
+[data-density="compact"] .dash-grid,[data-density="compact"] .grid{gap:12px}
+[data-density="compact"] .kpi{padding:13px 15px}
+[data-density="compact"] .kpi .k-value{font-size:21px}
+[data-density="compact"] .topbar{min-height:54px; padding:10px 18px}
+
+/* ---- mode édition ---- */
+.cz-banner{position:fixed; top:0; left:0; right:0; z-index:120; display:flex; align-items:center; gap:12px;
+  padding:9px 16px calc(9px); background:linear-gradient(100deg,var(--accent),var(--accent-deep)); color:#fff;
+  box-shadow:0 6px 22px -8px rgba(0,0,0,.45); font-size:13px; font-weight:550}
+.cz-banner .cz-bdot{font-size:15px}
+.cz-banner .cz-btxt{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.cz-banner .btn{background:rgba(255,255,255,.16); color:#fff; border:1px solid rgba(255,255,255,.28)}
+.cz-banner .btn:hover{background:rgba(255,255,255,.26)}
+.cz-banner .btn-p{background:#fff; color:var(--accent-deep); border-color:#fff; font-weight:700}
+@media(max-width:620px){.cz-banner .cz-btxt{white-space:normal; font-size:12px; line-height:1.3}}
+body.cz-on .app{height:calc(100% - 42px); margin-top:42px}
+
+.cz-item{position:relative}
+body.cz-on .cz-item{outline:1.5px dashed var(--accent); outline-offset:-1px; border-radius:var(--radius)}
+body.cz-on .nav-main .cz-item,body.cz-on .nav-foot-list .cz-item{border-radius:10px; outline-color:rgba(255,255,255,.4)}
+body.cz-on .cz-item.cz-hidden{opacity:.42; filter:grayscale(.6)}
+.cz-shield{position:absolute; inset:0; z-index:6; cursor:grab; touch-action:none; border-radius:inherit}
+.cz-shield:active{cursor:grabbing}
+.cz-badges{position:absolute; top:-9px; right:-9px; z-index:8; display:flex; gap:5px}
+.cz-del{width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:var(--danger); color:#fff;
+  box-shadow:0 3px 10px -2px rgba(0,0,0,.4); border:2px solid var(--panel)}
+.cz-del:hover{transform:scale(1.1)}
+.cz-del.cz-add{background:var(--accent)}
+.nav-main .cz-badges,.nav-foot-list .cz-badges{top:-6px; right:-4px}
+.nav-main .cz-del,.nav-foot-list .cz-del{width:20px; height:20px; border-color:var(--navy)}
+.cz-ghost{position:fixed; z-index:200; pointer-events:none; opacity:.92; box-shadow:var(--shadow-lg);
+  transform:rotate(1.2deg) scale(1.02); border-radius:var(--radius); overflow:hidden; background:var(--panel)}
+.cz-ghost .cz-shield,.cz-ghost .cz-badges{display:none}
+.cz-ph{border:2px dashed var(--accent); background:var(--accent-soft); border-radius:var(--radius); min-height:44px}
+.cz-ph-grid{grid-column:span 6}
+@media(max-width:620px){.cz-ph-grid{grid-column:span 12}}
+
+/* fiche de personnalisation (réglages) */
+.perso-row{display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel2)}
+.perso-row .pr-grip{color:var(--tx3); cursor:default; flex:none}
+.perso-row .pr-name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13.5px}
+.perso-row.off{opacity:.5}
+.perso-row .pr-btn{width:28px; height:28px; flex:none; display:grid; place-items:center; border-radius:8px; border:1px solid var(--line); color:var(--tx2)}
+.perso-row .pr-btn:hover{background:var(--panel); color:var(--tx)}
+.perso-row .pr-btn[disabled]{opacity:.3; cursor:default}
+.perso-list{display:flex; flex-direction:column; gap:6px}
+.swatch-row{display:flex; flex-wrap:wrap; gap:8px}
+.swatch{width:30px; height:30px; border-radius:50%; border:2px solid var(--line); cursor:pointer; position:relative}
+.swatch.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--tx)}
+.swatch.auto{display:grid; place-items:center; font-size:12px; color:var(--tx2); background:var(--panel2)}
+.hbar-list{display:flex; flex-direction:column; gap:11px}
+
 </style>
 </head>
 <body>
@@ -2722,16 +2793,20 @@ function viewDashboard(root) {
   const plannedLeft = m0.income - m0.expense;
   const endOfMonth = m0.balance;
   const savingRate = m0.income > 0 ? (m0.income - m0.expense + m0.saving) / m0.income : 0;
-  // KPIs
-  const kpis = el("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit,minmax(190px,1fr))" },
-    kpi("Argent réellement disponible", fmtMoney(disponible, cur),
+  // KPIs — sélection & ordre personnalisables (scope "dash.kpi")
+  const kpiDefs = {
+    dispo: () => kpi("Argent réellement disponible", fmtMoney(disponible, cur),
       reste.total > 0.5 ? `solde ${fmtMoney(balNow, cur)} − ${fmtMoney(reste.total, cur)} déjà prévus, pas encore débités` : "rien de prévu n'est encore en attente de débit", disponible < 0 ? "neg" : "pos"),
-    kpi("Solde réel aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
-    kpi("Solde prévu fin " + MOIS[+ymNow.slice(5, 7) - 1], fmtMoney(endOfMonth, cur), plannedLeft >= 0 ? `+${fmtMoney(plannedLeft, cur)} ce mois-ci` : `${fmtMoney(plannedLeft, cur)} ce mois-ci`, endOfMonth < 0 ? "neg" : "pos"),
-    kpi("Taux d'épargne prévu", m0.income > 0 ? fmtPct(savingRate) : "—", m0.saving > 0 ? `dont ${fmtMoney(m0.saving, cur)} d'épargne versée` : "revenus − dépenses, en % des revenus", savingRate < 0 ? "neg" : ""),
-    kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : ""),
-    kpi("Reste à vivre par jour", fmtMoney(sts.perDay, cur), `${fmtMoney(sts.dispo, cur)} sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`, sts.perDay < 0 ? "neg" : "pos")
-  );
+    soldeNow: () => kpi("Solde réel aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
+    finMois: () => kpi("Solde prévu fin " + MOIS[+ymNow.slice(5, 7) - 1], fmtMoney(endOfMonth, cur), plannedLeft >= 0 ? `+${fmtMoney(plannedLeft, cur)} ce mois-ci` : `${fmtMoney(plannedLeft, cur)} ce mois-ci`, endOfMonth < 0 ? "neg" : "pos"),
+    epargne: () => kpi("Taux d'épargne prévu", m0.income > 0 ? fmtPct(savingRate) : "—", m0.saving > 0 ? `dont ${fmtMoney(m0.saving, cur)} d'épargne versée` : "revenus − dépenses, en % des revenus", savingRate < 0 ? "neg" : ""),
+    depReelles: () => kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : ""),
+    resteJour: () => kpi("Reste à vivre par jour", fmtMoney(sts.perDay, cur), `${fmtMoney(sts.dispo, cur)} sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`, sts.perDay < 0 ? "neg" : "pos"),
+  };
+  const kpiIds = Custom.catalogIds("dash.kpi");
+  const kpiVisible = Custom.order("dash.kpi", kpiIds).filter(id => !Custom.isHidden("dash.kpi", id) && kpiDefs[id]);
+  const kpis = el("div", { class: "grid kpi-grid", style: "grid-template-columns:repeat(auto-fit,minmax(190px,1fr))" },
+    (kpiVisible.length ? kpiVisible : kpiIds).map(id => kpiDefs[id]()));
 
   // analyse intelligente : constats chiffrés, prédictifs & actionnables
   const toneCls = { danger: "danger", warn: "warn", good: "ok", info: "info", opp: "info" };
@@ -2768,12 +2843,12 @@ function viewDashboard(root) {
       el("span", { class: "a-ico", html: ico(a.icon, 17) }), el("span", {}, a.text)))
   ) : null;
 
-  // graphique projection 12 mois
+  // graphique projection 12 mois — type personnalisable (courbe / barres)
   const horizon = Math.min(proj.length, 13);
-  const chartCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Projection du solde"), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("projection") }, "Tout voir →")),
-    el("div", { class: "card-pad" }, chartLine({
+  const projType = Custom.get().dash.chart.projection;
+  const projGraph = projType === "bars"
+    ? chartBars({ labels: proj.slice(0, horizon).map(r => r.ym), pos: proj.slice(0, horizon).map(r => r.income), neg: proj.slice(0, horizon).map(r => r.expense), cur, height: 230 })
+    : chartLine({
       labels: proj.slice(0, horizon).map(r => r.ym),
       series: [
         { name: "Solde", color: "#10b981", values: proj.slice(0, horizon).map(r => r.balance), fill: true },
@@ -2781,7 +2856,12 @@ function viewDashboard(root) {
       ],
       markers: proj.slice(0, horizon).flatMap((r, i) => r.events.map(e => ({ idx: i, label: e.name, emoji: e.emoji }))),
       cur, height: 230,
-    }))
+    });
+  const chartCard = el("div", { class: "card" },
+    el("div", { class: "card-head" }, el("h3", {}, projType === "bars" ? "Revenus & dépenses" : "Projection du solde"), el("span", { class: "spacer" }),
+      chartTypeBtn("projection", projType === "bars" ? "line" : "bars", projType === "bars" ? "Voir en courbe" : "Voir en barres"),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("projection") }, "Tout voir →")),
+    el("div", { class: "card-pad" }, projGraph)
   );
 
   // donut répartition du mois
@@ -2789,17 +2869,26 @@ function viewDashboard(root) {
     const c = catById(b, id);
     return { label: c ? c.name : "Crédits & autres", emoji: c ? c.emoji : "💳", color: c ? c.color : "#dc2626", value: v };
   }).sort((a, z) => z.value - a.value);
-  const donutCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Dépenses prévues du mois")),
-    parts.length ? el("div", { class: "card-pad" },
+  const breakdownType = Custom.get().dash.chart.breakdown;
+  const breakMax = Math.max(1, ...parts.map(p => p.value));
+  const breakBody = breakdownType === "bars"
+    ? el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:11px" },
+      parts.slice(0, 8).map(p => el("div", {},
+        el("div", { class: "flex", style: "font-size:13px; margin-bottom:5px" }, el("span", {}, `${p.emoji} ${p.label}`),
+          el("span", { class: "spacer" }), el("b", { class: "mono" }, fmtMoney(p.value, cur))),
+        el("div", { class: "pbar" }, el("i", { style: `width:${p.value / breakMax * 100}%; background:${p.color}` })))))
+    : el("div", { class: "card-pad" },
       chartDonut({ parts, cur, height: 195, centerLabel: "ce mois-ci" }),
       el("div", { class: "mt12" }, parts.slice(0, 6).map(p => el("div", { class: "flex", style: "padding:3.5px 0; font-size:13px" },
         el("span", { class: "cat-dot", style: "background:" + p.color }),
         el("span", {}, `${p.emoji} ${p.label}`),
         el("span", { class: "spacer" }),
         el("b", { class: "mono" }, fmtMoney(p.value, cur))
-      )))
-    ) : emptyState("🌱", "Aucune dépense prévue", "Ajoutez vos charges dans l'onglet Budget.")
+      ))));
+  const donutCard = el("div", { class: "card" },
+    el("div", { class: "card-head" }, el("h3", {}, "Dépenses prévues du mois"), el("span", { class: "spacer" }),
+      parts.length ? chartTypeBtn("breakdown", breakdownType === "bars" ? "donut" : "bars", breakdownType === "bars" ? "Voir en anneau" : "Voir en barres") : null),
+    parts.length ? breakBody : emptyState("🌱", "Aucune dépense prévue", "Ajoutez vos charges dans l'onglet Budget.")
   );
 
   // prochaines échéances (14 jours)
@@ -2849,19 +2938,30 @@ function viewDashboard(root) {
     )
   ) : null;
 
-  root.append(
-    el("div", { class: "content-inner grid", style: "gap:16px" },
-      kpis,
-      insightCard,
-      alertBox,
-      resteCard,
-      el("div", { class: "grid g23" }, chartCard, donutCard),
-      el("div", { class: "grid g2" }, upCard, goalCard || el("div", { class: "card" },
-        el("div", { class: "card-head" }, el("h3", {}, "Objectifs d'épargne")),
-        emptyState("🎯", "Aucun objectif", "Vacances, permis, apport immobilier… fixez un cap et suivez votre progression.",
-          el("button", { class: "btn btn-p btn-sm", onclick: () => go("goals") }, "Créer un objectif"))))
-    )
-  );
+  const goalsNode = goalCard || el("div", { class: "card" },
+    el("div", { class: "card-head" }, el("h3", {}, "Objectifs d'épargne")),
+    emptyState("🎯", "Aucun objectif", "Vacances, permis, apport immobilier… fixez un cap et suivez votre progression.",
+      el("button", { class: "btn btn-p btn-sm", onclick: () => go("goals") }, "Créer un objectif")));
+
+  const grid = el("div", { class: "dash-grid" });
+  Custom.renderInto(grid, "dash.sec", [
+    { id: "kpis", node: kpis, span: 12 },
+    { id: "insight", node: insightCard, span: 12 },
+    { id: "alerts", node: alertBox, span: 12 },
+    { id: "reste", node: resteCard, span: 12 },
+    { id: "projection", node: chartCard, span: 6 },
+    { id: "breakdown", node: donutCard, span: 6 },
+    { id: "upcoming", node: upCard, span: 6 },
+    { id: "goals", node: goalsNode, span: 6 },
+  ], { axis: "grid" });
+  root.append(el("div", { class: "content-inner" }, grid));
+
+  function chartTypeBtn(which, to, title) {
+    return el("button", {
+      class: "btn btn-sm btn-ghost btn-ico", title, html: ico("layers", 15),
+      onclick: () => { Custom.get().dash.chart[which] = to; Custom.save(); }
+    });
+  }
 
   function kpi(label, value, sub, tone) {
     return el("div", { class: "card kpi" },
@@ -2901,12 +3001,13 @@ function viewBudget(root) {
   const listCard = el("div", { class: "card", style: "overflow:hidden" });
   buildList();
 
-  root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
-    head,
-    el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" }, seg, el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-p", html: ico("plus", 16) + "<span>Ajouter un poste</span>", onclick: () => openItemEditor(b, newItem(_budgetTab), true) })),
-    listCard
-  ));
+  const controls = el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" }, seg, el("span", { class: "spacer" }),
+    el("button", { class: "btn btn-p", html: ico("plus", 16) + "<span>Ajouter un poste</span>", onclick: () => openItemEditor(b, newItem(_budgetTab), true) }));
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.budget", [
+    { id: "summary", node: head }, { id: "controls", node: controls }, { id: "list", node: listCard },
+  ], { axis: "y" });
+  root.append(inner);
 
   function sum(label, v, tone) {
     return el("div", {}, el("div", { class: "xs muted", style: "text-transform:uppercase; letter-spacing:.04em; font-weight:650" }, label),
@@ -3737,9 +3838,13 @@ function viewProjection(root) {
       el("button", { class: "btn btn-sm", onclick: () => { _projTableAll = !_projTableAll; renderApp(); } },
         _projTableAll ? "Réduire" : `Afficher les ${slice.length} mois`)) : null);
 
-  root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
-    controls, chartCard, synthCard, reperesCard, chaptersCard,
-    el("div", { class: "grid g2" }, fluxCard, tableCard)));
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.projection", [
+    { id: "controls", node: controls }, { id: "chart", node: chartCard }, { id: "synth", node: synthCard },
+    { id: "reperes", node: reperesCard }, { id: "chapters", node: chaptersCard },
+    { id: "flux", node: fluxCard }, { id: "table", node: tableCard },
+  ], { axis: "y" });
+  root.append(inner);
 }
 
 /* Phrases de synthèse — factuelles, chiffrées. */
@@ -4396,7 +4501,7 @@ function viewTracking(root) {
     el("button", { class: "btn btn-p btn-sm", html: ico("plus", 15) + "<span>Transaction</span>", onclick: () => openTxEditor(b, null, ym === ymNow ? todayStr() : ym + "-01") })
   );
 
-  const kpis = el("div", { class: "grid g3 mt16" },
+  const kpis = el("div", { class: "grid g3" },
     kpiBox("Dépensé ce mois", fmtMoney(real.expense, cur), planned.expense ? `sur ${fmtMoney(planned.expense, cur)} prévus` : "rien de prévu", real.expense > planned.expense && planned.expense > 0 ? "neg" : ""),
     kpiBox("Reste à dépenser", fmtMoney(Math.max(0, remaining), cur), remaining < 0 ? `dépassement de ${fmtMoney(-remaining, cur)}` : "avant d'atteindre le budget prévu", remaining < 0 ? "neg" : "pos"),
     kpiBox("Revenus encaissés", fmtMoney(real.income, cur), planned.income ? `sur ${fmtMoney(planned.income, cur)} prévus` : "", "pos")
@@ -4469,7 +4574,7 @@ function viewTracking(root) {
 
   // suggestions issues de l'historique : récurrences, dérives de montant ou de date
   const suggestions = Intel.detectRecurring(b);
-  const suggCard = suggestions.length ? el("div", { class: "card mt16" },
+  const suggCard = suggestions.length ? el("div", { class: "card" },
     el("div", { class: "card-head" },
       el("h3", {}, "Régularités détectées"),
       el("span", { class: "spacer" }),
@@ -4490,8 +4595,12 @@ function viewTracking(root) {
       )))
   ) : null;
 
-  root.append(el("div", { class: "content-inner" }, head, kpis, suggCard,
-    el("div", { class: "grid g2 mt16", style: "align-items:start" }, compareCard, listCard)));
+  const grid = el("div", { class: "dash-grid" });
+  Custom.renderInto(grid, "page.tracking", [
+    { id: "head", node: head, span: 12 }, { id: "kpis", node: kpis, span: 12 }, { id: "sugg", node: suggCard, span: 12 },
+    { id: "compare", node: compareCard, span: 6 }, { id: "list", node: listCard, span: 6 },
+  ], { axis: "grid" });
+  root.append(el("div", { class: "content-inner" }, grid));
 
   function kpiBox(label, value, sub, tone) {
     return el("div", { class: "card kpi" },
@@ -5002,22 +5111,26 @@ function viewGoals(root) {
     }
   });
 
-  root.append(el("div", { class: "content-inner" },
+  const goalsSec = el("div", {},
     el("div", { class: "flex mb12" },
       el("h3", {}, "🎯 Objectifs d'épargne"),
       el("span", { class: "spacer" }),
       el("button", { class: "btn btn-p btn-sm", html: ico("plus", 14) + "<span>Objectif</span>", onclick: () => openGoalEditor(b, null) })),
     goalCards.length ? el("div", { class: "grid g3" }, goalCards)
       : el("div", { class: "card" }, emptyState("🎯", "Aucun objectif", "Fonds d'urgence, vacances, permis, apport immobilier… définissez un montant cible et, si vous voulez, une date limite. L'app calcule combien mettre de côté chaque mois.",
-        el("button", { class: "btn btn-p btn-sm", onclick: () => openGoalEditor(b, null) }, "Créer un objectif"))),
-    el("div", { class: "flex mb12 mt28" },
+        el("button", { class: "btn btn-p btn-sm", onclick: () => openGoalEditor(b, null) }, "Créer un objectif"))));
+  const accSec = el("div", {},
+    el("div", { class: "flex mb12" },
       el("h3", {}, "🏦 Comptes épargne rémunérés"),
       el("span", { class: "spacer" }),
       el("button", { class: "btn btn-sm", html: ico("plus", 14) + "<span>Compte</span>", onclick: () => openAccountEditor(b, null) })),
     accCards.length ? el("div", { class: "grid g3" }, accCards)
       : el("div", { class: "card" }, emptyState("🏦", "Aucun compte épargne", "Livret A, LEP, LDDS, assurance-vie… ajoutez vos comptes avec leur taux : les intérêts composés sont intégrés aux projections de patrimoine.",
         el("button", { class: "btn btn-sm", onclick: () => openAccountEditor(b, null) }, "Ajouter un compte")))
-  ));
+  );
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.goals", [{ id: "goals", node: goalsSec }, { id: "accounts", node: accSec }], { axis: "y" });
+  root.append(inner);
 }
 
 function addContribution(b, g) {
@@ -5175,11 +5288,11 @@ function viewDebts(root) {
     );
   });
 
-  root.append(el("div", { class: "content-inner" },
-    el("div", { class: "grid g3 mb16" },
-      el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Dette totale restante"), el("div", { class: "k-value" }, fmtMoney(totalRemaining, cur, { dec: 0 }))),
-      el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Mensualités totales"), el("div", { class: "k-value" }, fmtMoney(totalMonthly, cur)), el("div", { class: "k-sub" }, "intégrées automatiquement aux projections")),
-      el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Crédits en cours"), el("div", { class: "k-value" }, String(b.debts.length)))),
+  const summarySec = el("div", { class: "grid g3" },
+    el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Dette totale restante"), el("div", { class: "k-value" }, fmtMoney(totalRemaining, cur, { dec: 0 }))),
+    el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Mensualités totales"), el("div", { class: "k-value" }, fmtMoney(totalMonthly, cur)), el("div", { class: "k-sub" }, "intégrées automatiquement aux projections")),
+    el("div", { class: "card kpi" }, el("div", { class: "k-label" }, "Crédits en cours"), el("div", { class: "k-value" }, String(b.debts.length))));
+  const listSec = el("div", {},
     el("div", { class: "flex mb12" },
       el("h3", {}, "💳 Crédits & dettes"),
       el("span", { class: "spacer" }),
@@ -5187,8 +5300,10 @@ function viewDebts(root) {
     cards.length ? el("div", { class: "grid g3" }, cards)
       : el("div", { class: "card" }, emptyState("💳", "Aucun crédit",
         "Prêt immobilier, crédit auto, prêt étudiant, dette à un proche… L'app calcule la mensualité, la date de fin et le coût des intérêts, et intègre tout aux projections.",
-        el("button", { class: "btn btn-p btn-sm", onclick: () => openDebtEditor(b, null) }, "Ajouter un crédit")))
-  ));
+        el("button", { class: "btn btn-p btn-sm", onclick: () => openDebtEditor(b, null) }, "Ajouter un crédit"))));
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.debts", [{ id: "summary", node: summarySec }, { id: "list", node: listSec }], { axis: "y" });
+  root.append(inner);
 }
 
 function openDebtEditor(b, debt) {
@@ -5353,13 +5468,15 @@ function viewEvents(root) {
     "Anticipez les grands changements : fin d'études, nouvel emploi, déménagement, naissance, retraite… et observez leur impact sur vos projections.",
     el("button", { class: "btn btn-p btn-sm", onclick: () => openEventEditor(b, null) }, "Planifier un événement")));
 
-  root.append(el("div", { class: "content-inner" },
-    intro,
-    el("div", { class: "flex mb12 mt16" },
+  const listSec = el("div", {},
+    el("div", { class: "flex mb12" },
       el("h3", {}, "🧭 Ligne de vie"),
       el("span", { class: "spacer" }),
       el("button", { class: "btn btn-p btn-sm", html: ico("plus", 14) + "<span>Événement</span>", onclick: () => openEventEditor(b, null) })),
-    list));
+    list);
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.events", [{ id: "intro", node: intro }, { id: "list", node: listSec }], { axis: "y" });
+  root.append(inner);
 }
 
 function openEventEditor(b, ev) {
@@ -5742,6 +5859,110 @@ function buildCompare(budgets) {
 "use strict";
 /* ============ vue : réglages, sauvegarde, aide ============ */
 
+let _persoOpen = {};
+
+/* Une ligne réglable : nom + (réordonner) + visibilité. */
+function persoRow(scope, allIds, id, orderable) {
+  const hidden = Custom.isHidden(scope, id);
+  const o = Custom.order(scope, allIds), i = o.indexOf(id);
+  const locked = scope === "nav" && (id === "settings" || id === "dashboard");
+  return el("div", { class: "perso-row" + (hidden ? " off" : "") },
+    orderable ? el("span", { class: "pr-grip", html: ico("menu", 15) }) : null,
+    el("span", { class: "pr-name" }, Custom.label(scope, id)),
+    orderable ? el("button", { class: "pr-btn", title: "Monter", disabled: i <= 0, html: ico("up", 13), onclick: () => { Custom.move(scope, allIds, id, -1); Custom.save(); } }) : null,
+    orderable ? el("button", { class: "pr-btn", title: "Descendre", disabled: i >= o.length - 1, html: ico("down", 13), onclick: () => { Custom.move(scope, allIds, id, 1); Custom.save(); } }) : null,
+    el("label", { class: "switch", style: "margin-left:4px", title: hidden ? "Afficher" : "Masquer" },
+      el("input", { type: "checkbox", checked: !hidden, disabled: locked, onchange: e => { Custom.setHidden(scope, id, !e.target.checked); Custom.save(); } }),
+      el("span", { class: "tr" })));
+}
+
+function persoList(scope, ids, orderable) {
+  return el("div", { class: "perso-list" }, Custom.order(scope, ids).map(id => persoRow(scope, ids, id, orderable)));
+}
+
+function persoDetails(key, summary, resetFn, ...body) {
+  const d = el("details", { class: "card", style: "padding:0", open: !!_persoOpen[key] },
+    el("summary", { class: "tbl-summary" }, el("span", { html: ico("eye", 15) }), el("span", {}, summary), el("span", { class: "spacer" }),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: e => { e.preventDefault(); e.stopPropagation(); resetFn(); Custom.save(); } }, "Réinitialiser")),
+    el("div", { style: "padding:4px 14px 14px; display:flex; flex-direction:column; gap:12px" }, ...body));
+  d.addEventListener("toggle", () => { _persoOpen[key] = d.open; });
+  return d;
+}
+
+function buildPersonaCard() {
+  const c = Custom.get();
+
+  // apparence
+  const swatches = el("div", { class: "swatch-row" },
+    el("button", { class: "swatch auto" + (c.accent ? "" : " on"), title: "Couleur par défaut", onclick: () => { c.accent = null; Custom.save(); } }, "Déf."),
+    Custom.ACCENTS.map(([hex, name]) => el("button", {
+      class: "swatch" + (c.accent === hex ? " on" : ""), title: name, style: "background:" + hex,
+      onclick: () => { c.accent = hex; Custom.save(); }
+    })));
+  const densitySeg = segControl([{ value: "comfortable", label: "Confort" }, { value: "compact", label: "Compact" }],
+    c.density, v => { c.density = v; Custom.save(); });
+
+  // bouton d'ajout rapide
+  const byId = {}; Custom.quick().forEach(q => byId[q.id] = q);
+  const fabActionRows = el("div", { class: "perso-list" }, Custom.quick().map(q => {
+    const on = c.fab.actions.includes(q.id);
+    const fi = c.fab.actions.indexOf(q.id);
+    return el("div", { class: "perso-row" + (on ? "" : " off") },
+      el("span", { class: "pr-name" }, `${q.emoji} ${q.label}`),
+      el("button", { class: "pr-btn", title: "Monter", disabled: !on || fi <= 0, html: ico("up", 13), onclick: () => { c.fab.actions.splice(fi - 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
+      el("button", { class: "pr-btn", title: "Descendre", disabled: !on || fi >= c.fab.actions.length - 1, html: ico("down", 13), onclick: () => { c.fab.actions.splice(fi + 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
+      el("label", { class: "switch", style: "margin-left:4px" },
+        el("input", { type: "checkbox", checked: on, onchange: e => { if (e.target.checked) c.fab.actions.push(q.id); else c.fab.actions = c.fab.actions.filter(x => x !== q.id); Custom.save(); } }),
+        el("span", { class: "tr" })));
+  }));
+  const fabBox = persoDetails("fab", "Bouton d'ajout rapide", () => Custom.resetFab(),
+    el("div", { class: "form-grid" },
+      fField("Afficher le bouton", el("label", { class: "switch", style: "margin-top:8px" },
+        el("input", { type: "checkbox", checked: c.fab.enabled, onchange: e => { c.fab.enabled = e.target.checked; Custom.save(); } }), el("span", { class: "tr" }))),
+      fField("Position", el("div", {}, segControl([{ value: "br", label: "↘ Bas droite" }, { value: "bl", label: "↙ Bas gauche" }], c.fab.pos, v => { c.fab.pos = v; Custom.save(); })))),
+    el("div", {}, el("div", { class: "xs muted mb8" }, "Actions proposées (ordre & présence)"), fabActionRows));
+
+  // navigation
+  const navMobile = Custom.mobileNav();
+  const mobileChips = el("div", { class: "flex", style: "flex-wrap:wrap; gap:6px" },
+    Custom.navMain().concat(Custom.navFoot().filter(k => k !== "settings")).map(k => {
+      const on = navMobile.includes(k);
+      return el("button", {
+        class: "pc-chip" + (on ? " on" : ""), disabled: !on && navMobile.length >= 4,
+        onclick: () => { Custom.toggleMobile(k); Custom.save(); }
+      }, VIEWS[k] ? VIEWS[k].label.split(" ")[0] : k);
+    }));
+  const navBox = persoDetails("nav", "Navigation (sections de l'app)", () => Custom.resetNav(),
+    el("div", { class: "xs muted" }, "Masquez les pages dont vous n'avez pas besoin et réordonnez-les. « Tableau de bord » et « Réglages » restent toujours accessibles."),
+    persoList("nav", Custom.MAIN, true),
+    el("div", { class: "xs muted", style: "margin-top:4px" }, "Pied de menu"),
+    persoList("nav", Custom.FOOT, false),
+    el("div", {}, el("div", { class: "xs muted mb8", style: "margin-top:4px" }, `Barre mobile — 4 raccourcis max (${navMobile.length}/4)`), mobileChips));
+
+  // contenu des pages
+  const dashBox = persoDetails("dashboard", "Tableau de bord", () => Custom.resetPage("dashboard"),
+    el("div", {}, el("div", { class: "xs muted mb8" }, "Cartes"), persoList("dash.sec", Custom.catalogIds("dash.sec"), true)),
+    el("div", {}, el("div", { class: "xs muted mb8" }, "Indicateurs clés"), persoList("dash.kpi", Custom.catalogIds("dash.kpi"), true)),
+    el("div", { class: "form-grid" },
+      fField("Graphique de projection", el("div", {}, segControl([{ value: "line", label: "Courbe" }, { value: "bars", label: "Barres" }], c.dash.chart.projection, v => { c.dash.chart.projection = v; Custom.save(); }))),
+      fField("Répartition des dépenses", el("div", {}, segControl([{ value: "donut", label: "Anneau" }, { value: "bars", label: "Barres" }], c.dash.chart.breakdown, v => { c.dash.chart.breakdown = v; Custom.save(); })))));
+  const pageBoxes = [["budget", "Budget"], ["projection", "Projections"], ["tracking", "Suivi réel"], ["goals", "Objectifs"], ["debts", "Crédits & dettes"], ["events", "Événements de vie"]]
+    .map(([k, lbl]) => persoDetails("page." + k, lbl, () => Custom.resetPage(k), persoList("page." + k, Custom.catalogIds("page." + k), true)));
+
+  return el("div", { class: "card card-pad" },
+    el("div", { class: "flex mb12" }, el("h3", {}, "🎨 Personnalisation"), el("span", { class: "spacer" }),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: () => confirmDialog({ title: "Tout réinitialiser ?", body: "Disposition, sections masquées, couleurs et bouton d'ajout reviendront aux valeurs par défaut. Vos données ne sont pas touchées.", okLabel: "Réinitialiser", onOk: () => { Custom.resetAll(); Custom.save(); toast("↩️ Personnalisation réinitialisée"); } }) }, "Tout réinitialiser")),
+    el("p", { class: "small muted mb12" }, "Rendez l'application vôtre : masquez ce qui ne vous sert pas, réorganisez, choisissez vos graphiques et couleurs. Pour tout déplacer en direct, lancez le mode personnalisation et parcourez l'app — glissez les éléments, ✕ pour masquer."),
+    el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" },
+      el("button", { class: "btn btn-p", html: ico("edit", 16) + "<span>Personnaliser l'affichage (glisser-déposer)</span>", onclick: () => Custom.enterEdit() }),
+      el("button", { class: "btn", html: ico("list", 15) + "<span>Gérer les catégories</span>", onclick: () => curBudget() && openCategoryManager(curBudget()) })),
+    el("div", { class: "form-grid", style: "margin-top:14px" },
+      fField("Couleur d'accent", swatches),
+      fField("Densité de l'interface", el("div", {}, densitySeg))),
+    el("div", { style: "display:flex; flex-direction:column; gap:8px; margin-top:14px" },
+      navBox, fabBox, dashBox, ...pageBoxes));
+}
+
 function viewSettings(root) {
   const s = State.settings;
 
@@ -5870,8 +6091,322 @@ function viewSettings(root) {
   );
 
   root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
-    generalCard, aiCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
+    generalCard, buildPersonaCard(), aiCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
 }
+
+
+/* ===== 25-custom.js ===== */
+"use strict";
+/* ============ personnalisation : ce que l'on affiche, où, et comment ============
+   Tout vit dans State.settings.custom (donc persisté + synchronisé).
+   Modèle générique : deux dictionnaires order{scope:[ids]} et hidden{scope:[ids]}
+   décrivent l'ordre et la visibilité de n'importe quel ensemble d'éléments.
+   Un « scope » = "nav", "dash.sec", "dash.kpi", "page.budget"… ============ */
+const Custom = (() => {
+  const MAIN = ["dashboard", "budget", "projection", "calendar", "tracking", "goals", "debts", "events"];
+  const FOOT = ["budgets", "help", "settings"];
+  const PROTECTED_NAV = ["settings", "dashboard"];   // toujours accessibles
+  const DEFAULT_MOBILE = ["dashboard", "budget", "projection", "tracking"];
+  const ACCENTS = [
+    ["#10b981", "Émeraude"], ["#3b82f6", "Bleu"], ["#8b5cf6", "Violet"], ["#ec4899", "Rose"],
+    ["#f59e0b", "Ambre"], ["#06b6d4", "Cyan"], ["#ef4444", "Rouge"], ["#14b8a6", "Sarcelle"],
+    ["#6366f1", "Indigo"], ["#84cc16", "Lime"], ["#0ea5e9", "Azur"], ["#f43f5e", "Corail"],
+  ];
+  const QUICK = [
+    { id: "tx", emoji: "🧾", label: "Transaction réelle (dépense / revenu du jour)", run: (b, close) => { close(); openTxEditor(b, null); } },
+    { id: "expense", emoji: "📉", label: "Dépense planifiée (récurrente ou ponctuelle)", run: (b, close) => { close(); openItemEditor(b, newItem("expense"), true); } },
+    { id: "income", emoji: "📈", label: "Revenu planifié", run: (b, close) => { close(); openItemEditor(b, newItem("income"), true); } },
+    { id: "goal", emoji: "🎯", label: "Objectif d'épargne", run: (b, close) => { close(); openGoalEditor(b, null); } },
+    { id: "event", emoji: "🧭", label: "Événement de vie", run: (b, close) => { close(); openEventEditor(b, null); } },
+  ];
+
+  /* Catalogues : étiquettes lisibles pour chaque scope (utilisés par les réglages). */
+  const CATALOG = {
+    "dash.sec": [
+      { id: "kpis", label: "Indicateurs clés" }, { id: "insight", label: "Analyse intelligente" },
+      { id: "alerts", label: "Alertes" }, { id: "reste", label: "Déjà prévu, pas encore débité" },
+      { id: "projection", label: "Projection du solde" }, { id: "breakdown", label: "Dépenses prévues du mois" },
+      { id: "upcoming", label: "Échéances à 14 jours" }, { id: "goals", label: "Objectifs d'épargne" },
+    ],
+    "dash.kpi": [
+      { id: "dispo", label: "Argent réellement disponible" }, { id: "soldeNow", label: "Solde réel aujourd'hui" },
+      { id: "finMois", label: "Solde prévu fin de mois" }, { id: "epargne", label: "Taux d'épargne prévu" },
+      { id: "depReelles", label: "Dépenses réelles du mois" }, { id: "resteJour", label: "Reste à vivre par jour" },
+    ],
+    "page.budget": [
+      { id: "summary", label: "Résumé du mois" }, { id: "controls", label: "Onglet & bouton d'ajout" }, { id: "list", label: "Liste des postes" },
+    ],
+    "page.projection": [
+      { id: "controls", label: "Contrôles (mode, hypothèse)" }, { id: "chart", label: "Graphique principal" },
+      { id: "synth", label: "Synthèse" }, { id: "reperes", label: "Repères temporels" },
+      { id: "chapters", label: "Chapitres de vie" }, { id: "flux", label: "Flux mensuels" }, { id: "table", label: "Détail mois par mois" },
+    ],
+    "page.tracking": [
+      { id: "head", label: "En-tête & import" }, { id: "kpis", label: "Indicateurs" }, { id: "sugg", label: "Suggestions" },
+      { id: "compare", label: "Prévu vs réel" }, { id: "list", label: "Transactions" },
+    ],
+    "page.goals": [
+      { id: "goals", label: "Objectifs d'épargne" }, { id: "accounts", label: "Comptes épargne rémunérés" },
+    ],
+    "page.debts": [
+      { id: "summary", label: "Synthèse (indicateurs)" }, { id: "list", label: "Liste des crédits" },
+    ],
+    "page.events": [
+      { id: "intro", label: "Introduction" }, { id: "list", label: "Événements de vie" },
+    ],
+  };
+
+  /* ---- couleurs ---- */
+  const hx = c => { c = c.replace("#", ""); if (c.length === 3) c = c.split("").map(x => x + x).join(""); return [0, 2, 4].map(i => parseInt(c.slice(i, i + 2), 16)); };
+  const clampB = v => Math.max(0, Math.min(255, Math.round(v)));
+  const shade = (c, pct) => { const [r, g, b] = hx(c); const f = v => clampB(v + pct / 100 * 255); return "#" + [f(r), f(g), f(b)].map(v => v.toString(16).padStart(2, "0")).join(""); };
+  const hexA = (c, a) => { const [r, g, b] = hx(c); return `rgba(${r},${g},${b},${a})`; };
+
+  function defaults() {
+    return {
+      v: 1, accent: null, density: "comfortable",
+      fab: { enabled: true, pos: "br", actions: QUICK.map(q => q.id) },
+      nav: { mobile: DEFAULT_MOBILE.slice() },
+      dash: { chart: { projection: "line", breakdown: "donut" } },
+      order: {}, hidden: {},
+    };
+  }
+
+  function ensure() {
+    const d = defaults();
+    const c = State.settings.custom = Object.assign(d, State.settings.custom || {});
+    c.order = c.order || {}; c.hidden = c.hidden || {};
+    c.fab = Object.assign({ enabled: true, pos: "br", actions: QUICK.map(q => q.id) }, c.fab || {});
+    c.fab.actions = (c.fab.actions || []).filter(id => QUICK.some(q => q.id === id));
+    if (!c.fab.actions.length) c.fab.actions = QUICK.map(q => q.id);
+    if (c.fab.pos !== "bl") c.fab.pos = "br";
+    c.nav = Object.assign({ mobile: DEFAULT_MOBILE.slice() }, c.nav || {});
+    c.dash = Object.assign({ chart: {} }, c.dash || {});
+    c.dash.chart = Object.assign({ projection: "line", breakdown: "donut" }, c.dash.chart || {});
+    if (c.density !== "compact") c.density = "comfortable";
+    return c;
+  }
+
+  /* ---- ordre & visibilité génériques ---- */
+  function order(scope, allIds) {
+    const saved = ensure().order[scope] || [];
+    const seen = new Set(), out = [];
+    saved.forEach(id => { if (allIds.includes(id) && !seen.has(id)) { out.push(id); seen.add(id); } });
+    allIds.forEach(id => { if (!seen.has(id)) { out.push(id); seen.add(id); } });
+    return out;
+  }
+  const setOrder = (scope, arr) => { ensure().order[scope] = arr.slice(); };
+  const hiddenSet = scope => new Set(ensure().hidden[scope] || []);
+  const isHidden = (scope, id) => hiddenSet(scope).has(id);
+  function setHidden(scope, id, val) {
+    if (scope === "nav" && PROTECTED_NAV.includes(id)) return;
+    const c = ensure(), s = new Set(c.hidden[scope] || []);
+    val ? s.add(id) : s.delete(id);
+    c.hidden[scope] = [...s];
+  }
+  const toggleHidden = (scope, id) => setHidden(scope, id, !isHidden(scope, id));
+  function move(scope, allIds, id, dir) {
+    const o = order(scope, allIds), i = o.indexOf(id), j = i + dir;
+    if (i < 0 || j < 0 || j >= o.length) return;
+    o.splice(j, 0, o.splice(i, 1)[0]); setOrder(scope, o);
+  }
+  function resetScope(scope) { const c = ensure(); delete c.order[scope]; delete c.hidden[scope]; }
+  function resetNav() { resetScope("nav"); ensure().nav.mobile = DEFAULT_MOBILE.slice(); }
+  function resetFab() { ensure().fab = { enabled: true, pos: "br", actions: QUICK.map(q => q.id) }; }
+  function resetPage(view) {
+    if (view === "dashboard") { resetScope("dash.sec"); resetScope("dash.kpi"); ensure().dash.chart = { projection: "line", breakdown: "donut" }; }
+    else resetScope("page." + view);
+  }
+  function resetAll() {
+    State.settings.custom = defaults(); ensure();
+  }
+
+  function label(scope, id) {
+    if (scope === "nav") return (typeof VIEWS !== "undefined" && VIEWS[id]) ? VIEWS[id].label : id;
+    return ((CATALOG[scope] || []).find(x => x.id === id) || {}).label || id;
+  }
+  const catalogIds = scope => (CATALOG[scope] || []).map(x => x.id);
+
+  /* ---- navigation ---- */
+  const navMainAll = () => order("nav", MAIN);
+  const navMain = () => navMainAll().filter(k => !isHidden("nav", k));
+  const navFoot = () => FOOT.filter(k => !isHidden("nav", k));
+  const navAll = () => navMainAll().concat(FOOT);
+  function mobileNav() {
+    const c = ensure();
+    let m = (c.nav.mobile || []).filter(k => typeof VIEWS !== "undefined" && VIEWS[k] && !isHidden("nav", k));
+    m = [...new Set(m)].slice(0, 4);
+    if (!m.length) m = DEFAULT_MOBILE.filter(k => !isHidden("nav", k)).slice(0, 4);
+    return m;
+  }
+  function toggleMobile(k) {
+    const c = ensure(), m = c.nav.mobile.includes(k) ? c.nav.mobile.filter(x => x !== k) : [...c.nav.mobile, k];
+    c.nav.mobile = m.slice(0, 4);
+  }
+
+  /* ---- apparence ---- */
+  function apply() {
+    const c = ensure(), root = document.documentElement;
+    root.setAttribute("data-density", c.density === "compact" ? "compact" : "comfortable");
+    if (c.accent) {
+      root.style.setProperty("--accent", c.accent);
+      root.style.setProperty("--accent-deep", shade(c.accent, -14));
+      root.style.setProperty("--accent-soft", hexA(c.accent, 0.12));
+    } else {
+      root.style.removeProperty("--accent");
+      root.style.removeProperty("--accent-deep");
+      root.style.removeProperty("--accent-soft");
+    }
+  }
+
+  /* save = persiste + applique + re-render en conservant le scroll */
+  function save() {
+    const c = $(".content"); const top = c ? c.scrollTop : 0;
+    persist(); apply();
+    if (typeof renderApp === "function") renderApp();
+    const c2 = $(".content"); if (c2) c2.scrollTop = top;
+  }
+
+  /* ============ mode édition (glisser / masquer en parcourant l'app) ============ */
+  let editing = false, _dragged = false;
+  const isEditing = () => editing;
+  function enterEdit() { editing = true; document.body.classList.add("cz-on"); banner(); save(); }
+  function exitEdit() { editing = false; document.body.classList.remove("cz-on"); const b = $(".cz-banner"); if (b) b.remove(); save(); }
+  function toggleEdit() { editing ? exitEdit() : enterEdit(); }
+  function banner() {
+    if ($(".cz-banner")) return;
+    const bar = el("div", { class: "cz-banner" },
+      el("span", { class: "cz-bdot" }, "✦"),
+      el("span", { class: "cz-btxt" }, "Personnalisation — glissez pour réordonner, ✕ pour masquer. Parcourez l'app librement."),
+      el("span", { class: "spacer" }),
+      el("button", { class: "btn btn-sm", onclick: () => { resetPage(typeof _view !== "undefined" ? _view : "dashboard"); save(); toast("↩️ Page réinitialisée"); } }, "Réinitialiser la page"),
+      el("button", { class: "btn btn-sm btn-p", onclick: exitEdit }, "Terminé"));
+    document.body.append(bar);
+  }
+
+  /* ---- décoration d'un élément en mode édition (croix + voile de glisse) ---- */
+  function decorate(node, scope, id, onActivate) {
+    node.dataset.czid = id;
+    if (!editing) return node;
+    node.classList.add("cz-item");
+    const hid = isHidden(scope, id);
+    if (hid) node.classList.add("cz-hidden");
+    const protectedItem = scope === "nav" && PROTECTED_NAV.includes(id);
+    const badges = el("div", { class: "cz-badges" });
+    if (!protectedItem) {
+      badges.append(el("button", {
+        class: "cz-del" + (hid ? " cz-add" : ""), title: hid ? "Réafficher" : "Masquer",
+        html: ico(hid ? "plus" : "x", 13),
+        onpointerdown: e => e.stopPropagation(),
+        onclick: e => { e.preventDefault(); e.stopPropagation(); toggleHidden(scope, id); save(); }
+      }));
+    }
+    node.append(badges);
+    const shield = el("div", { class: "cz-shield" });
+    if (onActivate) shield.addEventListener("click", () => { if (!_dragged) onActivate(id); });
+    node.append(shield);
+    return node;
+  }
+
+  /* ---- rendu d'un ensemble : applique ordre + visibilité, décore si édition ---- */
+  function renderInto(container, scope, items, opts) {
+    opts = opts || {};
+    const ids = items.map(i => i.id);
+    const byId = {}; items.forEach(i => byId[i.id] = i);
+    order(scope, ids).forEach(id => {
+      const it = byId[id]; if (!it || !it.node) return;
+      if (isHidden(scope, id) && !editing) return;
+      if (it.span) it.node.classList.add("dz-" + it.span);
+      decorate(it.node, scope, id, opts.onActivate);
+      container.append(it.node);
+    });
+    if (editing) sortable(container, { axis: opts.axis || "y", onDrop: o => { setOrder(scope, o); save(); } });
+  }
+
+  /* ============ tri par glisser (souris + tactile, appui long) ============ */
+  function sortable(container, opts) {
+    const axis = opts.axis || "y";
+    let dragEl = null, ph = null, ghost = null, ox = 0, oy = 0, sx = 0, sy = 0, active = false, timer = null;
+    const items = () => [...container.children].filter(c => c.classList.contains("cz-item"));
+
+    function afterEl(x, y) {
+      const els = items().filter(it => it !== dragEl);
+      if (axis === "y") return els.find(it => { const r = it.getBoundingClientRect(); return y < r.top + r.height / 2; }) || null;
+      let best = null, bd = Infinity, before = true;
+      for (const it of els) {
+        const r = it.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const d = (x - cx) ** 2 + (y - cy) ** 2;
+        if (d < bd) { bd = d; best = it; before = (y < cy - r.height * 0.25) || (Math.abs(y - cy) <= r.height / 2 && x < cx); }
+      }
+      return best ? (before ? best : best.nextElementSibling) : null;
+    }
+    function begin() {
+      if (active || !dragEl) return; active = true; _dragged = true;
+      const r = dragEl.getBoundingClientRect();
+      ox = sx - r.left; oy = sy - r.top;
+      ghost = dragEl.cloneNode(true);
+      ghost.classList.add("cz-ghost");
+      ghost.style.width = r.width + "px"; ghost.style.height = r.height + "px";
+      ghost.style.left = (sx - ox) + "px"; ghost.style.top = (sy - oy) + "px";
+      document.body.append(ghost);
+      ph = el("div", { class: "cz-ph" + (axis === "grid" ? " cz-ph-grid" : "") });
+      ph.style.height = r.height + "px"; if (axis === "grid") ph.style.width = r.width + "px";
+      dragEl.style.display = "none";
+      container.insertBefore(ph, dragEl);
+      if (navigator.vibrate) try { navigator.vibrate(8); } catch (e) {}
+    }
+    function onMove(e) {
+      if (!dragEl) return;
+      if (!active) {
+        const moved = Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy);
+        if (e.pointerType !== "touch" && moved > 4) begin();
+        else if (e.pointerType === "touch" && moved > 12) { clearTimeout(timer); cleanup(); return; }
+        if (!active) return;
+      }
+      e.preventDefault();
+      ghost.style.left = (e.clientX - ox) + "px"; ghost.style.top = (e.clientY - oy) + "px";
+      const a = afterEl(e.clientX, e.clientY);
+      a == null ? container.append(ph) : container.insertBefore(ph, a);
+    }
+    function onUp() {
+      clearTimeout(timer);
+      if (active) {
+        container.insertBefore(dragEl, ph);
+        dragEl.style.display = ""; ph.remove(); ghost.remove();
+        const o = items().map(it => it.dataset.czid);
+        setTimeout(() => { _dragged = false; }, 0);
+        opts.onDrop && opts.onDrop(o);
+      }
+      cleanup();
+    }
+    function cleanup() {
+      active = false; dragEl = null; ph = null; ghost = null; clearTimeout(timer);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    }
+    container.addEventListener("pointerdown", e => {
+      if (e.button != null && e.button !== 0) return;
+      const it = e.target.closest(".cz-item");
+      if (!it || it.parentElement !== container || e.target.closest(".cz-del")) return;
+      dragEl = it; sx = e.clientX; sy = e.clientY;
+      window.addEventListener("pointermove", onMove, { passive: false });
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
+      if (e.pointerType === "touch") timer = setTimeout(begin, 220);
+    });
+  }
+
+  return {
+    MAIN, FOOT, ACCENTS, QUICK, CATALOG,
+    ensure, apply, save,
+    order, setOrder, hiddenSet, isHidden, setHidden, toggleHidden, move,
+    resetScope, resetNav, resetFab, resetPage, resetAll, label, catalogIds,
+    navMain, navMainAll, navFoot, navAll, mobileNav, toggleMobile,
+    isEditing, enterEdit, exitEdit, toggleEdit, renderInto, deco: decorate,
+    quick: () => QUICK, get: ensure,
+  };
+})();
 
 
 /* ===== 30-sync.js ===== */
@@ -6657,10 +7192,6 @@ const VIEWS = {
   settings:   { label: "Réglages",        icon: "gear",    sub: () => "Personnalisation, sauvegarde & partage", render: viewSettings },
   help:       { label: "Aide",            icon: "info",    sub: () => "Tutoriels & questions fréquentes", render: viewHelp },
 };
-const NAV_ORDER = ["dashboard", "budget", "projection", "calendar", "tracking", "goals", "debts", "events"];
-const NAV_FOOT = ["budgets", "help", "settings"];
-const MOBILE_NAV = ["dashboard", "budget", "projection", "tracking"];
-
 let _view = "dashboard";
 
 function go(view) {
@@ -6687,12 +7218,16 @@ function renderApp() {
   const v = VIEWS[_view];
   app.innerHTML = "";
 
-  // barre latérale (desktop)
+  // barre latérale (desktop) — navigation personnalisable
+  const navMainBox = el("div", { class: "nav-main" });
+  Custom.renderInto(navMainBox, "nav", Custom.navMainAll().map(k => ({ id: k, node: navBtn(k) })), { axis: "y", onActivate: go });
+  const footBox = el("div", { class: "nav-foot-list" });
+  (Custom.isEditing() ? Custom.FOOT : Custom.navFoot()).forEach(k => footBox.append(Custom.deco(navBtn(k), "nav", k, go)));
   const sidebar = el("aside", { class: "sidebar" },
     el("div", { class: "brand", html: I.logo + "<span>Horizon<br>Budget</span>" }),
-    NAV_ORDER.map(k => navBtn(k)),
+    navMainBox,
     el("div", { class: "nav-sep" }),
-    NAV_FOOT.map(k => navBtn(k)),
+    footBox,
     el("div", { class: "nav-foot" },
       el("button", { class: "budget-pill", onclick: openBudgetSwitcher, title: "Changer de budget" },
         el("span", { class: "b-ico" }, b.emoji),
@@ -6723,19 +7258,23 @@ function renderApp() {
   const content = el("div", { class: "content" });
   const main = el("main", { class: "main" }, topbar, content);
 
-  // navigation mobile
+  // navigation mobile (slots personnalisables)
+  const mobNav = Custom.mobileNav();
   const bottomnav = el("nav", { class: "bottomnav" },
-    MOBILE_NAV.map(k => el("button", {
+    mobNav.map(k => el("button", {
       class: _view === k ? "active" : "",
       onclick: () => go(k)
     }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), VIEWS[k].label.split(" ")[0])),
     el("button", {
-      class: !MOBILE_NAV.includes(_view) ? "active" : "",
+      class: !mobNav.includes(_view) ? "active" : "",
       onclick: openMobileMenu
     }, el("span", { class: "ico", html: I.menu }), "Plus"));
 
-  // bouton d'action rapide
-  const fab = el("button", { class: "fab", html: ico("plus", 24), title: "Ajout rapide", onclick: openQuickAdd });
+  // bouton d'action rapide (activable, positionnable)
+  const fc = Custom.get().fab;
+  const fab = fc.enabled
+    ? el("button", { class: "fab fab-" + fc.pos, html: ico("plus", 24), title: "Ajout rapide", onclick: openQuickAdd })
+    : null;
 
   app.append(sidebar, main, bottomnav, fab);
   v.render(content);
@@ -6751,10 +7290,11 @@ function renderApp() {
 }
 
 function openMobileMenu() {
+  const keys = Custom.navMain().concat(Custom.navFoot());
   const m = modal({
     title: "Navigation",
     body: el("div", { style: "display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:4px 0 8px" },
-      [...NAV_ORDER, ...NAV_FOOT].map(k => el("button", {
+      keys.map(k => el("button", {
         class: "btn", style: "justify-content:flex-start; padding:12px 14px",
         onclick: () => { m.close(); go(k); }
       }, el("span", { class: "ico", html: I[VIEWS[k].icon], style: "width:18px;height:18px" }), VIEWS[k].label)))
@@ -6763,14 +7303,13 @@ function openMobileMenu() {
 
 function openQuickAdd() {
   const b = curBudget();
+  const acts = Custom.get().fab.actions;
+  const byId = {}; Custom.quick().forEach(q => byId[q.id] = q);
   const m = modal({
     title: "Ajout rapide",
     body: el("div", { style: "display:flex; flex-direction:column; gap:8px; padding:4px 0 8px" },
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openTxEditor(b, null); } }, "🧾 Transaction réelle (dépense / revenu du jour)"),
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openItemEditor(b, newItem("expense"), true); } }, "📉 Dépense planifiée (récurrente ou ponctuelle)"),
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openItemEditor(b, newItem("income"), true); } }, "📈 Revenu planifié"),
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openGoalEditor(b, null); } }, "🎯 Objectif d'épargne"),
-      el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => { m.close(); openEventEditor(b, null); } }, "🧭 Événement de vie"))
+      acts.map(id => byId[id]).filter(Boolean).map(q =>
+        el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => q.run(b, m.close) }, `${q.emoji} ${q.label}`)))
   });
 }
 
@@ -6798,7 +7337,9 @@ document.addEventListener("keydown", e => {
 
 /* ---- démarrage ---- */
 loadState();
+Custom.ensure();
 applyTheme();
+Custom.apply();
 Sync.init();
 if (!State.onboarded || !State.budgets.length) showOnboarding();
 else renderApp();

@@ -25,7 +25,7 @@ function viewTracking(root) {
     el("button", { class: "btn btn-p btn-sm", html: ico("plus", 15) + "<span>Transaction</span>", onclick: () => openTxEditor(b, null, ym === ymNow ? todayStr() : ym + "-01") })
   );
 
-  const kpis = el("div", { class: "grid g3 mt16" },
+  const kpis = el("div", { class: "grid g3" },
     kpiBox("Dépensé ce mois", fmtMoney(real.expense, cur), planned.expense ? `sur ${fmtMoney(planned.expense, cur)} prévus` : "rien de prévu", real.expense > planned.expense && planned.expense > 0 ? "neg" : ""),
     kpiBox("Reste à dépenser", fmtMoney(Math.max(0, remaining), cur), remaining < 0 ? `dépassement de ${fmtMoney(-remaining, cur)}` : "avant d'atteindre le budget prévu", remaining < 0 ? "neg" : "pos"),
     kpiBox("Revenus encaissés", fmtMoney(real.income, cur), planned.income ? `sur ${fmtMoney(planned.income, cur)} prévus` : "", "pos")
@@ -98,7 +98,7 @@ function viewTracking(root) {
 
   // suggestions issues de l'historique : récurrences, dérives de montant ou de date
   const suggestions = Intel.detectRecurring(b);
-  const suggCard = suggestions.length ? el("div", { class: "card mt16" },
+  const suggCard = suggestions.length ? el("div", { class: "card" },
     el("div", { class: "card-head" },
       el("h3", {}, "Régularités détectées"),
       el("span", { class: "spacer" }),
@@ -119,8 +119,12 @@ function viewTracking(root) {
       )))
   ) : null;
 
-  root.append(el("div", { class: "content-inner" }, head, kpis, suggCard,
-    el("div", { class: "grid g2 mt16", style: "align-items:start" }, compareCard, listCard)));
+  const grid = el("div", { class: "dash-grid" });
+  Custom.renderInto(grid, "page.tracking", [
+    { id: "head", node: head, span: 12 }, { id: "kpis", node: kpis, span: 12 }, { id: "sugg", node: suggCard, span: 12 },
+    { id: "compare", node: compareCard, span: 6 }, { id: "list", node: listCard, span: 6 },
+  ], { axis: "grid" });
+  root.append(el("div", { class: "content-inner" }, grid));
 
   function kpiBox(label, value, sub, tone) {
     return el("div", { class: "card kpi" },

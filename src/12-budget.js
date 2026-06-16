@@ -25,12 +25,13 @@ function viewBudget(root) {
   const listCard = el("div", { class: "card", style: "overflow:hidden" });
   buildList();
 
-  root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
-    head,
-    el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" }, seg, el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-p", html: ico("plus", 16) + "<span>Ajouter un poste</span>", onclick: () => openItemEditor(b, newItem(_budgetTab), true) })),
-    listCard
-  ));
+  const controls = el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" }, seg, el("span", { class: "spacer" }),
+    el("button", { class: "btn btn-p", html: ico("plus", 16) + "<span>Ajouter un poste</span>", onclick: () => openItemEditor(b, newItem(_budgetTab), true) }));
+  const inner = el("div", { class: "content-inner grid", style: "gap:16px" });
+  Custom.renderInto(inner, "page.budget", [
+    { id: "summary", node: head }, { id: "controls", node: controls }, { id: "list", node: listCard },
+  ], { axis: "y" });
+  root.append(inner);
 
   function sum(label, v, tone) {
     return el("div", {}, el("div", { class: "xs muted", style: "text-transform:uppercase; letter-spacing:.04em; font-weight:650" }, label),
