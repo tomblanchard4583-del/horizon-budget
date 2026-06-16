@@ -189,8 +189,11 @@ function openItemEditor(b, item, isNew, onSaved) {
 
   const monthFreq = () => !!FREQ_MONTHS[freqSel.value];
   const dayField = fField("Jour du mois", dayInp);
+  const onceHint = el("div", { class: "xs muted full" },
+    "Date ou montant pas encore connus précisément (ex. révision voiture le mois prochain) ? Choisissez une date approximative et cochez « variable » ci-dessous pour indiquer une fourchette plutôt qu'un montant exact.");
   const updateFreqUi = () => {
     dayField.style.display = monthFreq() ? "" : "none";
+    onceHint.style.display = freqSel.value === "once" ? "" : "none";
   };
   freqSel.addEventListener("change", updateFreqUi);
   updateFreqUi();
@@ -205,6 +208,7 @@ function openItemEditor(b, item, isNew, onSaved) {
       fField("Fréquence", freqSel),
       dayField,
       fField(it.freq === "once" ? "Date" : "Commence le", startInp),
+      onceHint,
       el("div", { class: "field" },
         el("label", { class: "check", style: "margin-bottom:5px" }, hasEnd, "Se termine"),
         endInp),

@@ -8,6 +8,8 @@ function viewDashboard(root) {
   const m0 = proj[0];
   const real = realMonthByCat(b, ymNow);
   const balNow = balanceAtMonthStart(b, ymNow) + real.income - real.expense;
+  const reste = remainingPlanned(b, ymNow);
+  const disponible = balNow - reste.total;
   const alerts = computeAlerts(b);
   const cur = b.currency;
 
@@ -15,12 +17,29 @@ function viewDashboard(root) {
   const endOfMonth = m0.balance;
   const savingRate = m0.income > 0 ? (m0.income - m0.expense + m0.saving) / m0.income : 0;
   // KPIs
-  const kpis = el("div", { class: "grid g4" },
-    kpi("Solde estimé aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
+  const kpis = el("div", { class: "grid", style: "grid-template-columns:repeat(auto-fit,minmax(190px,1fr))" },
+    kpi("Argent réellement disponible", fmtMoney(disponible, cur),
+      reste.total > 0.5 ? `solde ${fmtMoney(balNow, cur)} − ${fmtMoney(reste.total, cur)} déjà prévus, pas encore débités` : "rien de prévu n'est encore en attente de débit", disponible < 0 ? "neg" : "pos"),
+    kpi("Solde réel aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
     kpi("Solde prévu fin " + MOIS[+ymNow.slice(5, 7) - 1], fmtMoney(endOfMonth, cur), plannedLeft >= 0 ? `+${fmtMoney(plannedLeft, cur)} ce mois-ci` : `${fmtMoney(plannedLeft, cur)} ce mois-ci`, endOfMonth < 0 ? "neg" : "pos"),
     kpi("Taux d'épargne prévu", m0.income > 0 ? fmtPct(savingRate) : "—", m0.saving > 0 ? `dont ${fmtMoney(m0.saving, cur)} d'épargne versée` : "revenus − dépenses, en % des revenus", savingRate < 0 ? "neg" : ""),
     kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : "")
   );
+
+  // dépenses prévues pas encore débitées (réservées, non comptées comme disponibles)
+  const resteCard = reste.rows.length ? el("div", { class: "card" },
+    el("div", { class: "card-head" }, el("h3", {}, "🔒 Déjà prévu, pas encore débité"),
+      el("span", { class: "spacer" }), el("span", { class: "small muted" }, `${fmtMoney(reste.total, cur)} réservés`)),
+    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:8px" },
+      reste.rows.slice(0, 8).map(r => el("div", { class: "flex small" },
+        el("span", { class: "cat-dot", style: "background:" + (r.cat ? r.cat.color : "#dc2626") }),
+        el("span", {}, r.cat ? `${r.cat.emoji} ${r.cat.name}` : "💳 Crédits & autres"),
+        el("span", { class: "spacer" }),
+        el("span", { class: "xs muted" }, `${fmtMoney(r.real, cur)} / ${fmtMoney(r.planned, cur)}`),
+        el("b", { class: "mono" }, fmtMoney(r.remaining, cur))
+      ))
+    )
+  ) : null;
 
   // alertes
   const alertBox = alerts.length ? el("div", { class: "grid", style: "gap:8px" },
@@ -113,6 +132,7 @@ function viewDashboard(root) {
     el("div", { class: "content-inner grid", style: "gap:16px" },
       kpis,
       alertBox,
+      resteCard,
       el("div", { class: "grid g23" }, chartCard, donutCard),
       el("div", { class: "grid g2" }, upCard, goalCard || el("div", { class: "card" },
         el("div", { class: "card-head" }, el("h3", {}, "Objectifs d'épargne")),

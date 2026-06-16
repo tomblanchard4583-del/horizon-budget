@@ -180,6 +180,29 @@ function realMonthByCat(budget, ym) {
   return { income, expense, byCat, incomeByCat };
 }
 
+/*
+ * Dépenses planifiées du mois pas encore débitées (réel < prévu, par catégorie racine).
+ * Sert à ne pas compter comme « disponible » l'argent déjà réservé pour des charges
+ * connues (ex. courses, essence) mais qui n'ont pas encore été enregistrées.
+ */
+function remainingPlanned(budget, ym) {
+  const planned = plannedMonth(budget, ym);
+  const real = realMonthByCat(budget, ym);
+  const rows = [];
+  let total = 0;
+  for (const [catId, p] of Object.entries(planned.byCat)) {
+    const r = real.byCat[catId] || 0;
+    const remaining = p - r;
+    if (remaining > 0.5) {
+      const cat = catId !== "_" && catId !== "_debt" ? catById(budget, catId) : null;
+      rows.push({ catId, cat, planned: p, real: r, remaining });
+      total += remaining;
+    }
+  }
+  rows.sort((a, z) => z.remaining - a.remaining);
+  return { total, rows };
+}
+
 /* Mensualité nécessaire pour atteindre un objectif à la date cible. */
 function goalRequiredMonthly(goal) {
   if (!goal.target || !goal.targetDate) return null;
