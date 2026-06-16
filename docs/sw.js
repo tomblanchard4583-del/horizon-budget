@@ -1,6 +1,6 @@
 /* Service worker Horizon Budget — cache hors-ligne + mises à jour automatiques.
- * 704c4c6dd3f7 est remplacé à chaque build : nouveau hash = nouveau cache = nouvelle version. */
-const CACHE = "horizon-704c4c6dd3f7";
+ * b586d6db3907 est remplacé à chaque build : nouveau hash = nouveau cache = nouvelle version. */
+const CACHE = "horizon-b586d6db3907";
 const SHELL = ["./", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
