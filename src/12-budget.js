@@ -34,8 +34,8 @@ function viewBudget(root) {
   root.append(inner);
 
   function sum(label, v, tone) {
-    return el("div", {}, el("div", { class: "xs muted", style: "text-transform:uppercase; letter-spacing:.04em; font-weight:650" }, label),
-      el("div", { class: "mono " + tone, style: "font-size:19px; font-weight:750" }, fmtMoney(v, cur)));
+    return el("div", {}, el("div", { class: "small muted", style: "font-weight:600" }, label),
+      el("div", { class: "mono " + tone, style: "font-size:21px; font-weight:750" }, fmtMoney(v, cur)));
   }
 
   function buildList() {

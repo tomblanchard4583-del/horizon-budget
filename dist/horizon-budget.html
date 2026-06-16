@@ -16,8 +16,9 @@
 :root{
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: "SF Mono", SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
-  --radius: 16px; --radius-sm: 10px;
+  --radius: 20px; --radius-sm: 13px; --radius-lg: 26px;
   --sidebar-w: 236px;
+  --bottomnav-h: 64px;
   --accent: #10b981; --accent-deep:#0ca678; --accent-soft: rgba(16,185,129,.12);
   --danger: #ef4444; --danger-soft: rgba(239,68,68,.1);
   --warn: #f59e0b; --warn-soft: rgba(245,158,11,.12);
@@ -74,6 +75,17 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.015em}
 .nav-foot{margin-top:auto; padding:10px 6px 4px}
 .budget-pill{display:flex; align-items:center; gap:9px; width:100%; padding:9px 11px; border-radius:11px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.1); color:inherit; text-align:left}
 .budget-pill:hover{background:rgba(255,255,255,.12)}
+.nav-add{display:flex; align-items:center; justify-content:center; gap:8px; width:100%; margin:0 0 10px; padding:11px 12px; border-radius:13px; background:linear-gradient(160deg, var(--accent), var(--accent-deep)); color:#fff; font-weight:650; font-size:14px; box-shadow:0 6px 18px -8px rgba(16,185,129,.6); transition:filter .12s, transform .1s ease}
+.nav-add:hover{filter:brightness(1.06)} .nav-add:active{transform:scale(.98)}
+.nav-add .ico{width:18px; height:18px; display:grid; place-items:center}
+.only-mobile{display:none}
+
+/* ---- sous-onglets de hub (Suivi / Avenir) ---- */
+.subtabs{display:flex; gap:7px; overflow-x:auto; -webkit-overflow-scrolling:touch; padding-bottom:2px; margin-bottom:16px; scrollbar-width:none}
+.subtabs::-webkit-scrollbar{display:none}
+.subtab{flex:none; padding:8px 16px; border-radius:99px; font-size:14px; font-weight:600; color:var(--tx2); background:var(--panel); border:1px solid var(--line2); transition:background .12s, color .12s, border-color .12s}
+.subtab:hover{background:var(--panel2); color:var(--tx)}
+.subtab.on{background:var(--accent); color:#fff; border-color:var(--accent-deep)}
 .budget-pill .b-ico{font-size:17px}
 .budget-pill .b-name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; font-weight:600}
 .main{flex:1; min-width:0; display:flex; flex-direction:column; overflow:hidden}
@@ -102,9 +114,30 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.015em}
 @media(max-width:980px){.g4{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr}.g23{grid-template-columns:1fr}}
 @media(max-width:620px){.g2,.g3{grid-template-columns:1fr}.g4{grid-template-columns:1fr 1fr;gap:10px}}
 .kpi{padding:17px 19px; display:flex; flex-direction:column; gap:4px; position:relative; overflow:hidden}
-.kpi .k-label{font-size:11.5px; font-weight:650; color:var(--tx2); text-transform:uppercase; letter-spacing:.06em; display:flex; align-items:center; gap:6px}
+.kpi .k-label{font-size:13px; font-weight:600; color:var(--tx2); letter-spacing:0; display:flex; align-items:center; gap:6px}
 .kpi .k-value{font-size:24px; font-weight:750; letter-spacing:-.025em; font-variant-numeric:tabular-nums}
 .kpi .k-sub{font-size:12px; color:var(--tx2)}
+
+/* ---------- accueil : héros + cartes calmes ---------- */
+.hero{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:22px 22px 18px}
+.hero .h-label{font-size:14px; color:var(--tx2); font-weight:550}
+.hero .h-value{font-size:46px; line-height:1.02; font-weight:750; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin:6px 0 0}
+.hero .h-value.neg{color:var(--danger)} .hero .h-value.pos{color:var(--accent)}
+.hero .h-value .cur{font-size:26px; color:var(--tx2); font-weight:650; margin-left:2px}
+.hero .h-sub{font-size:13.5px; color:var(--tx2); margin-top:8px}
+.hero .h-spark{margin:14px 0 4px}
+.hero .h-foot{font-size:13px; color:var(--tx2); margin-top:10px; display:flex; align-items:center; gap:7px; flex-wrap:wrap}
+.hero .h-foot b{color:var(--tx); font-variant-numeric:tabular-nums}
+@media(max-width:880px){ .hero{padding:20px 18px 16px} .hero .h-value{font-size:40px} .hero .h-value .cur{font-size:22px} }
+
+.home-card{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow)}
+.home-card .hc-head{display:flex; align-items:center; gap:10px; padding:15px 18px 0}
+.home-card .hc-head h3{font-size:15px; font-weight:650}
+.home-card .hc-head .spacer{flex:1}
+.home-card .hc-pad{padding:14px 18px 16px}
+.home-prog .hp-top{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:9px}
+.home-prog .hp-top .v{font-size:13px; color:var(--tx2); font-variant-numeric:tabular-nums}
+.home-stack{display:flex; flex-direction:column; gap:14px}
 
 /* ---------- buttons ---------- */
 .btn{display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:8.5px 15px; border-radius:10px; font-weight:600; font-size:13.5px; border:1px solid var(--line2); background:var(--panel); color:var(--tx); transition:filter .12s, background .12s, border-color .12s, box-shadow .15s, transform .1s ease; white-space:nowrap}
@@ -170,7 +203,7 @@ select.input{appearance:none; -webkit-appearance:none; background-image:url("dat
 .item-row .i-sub{font-size:12px; color:var(--tx2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
 .item-row .i-amt{text-align:right; font-weight:700; font-variant-numeric:tabular-nums; white-space:nowrap}
 .item-row .i-amt .per{font-size:11px; color:var(--tx3); font-weight:500; display:block}
-.group-head{display:flex; align-items:center; gap:9px; padding:13px 20px 7px; font-size:12px; font-weight:700; color:var(--tx2); text-transform:uppercase; letter-spacing:.07em}
+.group-head{display:flex; align-items:center; gap:9px; padding:13px 20px 7px; font-size:13px; font-weight:650; color:var(--tx2); letter-spacing:0}
 .group-head .g-total{margin-left:auto; font-variant-numeric:tabular-nums; text-transform:none; letter-spacing:0}
 .empty{padding:42px 24px; text-align:center; color:var(--tx2)}
 .empty .e-ico{font-size:34px; margin-bottom:10px}
@@ -180,7 +213,7 @@ select.input{appearance:none; -webkit-appearance:none; background-image:url("dat
 /* ---------- tables ---------- */
 .tbl-wrap{overflow-x:auto; -webkit-overflow-scrolling:touch}
 table.tbl{width:100%; border-collapse:collapse; font-size:13px}
-.tbl th{position:sticky; top:0; background:var(--panel); text-align:right; padding:9px 12px; font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--tx2); border-bottom:1.5px solid var(--line2); white-space:nowrap; z-index:2}
+.tbl th{position:sticky; top:0; background:var(--panel); text-align:right; padding:9px 12px; font-size:12px; letter-spacing:0; color:var(--tx2); border-bottom:1.5px solid var(--line2); white-space:nowrap; z-index:2}
 .tbl th:first-child,.tbl td:first-child{text-align:left}
 .tbl td{padding:8.5px 12px; border-bottom:1px solid var(--line); text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap}
 .tbl tr:hover td{background:var(--panel2)}
@@ -395,7 +428,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 .day-bal{display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--bg2); border-radius:12px; padding:11px 15px}
 .day-bal.neg{background:var(--danger-soft)}
 .day-bal b{font-size:17px}
-.day-sec{font-size:11.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--tx2); margin-bottom:6px}
+.day-sec{font-size:13px; font-weight:650; letter-spacing:0; color:var(--tx2); margin-bottom:6px}
 .day-list .day-row{padding:8px 0; border-bottom:1px solid var(--line); gap:10px; align-items:center}
 .day-list .day-row:last-child{border-bottom:none}
 .day-list .day-row.click{cursor:pointer; border-radius:8px; padding:8px 8px; margin:0 -8px; transition:background .1s}
@@ -464,7 +497,7 @@ details.adv[open] summary:before{transform:rotate(90deg)}
 @media(max-width:880px){
   .sidebar{display:none}
   .topbar{padding:12px 16px; padding-top:max(12px, env(safe-area-inset-top))}
-  .content{padding:16px 14px 110px}
+  .content{padding:16px 14px calc(92px + env(safe-area-inset-bottom))}
   .input,select.input,textarea.input{font-size:16px}
   .card-pad{padding:14px 15px}
   .item-row{padding:11px 14px}
@@ -476,15 +509,18 @@ details.adv[open] summary:before{transform:rotate(90deg)}
   .kpi{padding:13px 14px}
   .kpi .k-label{font-size:10.5px}
   .kpi .k-sub{font-size:11px}
-  .bottomnav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:50; background:var(--glass); backdrop-filter:blur(18px) saturate(1.5); -webkit-backdrop-filter:blur(18px) saturate(1.5); border-top:1px solid var(--line); padding:7px 4px calc(7px + env(safe-area-inset-bottom)); justify-content:space-around; box-shadow:0 -6px 24px -12px rgba(8,15,35,.18)}
-  .bottomnav button{display:flex; flex-direction:column; align-items:center; gap:3px; font-size:9.5px; font-weight:600; color:var(--tx3); padding:5px 10px; border-radius:11px; min-width:56px; transition:color .15s, background .15s}
-  .bottomnav button.active{color:var(--accent); background:var(--accent-soft)}
-  .bottomnav button .ico{width:21px; height:21px; display:grid; place-items:center}
-  .fab{bottom:calc(78px + env(safe-area-inset-bottom)); right:16px; width:52px; height:52px}
+  .bottomnav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:50; background:var(--glass); backdrop-filter:blur(18px) saturate(1.5); -webkit-backdrop-filter:blur(18px) saturate(1.5); border-top:1px solid var(--line); padding:5px 8px calc(3px + env(safe-area-inset-bottom)); justify-content:space-between; align-items:flex-end; box-shadow:0 -6px 24px -12px rgba(8,15,35,.18)}
+  .bottomnav .bn-tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; font-weight:600; color:var(--tx3); padding:5px 4px 3px; border-radius:13px; transition:color .15s; background:none; position:relative}
+  .bottomnav .bn-tab.active{color:var(--accent)}
+  .bottomnav .bn-tab .ico{width:24px; height:24px; display:grid; place-items:center}
+  .bottomnav .bn-fab{flex:none; width:56px; height:56px; border-radius:50%; background:linear-gradient(160deg, var(--accent), var(--accent-deep)); color:#fff; display:grid; place-items:center; box-shadow:0 8px 22px -6px rgba(16,185,129,.55), inset 0 1px 0 rgba(255,255,255,.25); transform:translateY(-12px); transition:transform .18s var(--ease)}
+  .bottomnav .bn-fab:active{transform:translateY(-12px) scale(.92)}
+  .fab{display:none}
   .topbar h1{font-size:17px}
   .kpi .k-value{font-size:21px}
   .btn{min-height:38px}
   .grid{gap:12px}
+  .only-mobile{display:inline-flex}
 }
 
 /* ---------- print ---------- */
@@ -624,51 +660,6 @@ svg:has(.dslice:hover) .dslice:not(:hover){opacity:.45}
 [data-density="compact"] .nav-item{padding:7.5px 11px}
 [data-density="compact"] .alert{padding:9px 12px}
 
-/* ---- mode édition ---- */
-.cz-banner{position:fixed; top:0; left:0; right:0; z-index:120; display:flex; align-items:center; gap:12px;
-  padding:9px 16px calc(9px); background:linear-gradient(100deg,var(--accent),var(--accent-deep)); color:#fff;
-  box-shadow:0 6px 22px -8px rgba(0,0,0,.45); font-size:13px; font-weight:550}
-.cz-banner .cz-bdot{font-size:15px}
-.cz-banner .cz-btxt{min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
-.cz-banner .btn{background:rgba(255,255,255,.16); color:#fff; border:1px solid rgba(255,255,255,.28)}
-.cz-banner .btn:hover{background:rgba(255,255,255,.26)}
-.cz-banner .btn-p{background:#fff; color:var(--accent-deep); border-color:#fff; font-weight:700}
-@media(max-width:620px){.cz-banner .cz-btxt{white-space:normal; font-size:12px; line-height:1.3}}
-body.cz-on .app{height:calc(100% - 42px); margin-top:42px}
-
-.cz-item{position:relative}
-body.cz-on .cz-item{outline:1.5px dashed var(--accent); outline-offset:-1px; border-radius:var(--radius)}
-body.cz-on .nav-main .cz-item,body.cz-on .nav-foot-list .cz-item{border-radius:10px; outline-color:rgba(255,255,255,.4)}
-body.cz-on .cz-item.cz-hidden{opacity:.42; filter:grayscale(.6)}
-.cz-shield{position:absolute; inset:0; z-index:6; cursor:grab; touch-action:none; border-radius:inherit}
-.cz-shield:active{cursor:grabbing}
-.cz-badges{position:absolute; top:-9px; right:-9px; z-index:8; display:flex; gap:5px}
-.cz-del{width:24px; height:24px; border-radius:50%; display:grid; place-items:center; background:var(--danger); color:#fff;
-  box-shadow:0 3px 10px -2px rgba(0,0,0,.4); border:2px solid var(--panel)}
-.cz-del:hover{transform:scale(1.1)}
-.cz-del.cz-add{background:var(--accent)}
-.nav-main .cz-badges,.nav-foot-list .cz-badges{top:-6px; right:-4px}
-.nav-main .cz-del,.nav-foot-list .cz-del{width:20px; height:20px; border-color:var(--navy)}
-.cz-ghost{position:fixed; z-index:200; pointer-events:none; opacity:.92; box-shadow:var(--shadow-lg);
-  transform:rotate(1.2deg) scale(1.02); border-radius:var(--radius); overflow:hidden; background:var(--panel)}
-.cz-ghost .cz-shield,.cz-ghost .cz-badges{display:none}
-.cz-ph{border:2px dashed var(--accent); background:var(--accent-soft); border-radius:var(--radius); min-height:44px}
-.cz-ph-grid{grid-column:span 6}
-@media(max-width:620px){.cz-ph-grid{grid-column:span 12}}
-
-/* fiche de personnalisation (réglages) */
-.perso-row{display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel2)}
-.perso-row .pr-grip{color:var(--tx3); cursor:default; flex:none}
-.perso-row .pr-name{flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13.5px}
-.perso-row.off{opacity:.5}
-.perso-row .pr-btn{width:28px; height:28px; flex:none; display:grid; place-items:center; border-radius:8px; border:1px solid var(--line); color:var(--tx2)}
-.perso-row .pr-btn:hover{background:var(--panel); color:var(--tx)}
-.perso-row .pr-btn[disabled]{opacity:.3; cursor:default}
-.perso-list{display:flex; flex-direction:column; gap:6px}
-.swatch-row{display:flex; flex-wrap:wrap; gap:8px}
-.swatch{width:30px; height:30px; border-radius:50%; border:2px solid var(--line); cursor:pointer; position:relative}
-.swatch.on{box-shadow:0 0 0 2px var(--panel),0 0 0 4px var(--tx)}
-.swatch.auto{display:grid; place-items:center; font-size:12px; color:var(--tx2); background:var(--panel2)}
 .hbar-list{display:flex; flex-direction:column; gap:11px}
 .pc-chip[disabled]{opacity:.4; cursor:not-allowed}
 
@@ -2807,7 +2798,7 @@ function showOnboarding() {
 
 /* ===== 11-dashboard.js ===== */
 "use strict";
-/* ============ vue : tableau de bord ============ */
+/* ============ vue : accueil (une info maîtresse, puis des cartes calmes) ============ */
 
 function viewDashboard(root) {
   const b = curBudget();
@@ -2815,116 +2806,52 @@ function viewDashboard(root) {
   const proj = project(b, { months: Math.max(13, State.settings.horizonMonths) });
   const m0 = proj[0];
   const real = realMonthByCat(b, ymNow);
-  const balNow = balanceAtMonthStart(b, ymNow) + real.income - real.expense;
   const reste = remainingPlanned(b, ymNow);
-  const disponible = balNow - reste.total;
-  const alerts = computeAlerts(b);
-  const insights = (typeof Insights !== "undefined") ? Insights.compute(b) : [];
   const sts = Insights.safeToSpend(b);
   const cur = b.currency;
-
-  const plannedLeft = m0.income - m0.expense;
   const endOfMonth = m0.balance;
-  const savingRate = m0.income > 0 ? (m0.income - m0.expense + m0.saving) / m0.income : 0;
-  // KPIs — sélection & ordre personnalisables (scope "dash.kpi")
-  const kpiDefs = {
-    dispo: () => kpi("Argent réellement disponible", fmtMoney(disponible, cur),
-      reste.total > 0.5 ? `solde ${fmtMoney(balNow, cur)} − ${fmtMoney(reste.total, cur)} déjà prévus, pas encore débités` : "rien de prévu n'est encore en attente de débit", disponible < 0 ? "neg" : "pos"),
-    soldeNow: () => kpi("Solde réel aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
-    finMois: () => kpi("Solde prévu fin " + MOIS[+ymNow.slice(5, 7) - 1], fmtMoney(endOfMonth, cur), plannedLeft >= 0 ? `+${fmtMoney(plannedLeft, cur)} ce mois-ci` : `${fmtMoney(plannedLeft, cur)} ce mois-ci`, endOfMonth < 0 ? "neg" : "pos"),
-    epargne: () => kpi("Taux d'épargne prévu", m0.income > 0 ? fmtPct(savingRate) : "—", m0.saving > 0 ? `dont ${fmtMoney(m0.saving, cur)} d'épargne versée` : "revenus − dépenses, en % des revenus", savingRate < 0 ? "neg" : ""),
-    depReelles: () => kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : ""),
-    resteJour: () => kpi("Reste à vivre par jour", fmtMoney(sts.perDay, cur), `${fmtMoney(sts.dispo, cur)} sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`, sts.perDay < 0 ? "neg" : "pos"),
-  };
-  const kpiIds = Custom.catalogIds("dash.kpi");
-  const kpiVisible = Custom.order("dash.kpi", kpiIds).filter(id => !Custom.isHidden("dash.kpi", id) && kpiDefs[id]);
-  const kpis = el("div", { class: "grid kpi-grid", style: "grid-template-columns:repeat(auto-fit,minmax(190px,1fr))" },
-    (kpiVisible.length ? kpiVisible : kpiIds).map(id => kpiDefs[id]()));
+  const monthName = MOIS[+ymNow.slice(5, 7) - 1];
 
-  // analyse intelligente : constats chiffrés, prédictifs & actionnables
-  const toneCls = { danger: "danger", warn: "warn", good: "ok", info: "info", opp: "info" };
-  const insightCard = insights.length ? el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "💡 Analyse intelligente"),
-      el("span", { class: "spacer" }), el("span", { class: "xs muted" }, "d'après vos données")),
-    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:10px" },
-      insights.map(it => el("div", { class: "insight" },
-        el("div", { class: "alert a-" + (toneCls[it.tone] || "info"), style: "flex:1; min-width:0" },
-          el("span", { class: "a-ico", html: ico(it.icon, 17) }), el("span", {}, it.text)),
-        el("div", { class: "insight-act" },
-          it.action ? el("button", { class: "btn btn-sm btn-p", onclick: () => { const r = it.action.run(); if (typeof r === "string") toast("✅ " + r); } }, it.action.label) : null,
-          el("button", { class: "btn btn-sm btn-ghost btn-ico", title: "Ignorer", html: ico("x", 15), onclick: () => { Intel.dismiss(it.id); persist(); renderApp(); } })))))
-  ) : null;
-
-  // dépenses prévues pas encore débitées (réservées, non comptées comme disponibles)
-  const resteCard = reste.rows.length ? el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "🔒 Déjà prévu, pas encore débité"),
-      el("span", { class: "spacer" }), el("span", { class: "small muted" }, `${fmtMoney(reste.total, cur)} réservés`)),
-    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:8px" },
-      reste.rows.slice(0, 8).map(r => el("div", { class: "flex small" },
-        el("span", { class: "cat-dot", style: "background:" + (r.cat ? r.cat.color : "#dc2626") }),
-        el("span", {}, r.cat ? `${r.cat.emoji} ${r.cat.name}` : "💳 Crédits & autres"),
-        el("span", { class: "spacer" }),
-        el("span", { class: "xs muted" }, `${fmtMoney(r.real, cur)} / ${fmtMoney(r.planned, cur)}`),
-        el("b", { class: "mono" }, fmtMoney(r.remaining, cur))
-      ))
-    )
-  ) : null;
-
-  // alertes
-  const alertBox = alerts.length ? el("div", { class: "grid", style: "gap:8px" },
-    alerts.slice(0, 4).map(a => el("div", { class: "alert a-" + (a.type === "danger" ? "danger" : a.type === "warn" ? "warn" : "info") },
-      el("span", { class: "a-ico", html: ico(a.icon, 17) }), el("span", {}, a.text)))
-  ) : null;
-
-  // graphique projection 12 mois — type personnalisable (courbe / barres)
-  const horizon = Math.min(proj.length, 13);
-  const projType = Custom.get().dash.chart.projection;
-  const projGraph = projType === "bars"
-    ? chartBars({ labels: proj.slice(0, horizon).map(r => r.ym), pos: proj.slice(0, horizon).map(r => r.income), neg: proj.slice(0, horizon).map(r => r.expense), cur, height: 230 })
-    : chartLine({
-      labels: proj.slice(0, horizon).map(r => r.ym),
-      series: [
-        { name: "Solde", color: "#10b981", values: proj.slice(0, horizon).map(r => r.balance), fill: true },
-        { name: "Patrimoine net", color: "#8b5cf6", values: proj.slice(0, horizon).map(r => r.netWorth), dash: true },
-      ],
-      markers: proj.slice(0, horizon).flatMap((r, i) => r.events.map(e => ({ idx: i, label: e.name, emoji: e.emoji }))),
-      cur, height: 230,
-    });
-  const chartCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, projType === "bars" ? "Revenus & dépenses" : "Projection du solde"), el("span", { class: "spacer" }),
-      chartTypeBtn("projection", projType === "bars" ? "line" : "bars", projType === "bars" ? "Voir en courbe" : "Voir en barres"),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("projection") }, "Tout voir →")),
-    el("div", { class: "card-pad" }, projGraph)
+  // ---------- HÉROS : reste à vivre ce mois-ci ----------
+  const heroVal = sts.dispo;
+  const heroCls = heroVal < 0 ? "neg" : "pos";
+  const hero = el("div", { class: "hero" },
+    el("div", { class: "h-label" }, "Reste à vivre ce mois-ci"),
+    el("div", { class: "h-value " + heroCls }, ...moneyHero(heroVal, cur)),
+    el("div", { class: "h-sub" }, sts.daysLeft > 0
+      ? `${fmtMoney(sts.perDay, cur)} par jour sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`
+      : "dernier jour du mois"),
+    el("div", { class: "h-spark" }, sparkline(proj.slice(0, 13).map(r => r.balance), heroVal < 0)),
+    el("div", { class: "h-foot" }, `Solde prévu fin ${monthName} : `,
+      el("b", { class: endOfMonth < 0 ? "neg" : "pos" }, fmtMoney(endOfMonth, cur, { sign: true })),
+      el("span", { class: "spacer", style: "flex:1" }),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("projection") }, "Projection →"))
   );
 
-  // donut répartition du mois
-  const parts = Object.entries(m0.byCat).map(([id, v]) => {
-    const c = catById(b, id);
-    return { label: c ? c.name : "Crédits & autres", emoji: c ? c.emoji : "💳", color: c ? c.color : "#dc2626", value: v };
-  }).sort((a, z) => z.value - a.value);
-  const breakdownType = Custom.get().dash.chart.breakdown;
-  const breakMax = Math.max(1, ...parts.map(p => p.value));
-  const breakBody = breakdownType === "bars"
-    ? el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:11px" },
-      parts.slice(0, 8).map(p => el("div", {},
-        el("div", { class: "flex", style: "font-size:13px; margin-bottom:5px" }, el("span", {}, `${p.emoji} ${p.label}`),
-          el("span", { class: "spacer" }), el("b", { class: "mono" }, fmtMoney(p.value, cur))),
-        el("div", { class: "pbar" }, el("i", { style: `width:${p.value / breakMax * 100}%; background:${p.color}` })))))
-    : el("div", { class: "card-pad" },
-      chartDonut({ parts, cur, height: 195, centerLabel: "ce mois-ci" }),
-      el("div", { class: "mt12" }, parts.slice(0, 6).map(p => el("div", { class: "flex", style: "padding:3.5px 0; font-size:13px" },
-        el("span", { class: "cat-dot", style: "background:" + p.color }),
-        el("span", {}, `${p.emoji} ${p.label}`),
-        el("span", { class: "spacer" }),
-        el("b", { class: "mono" }, fmtMoney(p.value, cur))
-      ))));
-  const donutCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Dépenses prévues du mois"), el("span", { class: "spacer" }),
-      parts.length ? chartTypeBtn("breakdown", breakdownType === "bars" ? "donut" : "bars", breakdownType === "bars" ? "Voir en anneau" : "Voir en barres") : null),
-    parts.length ? breakBody : emptyState("🌱", "Aucune dépense prévue", "Ajoutez vos charges dans l'onglet Budget.")
+  // ---------- une seule analyse à la fois (la plus prioritaire) ----------
+  const alerts = computeAlerts(b);
+  const insights = (typeof Insights !== "undefined") ? Insights.compute(b) : [];
+  const danger = alerts.find(a => a.type === "danger");
+  let analysisCard = null;
+  if (danger) analysisCard = alertNode(danger);
+  else if (insights.length) analysisCard = insightNode(insights[0]);
+  else if (alerts.length) analysisCard = alertNode(alerts[0]);
+
+  // ---------- dépensé ce mois ----------
+  const spent = real.expense, planned = m0.expense;
+  const pct = planned > 0 ? spent / planned : 0;
+  const over = planned > 0 && spent > planned;
+  const depCard = el("div", { class: "home-card" },
+    el("div", { class: "hc-head" }, el("h3", {}, "Dépensé ce mois"), el("span", { class: "spacer" }),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("tracking") }, "Détail")),
+    el("div", { class: "hc-pad home-prog" },
+      el("div", { class: "hp-top" },
+        el("b", { class: "mono", style: "font-size:16px" }, fmtMoney(spent, cur)),
+        el("span", { class: "v" }, planned > 0 ? `sur ${fmtMoney(planned, cur)} prévus · ${Math.round(pct * 100)} %` : "aucun budget prévu")),
+      el("div", { class: "pbar" + (over ? " over" : "") }, el("i", { style: `width:${Math.min(100, pct * 100)}%` })))
   );
 
-  // prochaines échéances (14 jours)
+  // ---------- à venir (14 jours) ----------
   const upcoming = [];
   for (const ym of [ymNow, addMonths(ymNow, 1)]) {
     const flows = dayFlows(b, ym);
@@ -2935,73 +2862,84 @@ function viewDashboard(root) {
     }
   }
   upcoming.sort((a, z) => a.date.localeCompare(z.date));
-  const upCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Échéances des 14 prochains jours"), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("calendar") }, "Calendrier →")),
-    upcoming.length ? el("div", { class: "row-list", style: "padding-bottom:8px" }, upcoming.slice(0, 8).map(u =>
-      el("div", { class: "item-row", style: "cursor:default" },
-        el("div", { class: "i-emoji", style: "font-size:12px; font-weight:700; flex-direction:column; line-height:1.1; display:flex; align-items:center; justify-content:center" },
-          el("span", {}, String(+u.date.slice(8))), el("span", { class: "xs muted" }, MOIS[+u.date.slice(5, 7) - 1].slice(0, 4) + ".")),
-        el("div", { class: "i-main" },
-          el("div", { class: "i-name" }, u.item.name || "(sans nom)"),
-          el("div", { class: "i-sub" }, u.item._debt ? "mensualité de crédit" : catLabel(b, u.item.categoryId))),
-        el("div", { class: "i-amt " + (u.item.kind === "income" ? "pos" : "") }, fmtMoney(u.item.kind === "income" ? u.amount : -u.amount, cur, { sign: true }))
-      ))) : emptyState("📭", "Rien à signaler", "Aucune échéance planifiée sur les 14 prochains jours.")
+  const upCard = el("div", { class: "home-card" },
+    el("div", { class: "hc-head" }, el("h3", {}, "À venir"), el("span", { class: "spacer" }),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("calendar") }, "Calendrier")),
+    upcoming.length
+      ? el("div", { class: "row-list", style: "padding-bottom:6px" }, upcoming.slice(0, 4).map(u => upRow(b, u, cur)))
+      : emptyState("📭", "Rien à l'horizon", "Aucune échéance sur les 14 prochains jours.")
   );
 
-  // objectifs
-  const goalCard = b.goals.length ? el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Objectifs d'épargne"), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("goals") }, "Gérer →")),
-    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:14px" },
-      b.goals.slice(0, 4).map(g => {
-        const current = +g.current || 0;
-        const pct = g.target ? clamp(current / g.target, 0, 1) : 0;
-        const done = g.target > 0 && current >= g.target;
-        const eta = done ? null : goalEta(b, g);
-        return el("div", {},
-          el("div", { class: "flex small mb8" }, el("span", {}, `${g.emoji || "🎯"} ${g.name}`), el("span", { class: "spacer" }),
-            el("b", { class: "mono" }, fmtMoney(current, cur, { dec: 0 }) + " / " + fmtMoney(g.target, cur, { dec: 0 }))),
-          el("div", { class: "pbar" }, el("i", { style: `width:${pct * 100}%; background:${g.color || "var(--accent)"}` })),
-          el("div", { class: "xs muted", style: "margin-top:5px" },
-            done ? "Objectif atteint"
-              : `Reste ${fmtMoney(Math.max(0, (g.target || 0) - current), cur, { dec: 0 })}` + (eta ? ` · atteint vers ${fmtYm(eta).toLowerCase()}` : ""))
-        );
-      })
-    )
-  ) : null;
-
-  const goalsNode = goalCard || el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Objectifs d'épargne")),
-    emptyState("🎯", "Aucun objectif", "Vacances, permis, apport immobilier… fixez un cap et suivez votre progression.",
-      el("button", { class: "btn btn-p btn-sm", onclick: () => go("goals") }, "Créer un objectif")));
-
-  const grid = el("div", { class: "dash-grid" });
-  Custom.renderInto(grid, "dash.sec", [
-    { id: "kpis", node: kpis, span: 12 },
-    { id: "insight", node: insightCard, span: 12 },
-    { id: "alerts", node: alertBox, span: 12 },
-    { id: "reste", node: resteCard, span: 12 },
-    { id: "projection", node: chartCard, span: 6 },
-    { id: "breakdown", node: donutCard, span: 6 },
-    { id: "upcoming", node: upCard, span: 6 },
-    { id: "goals", node: goalsNode, span: 6 },
-  ], { axis: "grid" });
-  root.append(el("div", { class: "content-inner" }, grid));
-
-  function chartTypeBtn(which, to, title) {
-    return el("button", {
-      class: "btn btn-sm btn-ghost btn-ico", title, html: ico("layers", 15),
-      onclick: () => { Custom.get().dash.chart[which] = to; Custom.save(); }
-    });
+  // ---------- objectifs (compact, si présents) ----------
+  let goalCard = null;
+  if (b.goals && b.goals.length) {
+    goalCard = el("div", { class: "home-card" },
+      el("div", { class: "hc-head" }, el("h3", {}, "Objectifs"), el("span", { class: "spacer" }),
+        el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("goals") }, "Gérer")),
+      el("div", { class: "hc-pad", style: "display:flex; flex-direction:column; gap:14px" },
+        b.goals.slice(0, 3).map(g => {
+          const current = +g.current || 0;
+          const p = g.target ? clamp(current / g.target, 0, 1) : 0;
+          const done = g.target > 0 && current >= g.target;
+          return el("div", {},
+            el("div", { class: "flex small mb8" }, el("span", {}, `${g.emoji || "🎯"} ${g.name}`), el("span", { class: "spacer" }),
+              el("b", { class: "mono" }, fmtMoney(current, cur, { dec: 0 }) + " / " + fmtMoney(g.target, cur, { dec: 0 }))),
+            el("div", { class: "pbar" }, el("i", { style: `width:${p * 100}%; background:${g.color || "var(--accent)"}` })),
+            el("div", { class: "xs muted", style: "margin-top:5px" },
+              done ? "Objectif atteint" : `Reste ${fmtMoney(Math.max(0, (g.target || 0) - current), cur, { dec: 0 })}`));
+        }))
+    );
   }
 
-  function kpi(label, value, sub, tone) {
-    return el("div", { class: "card kpi" },
-      el("div", { class: "k-label" }, label),
-      el("div", { class: "k-value " + (tone || "") }, value),
-      el("div", { class: "k-sub" }, sub || "")
-    );
+  const stack = el("div", { class: "home-stack" }, hero, analysisCard, depCard, upCard, goalCard);
+  root.append(el("div", { class: "content-inner" }, stack));
+
+  // ---- helpers ----
+  function moneyHero(v, cur) {
+    const s = fmtMoney(v, cur);
+    const mt = s.match(/^([\s\d., \-+]+)(.*)$/);
+    if (!mt || !mt[2]) return [s];
+    return [mt[1].trim(), el("span", { class: "cur" }, " " + mt[2].trim())];
+  }
+  function sparkline(vals, neg) {
+    const n = vals.length;
+    if (n < 2) return el("div");
+    const W = 320, H = 46, pad = 4;
+    const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
+    const x = i => (i / (n - 1) * W).toFixed(1);
+    const y = v => (H - pad - (v - min) / span * (H - pad * 2)).toFixed(1);
+    const pts = vals.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+    const col = neg ? "var(--danger)" : "var(--accent)";
+    const area = `0,${H} ${pts} ${W},${H}`;
+    const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" aria-hidden="true">`
+      + `<polygon points="${area}" fill="${col}" opacity="0.10"/>`
+      + `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`
+      + `<circle cx="${x(n - 1)}" cy="${y(vals[n - 1])}" r="3.2" fill="${col}"/></svg>`;
+    return el("div", { class: "spark", html: svg });
+  }
+  function upRow(b, u, cur) {
+    const income = u.item.kind === "income";
+    return el("div", { class: "item-row", style: "cursor:default" },
+      el("div", { class: "i-emoji", style: "font-size:12px; font-weight:700; flex-direction:column; line-height:1.1; display:flex; align-items:center; justify-content:center" },
+        el("span", {}, String(+u.date.slice(8))), el("span", { class: "xs muted" }, MOIS[+u.date.slice(5, 7) - 1].slice(0, 4) + ".")),
+      el("div", { class: "i-main" },
+        el("div", { class: "i-name" }, u.item.name || "(sans nom)"),
+        el("div", { class: "i-sub" }, u.item._debt ? "mensualité de crédit" : catLabel(b, u.item.categoryId))),
+      el("div", { class: "i-amt " + (income ? "pos" : "") }, fmtMoney(income ? u.amount : -u.amount, cur, { sign: true })));
+  }
+  function alertNode(a) {
+    return el("div", { class: "home-card" }, el("div", { class: "hc-pad" },
+      el("div", { class: "alert a-" + (a.type === "danger" ? "danger" : a.type === "warn" ? "warn" : "info") },
+        el("span", { class: "a-ico", html: ico(a.icon, 17) }), el("span", {}, a.text))));
+  }
+  function insightNode(it) {
+    const toneCls = { danger: "danger", warn: "warn", good: "ok", info: "info", opp: "info" };
+    return el("div", { class: "home-card" }, el("div", { class: "hc-pad insight" },
+      el("div", { class: "alert a-" + (toneCls[it.tone] || "info"), style: "flex:1; min-width:0" },
+        el("span", { class: "a-ico", html: ico(it.icon, 17) }), el("span", {}, it.text)),
+      el("div", { class: "insight-act" },
+        it.action ? el("button", { class: "btn btn-sm btn-p", onclick: () => { const r = it.action.run(); if (typeof r === "string") toast("✅ " + r); } }, it.action.label) : null,
+        el("button", { class: "btn btn-sm btn-ghost btn-ico", title: "Ignorer", html: ico("x", 15), onclick: () => { Intel.dismiss(it.id); persist(); renderApp(); } }))));
   }
 }
 
@@ -3043,8 +2981,8 @@ function viewBudget(root) {
   root.append(inner);
 
   function sum(label, v, tone) {
-    return el("div", {}, el("div", { class: "xs muted", style: "text-transform:uppercase; letter-spacing:.04em; font-weight:650" }, label),
-      el("div", { class: "mono " + tone, style: "font-size:19px; font-weight:750" }, fmtMoney(v, cur)));
+    return el("div", {}, el("div", { class: "small muted", style: "font-weight:600" }, label),
+      el("div", { class: "mono " + tone, style: "font-size:21px; font-weight:750" }, fmtMoney(v, cur)));
   }
 
   function buildList() {
@@ -5617,7 +5555,7 @@ function openEventEditor(b, ev) {
         fField("Nom", nameI, { full: true }),
         fField("Emoji", emojiI), fField("Date", dateI),
         fField("Notes", notesI, { full: true })),
-      el("div", { class: "small mt16 mb8", style: "font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--tx2)" }, "Changements liés"),
+      el("div", { class: "small mt16 mb8", style: "font-weight:650; color:var(--tx2)" }, "Changements liés"),
       linkedBox),
     foot: [
       !isNew ? el("button", {
@@ -5892,112 +5830,9 @@ function buildCompare(budgets) {
 "use strict";
 /* ============ vue : réglages, sauvegarde, aide ============ */
 
-let _persoOpen = {};
-
-/* Une ligne réglable : nom + (réordonner) + visibilité. */
-function persoRow(scope, allIds, id, orderable) {
-  const hidden = Custom.isHidden(scope, id);
-  const o = Custom.order(scope, allIds), i = o.indexOf(id);
-  const locked = scope === "nav" && (id === "settings" || id === "dashboard");
-  return el("div", { class: "perso-row" + (hidden ? " off" : "") },
-    orderable ? el("span", { class: "pr-grip", html: ico("menu", 15) }) : null,
-    el("span", { class: "pr-name" }, Custom.label(scope, id)),
-    orderable ? el("button", { class: "pr-btn", title: "Monter", disabled: i <= 0, html: ico("chevU", 16), onclick: () => { Custom.move(scope, allIds, id, -1); Custom.save(); } }) : null,
-    orderable ? el("button", { class: "pr-btn", title: "Descendre", disabled: i >= o.length - 1, html: ico("chevD", 16), onclick: () => { Custom.move(scope, allIds, id, 1); Custom.save(); } }) : null,
-    el("label", { class: "switch", style: "margin-left:4px", title: hidden ? "Afficher" : "Masquer" },
-      el("input", { type: "checkbox", checked: !hidden, disabled: locked, onchange: e => { Custom.setHidden(scope, id, !e.target.checked); Custom.save(); } }),
-      el("span", { class: "tr" })));
-}
-
-function persoList(scope, ids, orderable) {
-  return el("div", { class: "perso-list" }, Custom.order(scope, ids).map(id => persoRow(scope, ids, id, orderable)));
-}
-
-function persoDetails(key, summary, resetFn, ...body) {
-  const d = el("details", { class: "card", style: "padding:0", open: !!_persoOpen[key] },
-    el("summary", { class: "tbl-summary" }, el("span", { html: ico("eye", 15) }), el("span", {}, summary), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: e => { e.preventDefault(); e.stopPropagation(); resetFn(); Custom.save(); } }, "Réinitialiser")),
-    el("div", { style: "padding:4px 14px 14px; display:flex; flex-direction:column; gap:12px" }, ...body));
-  d.addEventListener("toggle", () => { _persoOpen[key] = d.open; });
-  return d;
-}
-
-function buildPersonaCard() {
-  const c = Custom.get();
-
-  // apparence
-  const swatches = el("div", { class: "swatch-row" },
-    el("button", { class: "swatch auto" + (c.accent ? "" : " on"), title: "Couleur par défaut", onclick: () => { c.accent = null; Custom.save(); } }, "Déf."),
-    Custom.ACCENTS.map(([hex, name]) => el("button", {
-      class: "swatch" + (c.accent === hex ? " on" : ""), title: name, style: "background:" + hex,
-      onclick: () => { c.accent = hex; Custom.save(); }
-    })));
-  const densitySeg = segControl([{ value: "comfortable", label: "Confort" }, { value: "compact", label: "Compact" }],
-    c.density, v => { c.density = v; Custom.save(); });
-
-  // bouton d'ajout rapide
-  const byId = {}; Custom.quick().forEach(q => byId[q.id] = q);
-  const fabActionRows = el("div", { class: "perso-list" }, Custom.quick().map(q => {
-    const on = c.fab.actions.includes(q.id);
-    const fi = c.fab.actions.indexOf(q.id);
-    return el("div", { class: "perso-row" + (on ? "" : " off") },
-      el("span", { class: "pr-name" }, `${q.emoji} ${q.label}`),
-      el("button", { class: "pr-btn", title: "Monter", disabled: !on || fi <= 0, html: ico("chevU", 16), onclick: () => { c.fab.actions.splice(fi - 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
-      el("button", { class: "pr-btn", title: "Descendre", disabled: !on || fi >= c.fab.actions.length - 1, html: ico("chevD", 16), onclick: () => { c.fab.actions.splice(fi + 1, 0, c.fab.actions.splice(fi, 1)[0]); Custom.save(); } }),
-      el("label", { class: "switch", style: "margin-left:4px" },
-        el("input", { type: "checkbox", checked: on, onchange: e => { if (e.target.checked) c.fab.actions.push(q.id); else c.fab.actions = c.fab.actions.filter(x => x !== q.id); Custom.save(); } }),
-        el("span", { class: "tr" })));
-  }));
-  const fabBox = persoDetails("fab", "Bouton d'ajout rapide", () => Custom.resetFab(),
-    el("div", { class: "form-grid" },
-      fField("Afficher le bouton", el("label", { class: "switch", style: "margin-top:8px" },
-        el("input", { type: "checkbox", checked: c.fab.enabled, onchange: e => { c.fab.enabled = e.target.checked; Custom.save(); } }), el("span", { class: "tr" }))),
-      fField("Position", el("div", {}, segControl([{ value: "br", label: "↘ Bas droite" }, { value: "bl", label: "↙ Bas gauche" }], c.fab.pos, v => { c.fab.pos = v; Custom.save(); })))),
-    el("div", {}, el("div", { class: "xs muted mb8" }, "Actions proposées (ordre & présence)"), fabActionRows));
-
-  // navigation
-  const navMobile = Custom.mobileNav();
-  const mobileChips = el("div", { class: "flex", style: "flex-wrap:wrap; gap:6px" },
-    Custom.navMain().concat(Custom.navFoot().filter(k => k !== "settings")).map(k => {
-      const on = navMobile.includes(k);
-      return el("button", {
-        class: "pc-chip" + (on ? " on" : ""), disabled: !on && navMobile.length >= 4,
-        onclick: () => { Custom.toggleMobile(k); Custom.save(); }
-      }, VIEWS[k] ? VIEWS[k].label.split(" ")[0] : k);
-    }));
-  const navBox = persoDetails("nav", "Navigation (sections de l'app)", () => Custom.resetNav(),
-    el("div", { class: "xs muted" }, "Masquez les pages dont vous n'avez pas besoin et réordonnez-les. « Tableau de bord » et « Réglages » restent toujours accessibles."),
-    persoList("nav", Custom.MAIN, true),
-    el("div", { class: "xs muted", style: "margin-top:4px" }, "Pied de menu"),
-    persoList("nav", Custom.FOOT, false),
-    el("div", {}, el("div", { class: "xs muted mb8", style: "margin-top:4px" }, `Barre mobile — 4 raccourcis max (${navMobile.length}/4)`), mobileChips));
-
-  // contenu des pages
-  const dashBox = persoDetails("dashboard", "Tableau de bord", () => Custom.resetPage("dashboard"),
-    el("div", {}, el("div", { class: "xs muted mb8" }, "Cartes"), persoList("dash.sec", Custom.catalogIds("dash.sec"), true)),
-    el("div", {}, el("div", { class: "xs muted mb8" }, "Indicateurs clés"), persoList("dash.kpi", Custom.catalogIds("dash.kpi"), true)),
-    el("div", { class: "form-grid" },
-      fField("Graphique de projection", el("div", {}, segControl([{ value: "line", label: "Courbe" }, { value: "bars", label: "Barres" }], c.dash.chart.projection, v => { c.dash.chart.projection = v; Custom.save(); }))),
-      fField("Répartition des dépenses", el("div", {}, segControl([{ value: "donut", label: "Anneau" }, { value: "bars", label: "Barres" }], c.dash.chart.breakdown, v => { c.dash.chart.breakdown = v; Custom.save(); })))));
-  const pageBoxes = [["budget", "Budget"], ["projection", "Projections"], ["tracking", "Suivi réel"], ["goals", "Objectifs"], ["debts", "Crédits & dettes"], ["events", "Événements de vie"]]
-    .map(([k, lbl]) => persoDetails("page." + k, lbl, () => Custom.resetPage(k), persoList("page." + k, Custom.catalogIds("page." + k), true)));
-
-  return el("div", { class: "card card-pad" },
-    el("div", { class: "flex mb12" }, el("h3", {}, "🎨 Personnalisation"), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => confirmDialog({ title: "Tout réinitialiser ?", body: "Disposition, sections masquées, couleurs et bouton d'ajout reviendront aux valeurs par défaut. Vos données ne sont pas touchées.", okLabel: "Réinitialiser", onOk: () => { Custom.resetAll(); Custom.save(); toast("↩️ Personnalisation réinitialisée"); } }) }, "Tout réinitialiser")),
-    el("p", { class: "small muted mb12" }, "Rendez l'application vôtre : masquez ce qui ne vous sert pas, réorganisez, choisissez vos graphiques et couleurs. Pour tout déplacer en direct, lancez le mode personnalisation et parcourez l'app — glissez les éléments, ✕ pour masquer."),
-    el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" },
-      el("button", { class: "btn btn-p", html: ico("edit", 16) + "<span>Personnaliser l'affichage (glisser-déposer)</span>", onclick: () => Custom.enterEdit() }),
-      el("button", { class: "btn", html: ico("list", 15) + "<span>Gérer les catégories</span>", onclick: () => curBudget() && openCategoryManager(curBudget()) })),
-    el("div", { class: "form-grid", style: "margin-top:14px" },
-      fField("Couleur d'accent", swatches),
-      fField("Densité de l'interface", el("div", {}, densitySeg))),
-    el("div", { style: "display:flex; flex-direction:column; gap:8px; margin-top:14px" },
-      navBox, fabBox, dashBox, ...pageBoxes));
-}
-
 function viewSettings(root) {
   const s = State.settings;
+  const b = curBudget();
 
   const themeSeg = segControl([
     { value: "light", label: "☀️ Clair" },
@@ -6023,11 +5858,20 @@ function viewSettings(root) {
       fField("Thème", el("div", {}, themeSeg)),
       fField("Prénom", nameI),
       fField("Inflation par défaut (projections)", inflI),
-      fField("Budget actif", el("div", { class: "small", style: "padding-top:10px" }, curBudget() ? `${curBudget().emoji} ${curBudget().name}` : "—")),
       fField("Animations d'interface", el("label", { class: "switch", style: "margin-top:8px" },
         el("input", { type: "checkbox", checked: s.juice !== false, onchange: e => { s.juice = e.target.checked; persist(); } }),
         el("span", { class: "tr" })))),
-    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios macro-économiques. Les animations d'interface (transitions, graphiques) respectent aussi le réglage « réduire les animations » de votre système.")
+    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios. Les animations respectent le réglage « réduire les animations » de votre système.")
+  );
+
+  // Personnalisation = contenu (catégories) + accès aux sections rangées
+  const contentCard = el("div", { class: "card card-pad" },
+    el("h3", { class: "mb12" }, "🗂️ Personnaliser mon budget"),
+    el("p", { class: "small muted mb12" }, "Adaptez les catégories de revenus et de dépenses à votre situation : ajoutez, renommez ou retirez ce qui ne vous concerne pas."),
+    el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" },
+      el("button", { class: "btn btn-p", html: ico("list", 15) + "<span>Gérer les catégories</span>", onclick: () => b && openCategoryManager(b) }),
+      el("button", { class: "btn", html: ico("layers", 15) + "<span>Mes budgets</span>", onclick: () => go("budgets") }),
+      el("button", { class: "btn", html: ico("info", 15) + "<span>Aide & tutoriels</span>", onclick: () => go("help") }))
   );
 
   const aiKeyI = el("input", {
@@ -6124,27 +5968,21 @@ function viewSettings(root) {
   );
 
   root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
-    generalCard, buildPersonaCard(), aiCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
+    generalCard, contentCard, aiCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
 }
 
 
 /* ===== 25-custom.js ===== */
 "use strict";
-/* ============ personnalisation : ce que l'on affiche, où, et comment ============
-   Tout vit dans State.settings.custom (donc persisté + synchronisé).
-   Modèle générique : deux dictionnaires order{scope:[ids]} et hidden{scope:[ids]}
-   décrivent l'ordre et la visibilité de n'importe quel ensemble d'éléments.
-   Un « scope » = "nav", "dash.sec", "dash.kpi", "page.budget"… ============ */
+/* ============ Custom : rendu en disposition fixe + actions d'ajout rapide ============
+   La personnalisation de mise en page (glisser-déposer, masquage, densité, couleur,
+   slots de nav…) a été retirée lors de la refonte « grande simplification » : la
+   disposition est désormais soignée et identique pour tous. Ce module ne garde que
+   - renderInto : rend une liste de blocs dans l'ordre fourni (pass-through) ;
+   - quick      : les actions du bouton « + » (ajout rapide).
+   La personnalisation du CONTENU (catégories de revenus/dépenses) vit dans le Budget
+   et les Réglages, pas ici. ============ */
 const Custom = (() => {
-  const MAIN = ["dashboard", "budget", "projection", "calendar", "tracking", "goals", "debts", "events"];
-  const FOOT = ["budgets", "help", "settings"];
-  const PROTECTED_NAV = ["settings", "dashboard"];   // toujours accessibles
-  const DEFAULT_MOBILE = ["dashboard", "budget", "projection", "tracking"];
-  const ACCENTS = [
-    ["#10b981", "Émeraude"], ["#3b82f6", "Bleu"], ["#8b5cf6", "Violet"], ["#ec4899", "Rose"],
-    ["#f59e0b", "Ambre"], ["#06b6d4", "Cyan"], ["#ef4444", "Rouge"], ["#14b8a6", "Sarcelle"],
-    ["#6366f1", "Indigo"], ["#84cc16", "Lime"], ["#0ea5e9", "Azur"], ["#f43f5e", "Corail"],
-  ];
   const QUICK = [
     { id: "tx", emoji: "🧾", label: "Transaction réelle (dépense / revenu du jour)", run: (b, close) => { close(); openTxEditor(b, null); } },
     { id: "expense", emoji: "📉", label: "Dépense planifiée (récurrente ou ponctuelle)", run: (b, close) => { close(); openItemEditor(b, newItem("expense"), true); } },
@@ -6153,300 +5991,21 @@ const Custom = (() => {
     { id: "event", emoji: "🧭", label: "Événement de vie", run: (b, close) => { close(); openEventEditor(b, null); } },
   ];
 
-  /* Catalogues : étiquettes lisibles pour chaque scope (utilisés par les réglages). */
-  const CATALOG = {
-    "dash.sec": [
-      { id: "kpis", label: "Indicateurs clés" }, { id: "insight", label: "Analyse intelligente" },
-      { id: "alerts", label: "Alertes" }, { id: "reste", label: "Déjà prévu, pas encore débité" },
-      { id: "projection", label: "Projection du solde" }, { id: "breakdown", label: "Dépenses prévues du mois" },
-      { id: "upcoming", label: "Échéances à 14 jours" }, { id: "goals", label: "Objectifs d'épargne" },
-    ],
-    "dash.kpi": [
-      { id: "dispo", label: "Argent réellement disponible" }, { id: "soldeNow", label: "Solde réel aujourd'hui" },
-      { id: "finMois", label: "Solde prévu fin de mois" }, { id: "epargne", label: "Taux d'épargne prévu" },
-      { id: "depReelles", label: "Dépenses réelles du mois" }, { id: "resteJour", label: "Reste à vivre par jour" },
-    ],
-    "page.budget": [
-      { id: "summary", label: "Résumé du mois" }, { id: "controls", label: "Onglet & bouton d'ajout" }, { id: "list", label: "Liste des postes" },
-    ],
-    "page.projection": [
-      { id: "controls", label: "Contrôles (mode, hypothèse)" }, { id: "chart", label: "Graphique principal" },
-      { id: "synth", label: "Synthèse" }, { id: "reperes", label: "Repères temporels" },
-      { id: "chapters", label: "Chapitres de vie" }, { id: "flux", label: "Flux mensuels" }, { id: "table", label: "Détail mois par mois" },
-    ],
-    "page.tracking": [
-      { id: "head", label: "En-tête & import" }, { id: "kpis", label: "Indicateurs" }, { id: "sugg", label: "Suggestions" },
-      { id: "compare", label: "Prévu vs réel" }, { id: "list", label: "Transactions" },
-    ],
-    "page.goals": [
-      { id: "goals", label: "Objectifs d'épargne" }, { id: "accounts", label: "Comptes épargne rémunérés" },
-    ],
-    "page.debts": [
-      { id: "summary", label: "Synthèse (indicateurs)" }, { id: "list", label: "Liste des crédits" },
-    ],
-    "page.events": [
-      { id: "intro", label: "Introduction" }, { id: "list", label: "Événements de vie" },
-    ],
-  };
+  // Garantit l'existence de l'objet (compat : d'anciennes sauvegardes peuvent contenir
+  // des champs de personnalisation désormais ignorés — on n'y touche pas).
+  function ensure() { return State.settings.custom || (State.settings.custom = {}); }
+  function apply() {} // plus de densité/couleur d'accent : disposition fixe
 
-  /* ---- couleurs ---- */
-  const hx = c => { c = c.replace("#", ""); if (c.length === 3) c = c.split("").map(x => x + x).join(""); return [0, 2, 4].map(i => parseInt(c.slice(i, i + 2), 16)); };
-  const clampB = v => Math.max(0, Math.min(255, Math.round(v)));
-  const shade = (c, pct) => { const [r, g, b] = hx(c); const f = v => clampB(v + pct / 100 * 255); return "#" + [f(r), f(g), f(b)].map(v => v.toString(16).padStart(2, "0")).join(""); };
-  const hexA = (c, a) => { const [r, g, b] = hx(c); return `rgba(${r},${g},${b},${a})`; };
-
-  function defaults() {
-    return {
-      v: 1, accent: null, density: "comfortable",
-      fab: { enabled: true, pos: "br", actions: QUICK.map(q => q.id) },
-      nav: { mobile: DEFAULT_MOBILE.slice() },
-      dash: { chart: { projection: "line", breakdown: "donut" } },
-      order: {}, hidden: {},
-    };
-  }
-
-  /* Normalise SANS jamais remplacer l'objet : l'identité de State.settings.custom
-     reste stable, sinon les références capturées par l'UI deviennent obsolètes. */
-  function ensure() {
-    const c = State.settings.custom || (State.settings.custom = {});
-    if (c.v == null) c.v = 1;
-    if (c.accent === undefined) c.accent = null;
-    if (c.density !== "compact" && c.density !== "comfortable") c.density = "comfortable";
-    if (!c.order) c.order = {};
-    if (!c.hidden) c.hidden = {};
-    if (!c.fab) c.fab = {};
-    if (typeof c.fab.enabled !== "boolean") c.fab.enabled = true;
-    c.fab.actions = (Array.isArray(c.fab.actions) ? c.fab.actions : QUICK.map(q => q.id)).filter(id => QUICK.some(q => q.id === id));
-    if (!c.fab.actions.length) c.fab.actions = QUICK.map(q => q.id);
-    if (c.fab.pos !== "bl") c.fab.pos = "br";
-    if (!c.nav) c.nav = {};
-    if (!Array.isArray(c.nav.mobile)) c.nav.mobile = DEFAULT_MOBILE.slice();
-    if (!c.dash) c.dash = {};
-    if (!c.dash.chart) c.dash.chart = {};
-    if (c.dash.chart.projection !== "bars") c.dash.chart.projection = "line";
-    if (c.dash.chart.breakdown !== "bars") c.dash.chart.breakdown = "donut";
-    return c;
-  }
-
-  /* ---- ordre & visibilité génériques ---- */
-  function order(scope, allIds) {
-    const saved = ensure().order[scope] || [];
-    const seen = new Set(), out = [];
-    saved.forEach(id => { if (allIds.includes(id) && !seen.has(id)) { out.push(id); seen.add(id); } });
-    allIds.forEach(id => { if (!seen.has(id)) { out.push(id); seen.add(id); } });
-    return out;
-  }
-  const setOrder = (scope, arr) => { ensure().order[scope] = arr.slice(); };
-  const hiddenSet = scope => new Set(ensure().hidden[scope] || []);
-  const isHidden = (scope, id) => hiddenSet(scope).has(id);
-  function setHidden(scope, id, val) {
-    if (scope === "nav" && PROTECTED_NAV.includes(id)) return;
-    const c = ensure(), s = new Set(c.hidden[scope] || []);
-    val ? s.add(id) : s.delete(id);
-    c.hidden[scope] = [...s];
-  }
-  const toggleHidden = (scope, id) => setHidden(scope, id, !isHidden(scope, id));
-  function move(scope, allIds, id, dir) {
-    const o = order(scope, allIds), i = o.indexOf(id), j = i + dir;
-    if (i < 0 || j < 0 || j >= o.length) return;
-    o.splice(j, 0, o.splice(i, 1)[0]); setOrder(scope, o);
-  }
-  function resetScope(scope) { const c = ensure(); delete c.order[scope]; delete c.hidden[scope]; }
-  function resetNav() { resetScope("nav"); ensure().nav.mobile = DEFAULT_MOBILE.slice(); }
-  function resetFab() { ensure().fab = { enabled: true, pos: "br", actions: QUICK.map(q => q.id) }; }
-  function resetPage(view) {
-    if (view === "dashboard") { resetScope("dash.sec"); resetScope("dash.kpi"); ensure().dash.chart = { projection: "line", breakdown: "donut" }; }
-    else resetScope("page." + view);
-  }
-  function resetAll() {
-    State.settings.custom = defaults(); ensure();
-  }
-
-  function label(scope, id) {
-    if (scope === "nav") return (typeof VIEWS !== "undefined" && VIEWS[id]) ? VIEWS[id].label : id;
-    return ((CATALOG[scope] || []).find(x => x.id === id) || {}).label || id;
-  }
-  const catalogIds = scope => (CATALOG[scope] || []).map(x => x.id);
-
-  /* ---- navigation ---- */
-  const navMainAll = () => order("nav", MAIN);
-  const navMain = () => navMainAll().filter(k => !isHidden("nav", k));
-  const navFoot = () => FOOT.filter(k => !isHidden("nav", k));
-  const navAll = () => navMainAll().concat(FOOT);
-  function mobileNav() {
-    const c = ensure();
-    let m = (c.nav.mobile || []).filter(k => typeof VIEWS !== "undefined" && VIEWS[k] && !isHidden("nav", k));
-    m = [...new Set(m)].slice(0, 4);
-    if (!m.length) m = DEFAULT_MOBILE.filter(k => !isHidden("nav", k)).slice(0, 4);
-    return m;
-  }
-  function toggleMobile(k) {
-    const c = ensure(), m = c.nav.mobile.includes(k) ? c.nav.mobile.filter(x => x !== k) : [...c.nav.mobile, k];
-    c.nav.mobile = m.slice(0, 4);
-  }
-
-  /* ---- apparence ---- */
-  function apply() {
-    const c = ensure(), root = document.documentElement;
-    root.setAttribute("data-density", c.density === "compact" ? "compact" : "comfortable");
-    if (c.accent) {
-      root.style.setProperty("--accent", c.accent);
-      root.style.setProperty("--accent-deep", shade(c.accent, -14));
-      root.style.setProperty("--accent-soft", hexA(c.accent, 0.12));
-    } else {
-      root.style.removeProperty("--accent");
-      root.style.removeProperty("--accent-deep");
-      root.style.removeProperty("--accent-soft");
-    }
-  }
-
-  /* save = persiste + applique + re-render en conservant le scroll */
-  function save() {
-    const c = $(".content"); const top = c ? c.scrollTop : 0;
-    persist(); apply();
-    if (typeof renderApp === "function") renderApp();
-    const c2 = $(".content"); if (c2) c2.scrollTop = top;
-  }
-
-  /* ============ mode édition (glisser / masquer en parcourant l'app) ============ */
-  let editing = false, _dragged = false;
-  const isEditing = () => editing;
-  function enterEdit() { editing = true; document.body.classList.add("cz-on"); banner(); save(); }
-  function exitEdit() { editing = false; document.body.classList.remove("cz-on"); const b = $(".cz-banner"); if (b) b.remove(); save(); }
-  function toggleEdit() { editing ? exitEdit() : enterEdit(); }
-  function banner() {
-    if ($(".cz-banner")) return;
-    const bar = el("div", { class: "cz-banner" },
-      el("span", { class: "cz-bdot" }, "✦"),
-      el("span", { class: "cz-btxt" }, "Personnalisation — glissez pour réordonner, ✕ pour masquer. Parcourez l'app librement."),
-      el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm", onclick: () => { resetPage(typeof _view !== "undefined" ? _view : "dashboard"); save(); toast("↩️ Page réinitialisée"); } }, "Réinitialiser la page"),
-      el("button", { class: "btn btn-sm btn-p", onclick: exitEdit }, "Terminé"));
-    document.body.append(bar);
-  }
-
-  /* ---- décoration d'un élément en mode édition (croix + voile de glisse) ---- */
-  function decorate(node, scope, id, onActivate) {
-    node.dataset.czid = id;
-    if (!editing) return node;
-    node.classList.add("cz-item");
-    const hid = isHidden(scope, id);
-    if (hid) node.classList.add("cz-hidden");
-    const protectedItem = scope === "nav" && PROTECTED_NAV.includes(id);
-    const badges = el("div", { class: "cz-badges" });
-    if (!protectedItem) {
-      badges.append(el("button", {
-        class: "cz-del" + (hid ? " cz-add" : ""), title: hid ? "Réafficher" : "Masquer",
-        html: ico(hid ? "plus" : "x", 13),
-        onpointerdown: e => e.stopPropagation(),
-        onclick: e => { e.preventDefault(); e.stopPropagation(); toggleHidden(scope, id); save(); }
-      }));
-    }
-    node.append(badges);
-    const shield = el("div", { class: "cz-shield" });
-    if (onActivate) shield.addEventListener("click", () => { if (!_dragged) onActivate(id); });
-    node.append(shield);
-    return node;
-  }
-
-  /* ---- rendu d'un ensemble : applique ordre + visibilité, décore si édition ---- */
-  function renderInto(container, scope, items, opts) {
-    opts = opts || {};
-    const ids = items.map(i => i.id);
-    const byId = {}; items.forEach(i => byId[i.id] = i);
-    order(scope, ids).forEach(id => {
-      const it = byId[id]; if (!it || !it.node) return;
-      if (isHidden(scope, id) && !editing) return;
+  /* Rend une liste de blocs { id, node, span? } dans l'ordre donné. */
+  function renderInto(container, scope, items) {
+    (items || []).forEach(it => {
+      if (!it || !it.node) return;
       if (it.span) it.node.classList.add("dz-" + it.span);
-      decorate(it.node, scope, id, opts.onActivate);
       container.append(it.node);
     });
-    if (editing) sortable(container, { axis: opts.axis || "y", onDrop: o => { setOrder(scope, o); save(); } });
   }
 
-  /* ============ tri par glisser (souris + tactile, appui long) ============ */
-  function sortable(container, opts) {
-    const axis = opts.axis || "y";
-    let dragEl = null, ph = null, ghost = null, ox = 0, oy = 0, sx = 0, sy = 0, active = false, timer = null;
-    const items = () => [...container.children].filter(c => c.classList.contains("cz-item"));
-
-    function afterEl(x, y) {
-      const els = items().filter(it => it !== dragEl);
-      if (axis === "y") return els.find(it => { const r = it.getBoundingClientRect(); return y < r.top + r.height / 2; }) || null;
-      let best = null, bd = Infinity, before = true;
-      for (const it of els) {
-        const r = it.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-        const d = (x - cx) ** 2 + (y - cy) ** 2;
-        if (d < bd) { bd = d; best = it; before = (y < cy - r.height * 0.25) || (Math.abs(y - cy) <= r.height / 2 && x < cx); }
-      }
-      return best ? (before ? best : best.nextElementSibling) : null;
-    }
-    function begin() {
-      if (active || !dragEl) return; active = true; _dragged = true;
-      const r = dragEl.getBoundingClientRect();
-      ox = sx - r.left; oy = sy - r.top;
-      ghost = dragEl.cloneNode(true);
-      ghost.classList.add("cz-ghost");
-      ghost.style.width = r.width + "px"; ghost.style.height = r.height + "px";
-      ghost.style.left = (sx - ox) + "px"; ghost.style.top = (sy - oy) + "px";
-      document.body.append(ghost);
-      ph = el("div", { class: "cz-ph" + (axis === "grid" ? " cz-ph-grid" : "") });
-      ph.style.height = r.height + "px"; if (axis === "grid") ph.style.width = r.width + "px";
-      dragEl.style.display = "none";
-      container.insertBefore(ph, dragEl);
-      if (navigator.vibrate) try { navigator.vibrate(8); } catch (e) {}
-    }
-    function onMove(e) {
-      if (!dragEl) return;
-      if (!active) {
-        const moved = Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy);
-        if (e.pointerType !== "touch" && moved > 4) begin();
-        else if (e.pointerType === "touch" && moved > 12) { clearTimeout(timer); cleanup(); return; }
-        if (!active) return;
-      }
-      e.preventDefault();
-      ghost.style.left = (e.clientX - ox) + "px"; ghost.style.top = (e.clientY - oy) + "px";
-      const a = afterEl(e.clientX, e.clientY);
-      a == null ? container.append(ph) : container.insertBefore(ph, a);
-    }
-    function onUp() {
-      clearTimeout(timer);
-      if (active) {
-        container.insertBefore(dragEl, ph);
-        dragEl.style.display = ""; ph.remove(); ghost.remove();
-        const o = items().map(it => it.dataset.czid);
-        setTimeout(() => { _dragged = false; }, 0);
-        opts.onDrop && opts.onDrop(o);
-      }
-      cleanup();
-    }
-    function cleanup() {
-      active = false; dragEl = null; ph = null; ghost = null; clearTimeout(timer);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      window.removeEventListener("pointercancel", onUp);
-    }
-    container.addEventListener("pointerdown", e => {
-      if (e.button != null && e.button !== 0) return;
-      const it = e.target.closest(".cz-item");
-      if (!it || it.parentElement !== container || e.target.closest(".cz-del")) return;
-      dragEl = it; sx = e.clientX; sy = e.clientY;
-      window.addEventListener("pointermove", onMove, { passive: false });
-      window.addEventListener("pointerup", onUp);
-      window.addEventListener("pointercancel", onUp);
-      if (e.pointerType === "touch") timer = setTimeout(begin, 220);
-    });
-  }
-
-  return {
-    MAIN, FOOT, ACCENTS, QUICK, CATALOG,
-    ensure, apply, save,
-    order, setOrder, hiddenSet, isHidden, setHidden, toggleHidden, move,
-    resetScope, resetNav, resetFab, resetPage, resetAll, label, catalogIds,
-    navMain, navMainAll, navFoot, navAll, mobileNav, toggleMobile,
-    isEditing, enterEdit, exitEdit, toggleEdit, renderInto, deco: decorate,
-    quick: () => QUICK, get: ensure,
-  };
+  return { ensure, apply, renderInto, quick: () => QUICK, get: ensure };
 })();
 
 
@@ -7216,27 +6775,59 @@ function btn(label, onclick) { return el("button", { class: "btn btn-sm mt8", st
 "use strict";
 /* ============ coquille applicative : navigation & rendu ============ */
 
+/* Vues de contenu (toutes conservées : les hubs réutilisent leurs render). */
 const VIEWS = {
-  dashboard:  { label: "Tableau de bord", icon: "home",    sub: () => {
+  dashboard:  { label: "Accueil",    icon: "home",    sub: () => {
     const h = new Date().getHours();
     const salut = h < 5 ? "Bonsoir" : h < 18 ? "Bonjour" : "Bonsoir";
-    return State.settings.firstName ? `${salut} ${State.settings.firstName} · votre mois en un coup d'œil` : "Vue d'ensemble de votre mois";
+    return State.settings.firstName ? `${salut} ${State.settings.firstName}` : "Votre mois en un coup d'œil";
   }, render: viewDashboard },
-  budget:     { label: "Budget",          icon: "list",    sub: () => "Revenus & dépenses planifiés", render: viewBudget },
-  projection: { label: "Projections",     icon: "trend",   sub: () => "Votre avenir financier, mois par mois", render: viewProjection },
-  calendar:   { label: "Calendrier",      icon: "cal",     sub: () => "Échéances & solde au jour le jour", render: viewCalendar },
-  tracking:   { label: "Suivi réel",      icon: "receipt", sub: () => "Transactions & prévu vs réel", render: viewTracking },
-  goals:      { label: "Objectifs",       icon: "target",  sub: () => "Épargne, projets & intérêts composés", render: viewGoals },
-  debts:      { label: "Crédits & dettes",icon: "card",    sub: () => "Mensualités, amortissement, fin de crédit", render: viewDebts },
-  events:     { label: "Événements de vie", icon: "zap",   sub: () => "Anticipez les changements de situation", render: viewEvents },
-  budgets:    { label: "Mes budgets",     icon: "layers",  sub: () => "Multi-budgets, scénarios & comparaison", render: viewBudgets },
-  settings:   { label: "Réglages",        icon: "gear",    sub: () => "Personnalisation, sauvegarde & partage", render: viewSettings },
-  help:       { label: "Aide",            icon: "info",    sub: () => "Tutoriels & questions fréquentes", render: viewHelp },
+  budget:     { label: "Budget",     icon: "list",    sub: () => "Revenus & dépenses planifiés", render: viewBudget },
+  suivi:      { label: "Suivi",      icon: "receipt", sub: () => "Vos opérations, jour après jour", render: viewSuivi },
+  avenir:     { label: "Avenir",     icon: "trend",   sub: () => "Projections, objectifs & projets", render: viewAvenir },
+  settings:   { label: "Réglages",   icon: "gear",    sub: () => "Profil, données & partage", render: viewSettings },
+  // sous-vues (atteintes via les hubs Suivi / Avenir ou les réglages)
+  projection: { label: "Projections", icon: "trend",  sub: () => "Votre avenir, mois par mois", render: viewProjection },
+  calendar:   { label: "Calendrier",  icon: "cal",    sub: () => "Échéances & solde au jour le jour", render: viewCalendar },
+  tracking:   { label: "Opérations",  icon: "receipt",sub: () => "Transactions & prévu vs réel", render: viewTracking },
+  goals:      { label: "Objectifs",   icon: "target", sub: () => "Épargne & projets", render: viewGoals },
+  debts:      { label: "Crédits",     icon: "card",   sub: () => "Mensualités & amortissement", render: viewDebts },
+  events:     { label: "Événements",  icon: "zap",    sub: () => "Changements de situation", render: viewEvents },
+  budgets:    { label: "Mes budgets", icon: "layers", sub: () => "Multi-budgets & scénarios", render: viewBudgets },
+  help:       { label: "Aide",        icon: "info",   sub: () => "Tutoriels & questions fréquentes", render: viewHelp },
 };
-let _view = "dashboard";
 
-function go(view) {
-  _view = VIEWS[view] ? view : "dashboard";
+/* Onglets principaux (barre du bas mobile + sidebar desktop). */
+const TABS = [
+  { k: "dashboard", label: "Accueil", icon: "home" },
+  { k: "budget",    label: "Budget",  icon: "list" },
+  { k: "suivi",     label: "Suivi",   icon: "receipt" },
+  { k: "avenir",    label: "Avenir",  icon: "trend" },
+];
+
+/* Hubs à sous-onglets internes. */
+const HUBS = {
+  suivi:  { def: "tracking",   subs: [{ k: "tracking", label: "Opérations" }, { k: "calendar", label: "Calendrier" }] },
+  avenir: { def: "projection", subs: [{ k: "projection", label: "Projection" }, { k: "goals", label: "Objectifs" }, { k: "debts", label: "Crédits" }, { k: "events", label: "Événements" }] },
+};
+
+/* Routage : n'importe quelle clé (héritée ou non) → onglet principal + sous-vue. */
+const ROUTE = {
+  home: ["dashboard"], dashboard: ["dashboard"],
+  budget: ["budget"],
+  suivi: ["suivi", null], tracking: ["suivi", "tracking"], calendar: ["suivi", "calendar"],
+  avenir: ["avenir", null], projection: ["avenir", "projection"], goals: ["avenir", "goals"], debts: ["avenir", "debts"], events: ["avenir", "events"],
+  budgets: ["budgets"], settings: ["settings"], help: ["help"],
+};
+
+let _view = "dashboard";
+const _sub = { suivi: "tracking", avenir: "projection" };
+
+function go(key) {
+  const r = ROUTE[key] || ROUTE.dashboard;
+  _view = r[0];
+  if (r[1]) _sub[_view] = r[1];
+  if (HUBS[_view] && !_sub[_view]) _sub[_view] = HUBS[_view].def;
   renderApp();
   const c = $(".content");
   if (c) c.scrollTop = 0;
@@ -7251,106 +6842,91 @@ function applyTheme() {
 }
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => State.settings.theme === "auto" && applyTheme());
 
+function isDark() { return document.documentElement.getAttribute("data-theme") === "dark"; }
+
 function renderApp() {
   const app = $("#app");
   if (!app) return;
   const b = curBudget();
   if (!b) { showOnboarding(); return; }
-  const v = VIEWS[_view];
+  const v = VIEWS[_view] || VIEWS.dashboard;
   app.innerHTML = "";
 
-  // barre latérale (desktop) — navigation personnalisable
-  const navMainBox = el("div", { class: "nav-main" });
-  Custom.renderInto(navMainBox, "nav", Custom.navMainAll().map(k => ({ id: k, node: navBtn(k) })), { axis: "y", onActivate: go });
-  const footBox = el("div", { class: "nav-foot-list" });
-  (Custom.isEditing() ? Custom.FOOT : Custom.navFoot()).forEach(k => footBox.append(Custom.deco(navBtn(k), "nav", k, go)));
+  // ---- barre latérale (desktop) ----
+  const navBox = el("div", { class: "nav-main" }, TABS.map(t => navBtn(t.k, t.label, t.icon)));
+  const footBox = el("div", { class: "nav-foot-list" },
+    navBtn("settings", "Réglages", "gear"),
+    navBtn("help", "Aide", "info"));
   const sidebar = el("aside", { class: "sidebar" },
     el("div", { class: "brand", html: I.logo + "<span>Horizon<br>Budget</span>" }),
-    navMainBox,
+    el("button", { class: "nav-add", onclick: openQuickAdd }, el("span", { class: "ico", html: I.plus }), "Ajouter"),
+    navBox,
     el("div", { class: "nav-sep" }),
     footBox,
     el("div", { class: "nav-foot" },
       el("button", { class: "budget-pill", onclick: openBudgetSwitcher, title: "Changer de budget" },
         el("span", { class: "b-ico" }, b.emoji),
         el("span", { class: "b-name" }, b.name, b.scenarioOf ? " 🧪" : ""),
-        el("span", { html: ico("swap", 15), style: "opacity:.6" })))
-  );
+        el("span", { html: ico("swap", 15), style: "opacity:.6" }))));
 
-  // barre du haut
+  // ---- barre du haut ----
   const themeBtn = el("button", {
-    class: "btn btn-ghost btn-ico",
-    html: ico(document.documentElement.getAttribute("data-theme") === "dark" ? "sun" : "moon", 18),
-    title: "Basculer clair/sombre",
-    onclick: () => {
-      State.settings.theme = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
-      applyTheme(); persist(); renderApp();
-    }
+    class: "btn btn-ghost btn-ico", html: ico(isDark() ? "sun" : "moon", 18), title: "Basculer clair/sombre",
+    onclick: () => { State.settings.theme = isDark() ? "light" : "dark"; applyTheme(); persist(); renderApp(); }
   });
+  const gearBtn = el("button", { class: "btn btn-ghost btn-ico only-mobile", html: ico("gear", 18), title: "Réglages", onclick: () => go("settings") });
   const topbar = el("div", { class: "topbar" },
     el("button", { class: "topbar-title", onclick: openBudgetSwitcher, title: "Changer de budget" },
       el("h1", {}, v.label),
       el("div", { class: "sub" }, `${b.emoji} ${b.name}`,
         State.budgets.filter(x => !x.archived).length > 1 ? el("span", { class: "ico", html: I.chevD, style: "width:12px;height:12px;display:inline-grid;place-items:center;vertical-align:-1px;margin-left:3px;opacity:.6" }) : null,
         ` · ${v.sub()}`)),
-    el("div", { class: "topbar-actions" },
-      Sync.chipEl(),
-      themeBtn));
+    el("div", { class: "topbar-actions" }, Sync.chipEl(), gearBtn, themeBtn));
 
   const content = el("div", { class: "content" });
   const main = el("main", { class: "main" }, topbar, content);
 
-  // navigation mobile (slots personnalisables)
-  const mobNav = Custom.mobileNav();
+  // ---- barre du bas (mobile) : 2 onglets · FAB central · 2 onglets ----
+  const tabBtn = k => el("button", {
+    class: "bn-tab" + (_view === k ? " active" : ""), onclick: () => go(k)
+  }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), VIEWS[k].label);
   const bottomnav = el("nav", { class: "bottomnav" },
-    mobNav.map(k => el("button", {
-      class: _view === k ? "active" : "",
-      onclick: () => go(k)
-    }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), VIEWS[k].label.split(" ")[0])),
-    el("button", {
-      class: !mobNav.includes(_view) ? "active" : "",
-      onclick: openMobileMenu
-    }, el("span", { class: "ico", html: I.menu }), "Plus"));
+    tabBtn("dashboard"), tabBtn("budget"),
+    el("button", { class: "bn-fab", html: ico("plus", 26), title: "Ajout rapide", onclick: openQuickAdd }),
+    tabBtn("suivi"), tabBtn("avenir"));
 
-  // bouton d'action rapide (activable, positionnable)
-  const fc = Custom.get().fab;
-  const fab = fc.enabled
-    ? el("button", { class: "fab fab-" + fc.pos, html: ico("plus", 24), title: "Ajout rapide", onclick: openQuickAdd })
-    : null;
-
-  app.append(sidebar, main, bottomnav, fab);
+  app.append(sidebar, main, bottomnav);
   v.render(content);
   Juice.view(content);
 
-  function navBtn(k) {
-    return el("button", {
-      class: "nav-item" + (_view === k ? " active" : ""),
-      title: VIEWS[k].label,
-      onclick: () => go(k)
-    }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), el("span", { class: "nav-label" }, VIEWS[k].label));
+  function navBtn(k, label, icon) {
+    return el("button", { class: "nav-item" + (_view === k ? " active" : ""), title: label, onclick: () => go(k) },
+      el("span", { class: "ico", html: I[icon] }), el("span", { class: "nav-label" }, label));
   }
 }
 
-function openMobileMenu() {
-  const keys = Custom.navMain().concat(Custom.navFoot());
-  const m = modal({
-    title: "Navigation",
-    body: el("div", { style: "display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:4px 0 8px" },
-      keys.map(k => el("button", {
-        class: "btn", style: "justify-content:flex-start; padding:12px 14px",
-        onclick: () => { m.close(); go(k); }
-      }, el("span", { class: "ico", html: I[VIEWS[k].icon], style: "width:18px;height:18px" }), VIEWS[k].label)))
-  });
+/* Barre de sous-onglets d'un hub (Suivi / Avenir). */
+function subTabBar(hub) {
+  const cur = _sub[hub] || HUBS[hub].def;
+  return el("div", { class: "subtabs" }, HUBS[hub].subs.map(s =>
+    el("button", { class: "subtab" + (s.k === cur ? " on" : ""), onclick: () => { _sub[hub] = s.k; renderApp(); $(".content") && ($(".content").scrollTop = 0); } }, s.label)));
+}
+
+function viewSuivi(root) {
+  root.append(el("div", { class: "content-inner" }, subTabBar("suivi")));
+  (VIEWS[_sub.suivi] || VIEWS.tracking).render(root);
+}
+function viewAvenir(root) {
+  root.append(el("div", { class: "content-inner" }, subTabBar("avenir")));
+  (VIEWS[_sub.avenir] || VIEWS.projection).render(root);
 }
 
 function openQuickAdd() {
   const b = curBudget();
-  const acts = Custom.get().fab.actions;
-  const byId = {}; Custom.quick().forEach(q => byId[q.id] = q);
   const m = modal({
     title: "Ajout rapide",
     body: el("div", { style: "display:flex; flex-direction:column; gap:8px; padding:4px 0 8px" },
-      acts.map(id => byId[id]).filter(Boolean).map(q =>
-        el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => q.run(b, m.close) }, `${q.emoji} ${q.label}`)))
+      Custom.quick().map(q => el("button", { class: "btn", style: "justify-content:flex-start; padding:13px 14px", onclick: () => q.run(b, m.close) }, `${q.emoji} ${q.label}`)))
   });
 }
 
@@ -7371,7 +6947,7 @@ function openBudgetSwitcher() {
 /* ---- raccourcis clavier ---- */
 document.addEventListener("keydown", e => {
   if (e.target.matches("input, select, textarea") || _openModals.length) return;
-  const map = { "1": "dashboard", "2": "budget", "3": "projection", "4": "calendar", "5": "tracking", "6": "goals", "7": "debts", "8": "events" };
+  const map = { "1": "dashboard", "2": "budget", "3": "suivi", "4": "avenir", "5": "settings" };
   if (map[e.key]) go(map[e.key]);
   if (e.key === "n") { e.preventDefault(); openTxEditor(curBudget(), null); }
 });
@@ -7389,6 +6965,7 @@ window.addEventListener("beforeunload", () => {
   clearTimeout(_saveTimer);
   try { localStorage.setItem(STORE_KEY, JSON.stringify(State)); } catch (e) {}
 });
+
 </script>
 </body>
 </html>

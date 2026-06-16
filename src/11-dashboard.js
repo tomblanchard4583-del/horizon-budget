@@ -1,5 +1,5 @@
 "use strict";
-/* ============ vue : tableau de bord ============ */
+/* ============ vue : accueil (une info maîtresse, puis des cartes calmes) ============ */
 
 function viewDashboard(root) {
   const b = curBudget();
@@ -7,116 +7,52 @@ function viewDashboard(root) {
   const proj = project(b, { months: Math.max(13, State.settings.horizonMonths) });
   const m0 = proj[0];
   const real = realMonthByCat(b, ymNow);
-  const balNow = balanceAtMonthStart(b, ymNow) + real.income - real.expense;
   const reste = remainingPlanned(b, ymNow);
-  const disponible = balNow - reste.total;
-  const alerts = computeAlerts(b);
-  const insights = (typeof Insights !== "undefined") ? Insights.compute(b) : [];
   const sts = Insights.safeToSpend(b);
   const cur = b.currency;
-
-  const plannedLeft = m0.income - m0.expense;
   const endOfMonth = m0.balance;
-  const savingRate = m0.income > 0 ? (m0.income - m0.expense + m0.saving) / m0.income : 0;
-  // KPIs — sélection & ordre personnalisables (scope "dash.kpi")
-  const kpiDefs = {
-    dispo: () => kpi("Argent réellement disponible", fmtMoney(disponible, cur),
-      reste.total > 0.5 ? `solde ${fmtMoney(balNow, cur)} − ${fmtMoney(reste.total, cur)} déjà prévus, pas encore débités` : "rien de prévu n'est encore en attente de débit", disponible < 0 ? "neg" : "pos"),
-    soldeNow: () => kpi("Solde réel aujourd'hui", fmtMoney(balNow, cur), `${State.transactions.filter(t => t.budgetId === b.id).length ? "solde initial + transactions saisies" : "solde initial du " + fmtDateShort(b.initialDate)}`),
-    finMois: () => kpi("Solde prévu fin " + MOIS[+ymNow.slice(5, 7) - 1], fmtMoney(endOfMonth, cur), plannedLeft >= 0 ? `+${fmtMoney(plannedLeft, cur)} ce mois-ci` : `${fmtMoney(plannedLeft, cur)} ce mois-ci`, endOfMonth < 0 ? "neg" : "pos"),
-    epargne: () => kpi("Taux d'épargne prévu", m0.income > 0 ? fmtPct(savingRate) : "—", m0.saving > 0 ? `dont ${fmtMoney(m0.saving, cur)} d'épargne versée` : "revenus − dépenses, en % des revenus", savingRate < 0 ? "neg" : ""),
-    depReelles: () => kpi("Dépenses réelles du mois", fmtMoney(real.expense, cur), m0.expense > 0 ? `sur ${fmtMoney(m0.expense, cur)} prévues (${Math.round(real.expense / m0.expense * 100)} %)` : "aucune dépense prévue", real.expense > m0.expense && m0.expense > 0 ? "neg" : ""),
-    resteJour: () => kpi("Reste à vivre par jour", fmtMoney(sts.perDay, cur), `${fmtMoney(sts.dispo, cur)} sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`, sts.perDay < 0 ? "neg" : "pos"),
-  };
-  const kpiIds = Custom.catalogIds("dash.kpi");
-  const kpiVisible = Custom.order("dash.kpi", kpiIds).filter(id => !Custom.isHidden("dash.kpi", id) && kpiDefs[id]);
-  const kpis = el("div", { class: "grid kpi-grid", style: "grid-template-columns:repeat(auto-fit,minmax(190px,1fr))" },
-    (kpiVisible.length ? kpiVisible : kpiIds).map(id => kpiDefs[id]()));
+  const monthName = MOIS[+ymNow.slice(5, 7) - 1];
 
-  // analyse intelligente : constats chiffrés, prédictifs & actionnables
-  const toneCls = { danger: "danger", warn: "warn", good: "ok", info: "info", opp: "info" };
-  const insightCard = insights.length ? el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "💡 Analyse intelligente"),
-      el("span", { class: "spacer" }), el("span", { class: "xs muted" }, "d'après vos données")),
-    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:10px" },
-      insights.map(it => el("div", { class: "insight" },
-        el("div", { class: "alert a-" + (toneCls[it.tone] || "info"), style: "flex:1; min-width:0" },
-          el("span", { class: "a-ico", html: ico(it.icon, 17) }), el("span", {}, it.text)),
-        el("div", { class: "insight-act" },
-          it.action ? el("button", { class: "btn btn-sm btn-p", onclick: () => { const r = it.action.run(); if (typeof r === "string") toast("✅ " + r); } }, it.action.label) : null,
-          el("button", { class: "btn btn-sm btn-ghost btn-ico", title: "Ignorer", html: ico("x", 15), onclick: () => { Intel.dismiss(it.id); persist(); renderApp(); } })))))
-  ) : null;
-
-  // dépenses prévues pas encore débitées (réservées, non comptées comme disponibles)
-  const resteCard = reste.rows.length ? el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "🔒 Déjà prévu, pas encore débité"),
-      el("span", { class: "spacer" }), el("span", { class: "small muted" }, `${fmtMoney(reste.total, cur)} réservés`)),
-    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:8px" },
-      reste.rows.slice(0, 8).map(r => el("div", { class: "flex small" },
-        el("span", { class: "cat-dot", style: "background:" + (r.cat ? r.cat.color : "#dc2626") }),
-        el("span", {}, r.cat ? `${r.cat.emoji} ${r.cat.name}` : "💳 Crédits & autres"),
-        el("span", { class: "spacer" }),
-        el("span", { class: "xs muted" }, `${fmtMoney(r.real, cur)} / ${fmtMoney(r.planned, cur)}`),
-        el("b", { class: "mono" }, fmtMoney(r.remaining, cur))
-      ))
-    )
-  ) : null;
-
-  // alertes
-  const alertBox = alerts.length ? el("div", { class: "grid", style: "gap:8px" },
-    alerts.slice(0, 4).map(a => el("div", { class: "alert a-" + (a.type === "danger" ? "danger" : a.type === "warn" ? "warn" : "info") },
-      el("span", { class: "a-ico", html: ico(a.icon, 17) }), el("span", {}, a.text)))
-  ) : null;
-
-  // graphique projection 12 mois — type personnalisable (courbe / barres)
-  const horizon = Math.min(proj.length, 13);
-  const projType = Custom.get().dash.chart.projection;
-  const projGraph = projType === "bars"
-    ? chartBars({ labels: proj.slice(0, horizon).map(r => r.ym), pos: proj.slice(0, horizon).map(r => r.income), neg: proj.slice(0, horizon).map(r => r.expense), cur, height: 230 })
-    : chartLine({
-      labels: proj.slice(0, horizon).map(r => r.ym),
-      series: [
-        { name: "Solde", color: "#10b981", values: proj.slice(0, horizon).map(r => r.balance), fill: true },
-        { name: "Patrimoine net", color: "#8b5cf6", values: proj.slice(0, horizon).map(r => r.netWorth), dash: true },
-      ],
-      markers: proj.slice(0, horizon).flatMap((r, i) => r.events.map(e => ({ idx: i, label: e.name, emoji: e.emoji }))),
-      cur, height: 230,
-    });
-  const chartCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, projType === "bars" ? "Revenus & dépenses" : "Projection du solde"), el("span", { class: "spacer" }),
-      chartTypeBtn("projection", projType === "bars" ? "line" : "bars", projType === "bars" ? "Voir en courbe" : "Voir en barres"),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("projection") }, "Tout voir →")),
-    el("div", { class: "card-pad" }, projGraph)
+  // ---------- HÉROS : reste à vivre ce mois-ci ----------
+  const heroVal = sts.dispo;
+  const heroCls = heroVal < 0 ? "neg" : "pos";
+  const hero = el("div", { class: "hero" },
+    el("div", { class: "h-label" }, "Reste à vivre ce mois-ci"),
+    el("div", { class: "h-value " + heroCls }, ...moneyHero(heroVal, cur)),
+    el("div", { class: "h-sub" }, sts.daysLeft > 0
+      ? `${fmtMoney(sts.perDay, cur)} par jour sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`
+      : "dernier jour du mois"),
+    el("div", { class: "h-spark" }, sparkline(proj.slice(0, 13).map(r => r.balance), heroVal < 0)),
+    el("div", { class: "h-foot" }, `Solde prévu fin ${monthName} : `,
+      el("b", { class: endOfMonth < 0 ? "neg" : "pos" }, fmtMoney(endOfMonth, cur, { sign: true })),
+      el("span", { class: "spacer", style: "flex:1" }),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("projection") }, "Projection →"))
   );
 
-  // donut répartition du mois
-  const parts = Object.entries(m0.byCat).map(([id, v]) => {
-    const c = catById(b, id);
-    return { label: c ? c.name : "Crédits & autres", emoji: c ? c.emoji : "💳", color: c ? c.color : "#dc2626", value: v };
-  }).sort((a, z) => z.value - a.value);
-  const breakdownType = Custom.get().dash.chart.breakdown;
-  const breakMax = Math.max(1, ...parts.map(p => p.value));
-  const breakBody = breakdownType === "bars"
-    ? el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:11px" },
-      parts.slice(0, 8).map(p => el("div", {},
-        el("div", { class: "flex", style: "font-size:13px; margin-bottom:5px" }, el("span", {}, `${p.emoji} ${p.label}`),
-          el("span", { class: "spacer" }), el("b", { class: "mono" }, fmtMoney(p.value, cur))),
-        el("div", { class: "pbar" }, el("i", { style: `width:${p.value / breakMax * 100}%; background:${p.color}` })))))
-    : el("div", { class: "card-pad" },
-      chartDonut({ parts, cur, height: 195, centerLabel: "ce mois-ci" }),
-      el("div", { class: "mt12" }, parts.slice(0, 6).map(p => el("div", { class: "flex", style: "padding:3.5px 0; font-size:13px" },
-        el("span", { class: "cat-dot", style: "background:" + p.color }),
-        el("span", {}, `${p.emoji} ${p.label}`),
-        el("span", { class: "spacer" }),
-        el("b", { class: "mono" }, fmtMoney(p.value, cur))
-      ))));
-  const donutCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Dépenses prévues du mois"), el("span", { class: "spacer" }),
-      parts.length ? chartTypeBtn("breakdown", breakdownType === "bars" ? "donut" : "bars", breakdownType === "bars" ? "Voir en anneau" : "Voir en barres") : null),
-    parts.length ? breakBody : emptyState("🌱", "Aucune dépense prévue", "Ajoutez vos charges dans l'onglet Budget.")
+  // ---------- une seule analyse à la fois (la plus prioritaire) ----------
+  const alerts = computeAlerts(b);
+  const insights = (typeof Insights !== "undefined") ? Insights.compute(b) : [];
+  const danger = alerts.find(a => a.type === "danger");
+  let analysisCard = null;
+  if (danger) analysisCard = alertNode(danger);
+  else if (insights.length) analysisCard = insightNode(insights[0]);
+  else if (alerts.length) analysisCard = alertNode(alerts[0]);
+
+  // ---------- dépensé ce mois ----------
+  const spent = real.expense, planned = m0.expense;
+  const pct = planned > 0 ? spent / planned : 0;
+  const over = planned > 0 && spent > planned;
+  const depCard = el("div", { class: "home-card" },
+    el("div", { class: "hc-head" }, el("h3", {}, "Dépensé ce mois"), el("span", { class: "spacer" }),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("tracking") }, "Détail")),
+    el("div", { class: "hc-pad home-prog" },
+      el("div", { class: "hp-top" },
+        el("b", { class: "mono", style: "font-size:16px" }, fmtMoney(spent, cur)),
+        el("span", { class: "v" }, planned > 0 ? `sur ${fmtMoney(planned, cur)} prévus · ${Math.round(pct * 100)} %` : "aucun budget prévu")),
+      el("div", { class: "pbar" + (over ? " over" : "") }, el("i", { style: `width:${Math.min(100, pct * 100)}%` })))
   );
 
-  // prochaines échéances (14 jours)
+  // ---------- à venir (14 jours) ----------
   const upcoming = [];
   for (const ym of [ymNow, addMonths(ymNow, 1)]) {
     const flows = dayFlows(b, ym);
@@ -127,72 +63,83 @@ function viewDashboard(root) {
     }
   }
   upcoming.sort((a, z) => a.date.localeCompare(z.date));
-  const upCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Échéances des 14 prochains jours"), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("calendar") }, "Calendrier →")),
-    upcoming.length ? el("div", { class: "row-list", style: "padding-bottom:8px" }, upcoming.slice(0, 8).map(u =>
-      el("div", { class: "item-row", style: "cursor:default" },
-        el("div", { class: "i-emoji", style: "font-size:12px; font-weight:700; flex-direction:column; line-height:1.1; display:flex; align-items:center; justify-content:center" },
-          el("span", {}, String(+u.date.slice(8))), el("span", { class: "xs muted" }, MOIS[+u.date.slice(5, 7) - 1].slice(0, 4) + ".")),
-        el("div", { class: "i-main" },
-          el("div", { class: "i-name" }, u.item.name || "(sans nom)"),
-          el("div", { class: "i-sub" }, u.item._debt ? "mensualité de crédit" : catLabel(b, u.item.categoryId))),
-        el("div", { class: "i-amt " + (u.item.kind === "income" ? "pos" : "") }, fmtMoney(u.item.kind === "income" ? u.amount : -u.amount, cur, { sign: true }))
-      ))) : emptyState("📭", "Rien à signaler", "Aucune échéance planifiée sur les 14 prochains jours.")
+  const upCard = el("div", { class: "home-card" },
+    el("div", { class: "hc-head" }, el("h3", {}, "À venir"), el("span", { class: "spacer" }),
+      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("calendar") }, "Calendrier")),
+    upcoming.length
+      ? el("div", { class: "row-list", style: "padding-bottom:6px" }, upcoming.slice(0, 4).map(u => upRow(b, u, cur)))
+      : emptyState("📭", "Rien à l'horizon", "Aucune échéance sur les 14 prochains jours.")
   );
 
-  // objectifs
-  const goalCard = b.goals.length ? el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Objectifs d'épargne"), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("goals") }, "Gérer →")),
-    el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:14px" },
-      b.goals.slice(0, 4).map(g => {
-        const current = +g.current || 0;
-        const pct = g.target ? clamp(current / g.target, 0, 1) : 0;
-        const done = g.target > 0 && current >= g.target;
-        const eta = done ? null : goalEta(b, g);
-        return el("div", {},
-          el("div", { class: "flex small mb8" }, el("span", {}, `${g.emoji || "🎯"} ${g.name}`), el("span", { class: "spacer" }),
-            el("b", { class: "mono" }, fmtMoney(current, cur, { dec: 0 }) + " / " + fmtMoney(g.target, cur, { dec: 0 }))),
-          el("div", { class: "pbar" }, el("i", { style: `width:${pct * 100}%; background:${g.color || "var(--accent)"}` })),
-          el("div", { class: "xs muted", style: "margin-top:5px" },
-            done ? "Objectif atteint"
-              : `Reste ${fmtMoney(Math.max(0, (g.target || 0) - current), cur, { dec: 0 })}` + (eta ? ` · atteint vers ${fmtYm(eta).toLowerCase()}` : ""))
-        );
-      })
-    )
-  ) : null;
-
-  const goalsNode = goalCard || el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Objectifs d'épargne")),
-    emptyState("🎯", "Aucun objectif", "Vacances, permis, apport immobilier… fixez un cap et suivez votre progression.",
-      el("button", { class: "btn btn-p btn-sm", onclick: () => go("goals") }, "Créer un objectif")));
-
-  const grid = el("div", { class: "dash-grid" });
-  Custom.renderInto(grid, "dash.sec", [
-    { id: "kpis", node: kpis, span: 12 },
-    { id: "insight", node: insightCard, span: 12 },
-    { id: "alerts", node: alertBox, span: 12 },
-    { id: "reste", node: resteCard, span: 12 },
-    { id: "projection", node: chartCard, span: 6 },
-    { id: "breakdown", node: donutCard, span: 6 },
-    { id: "upcoming", node: upCard, span: 6 },
-    { id: "goals", node: goalsNode, span: 6 },
-  ], { axis: "grid" });
-  root.append(el("div", { class: "content-inner" }, grid));
-
-  function chartTypeBtn(which, to, title) {
-    return el("button", {
-      class: "btn btn-sm btn-ghost btn-ico", title, html: ico("layers", 15),
-      onclick: () => { Custom.get().dash.chart[which] = to; Custom.save(); }
-    });
+  // ---------- objectifs (compact, si présents) ----------
+  let goalCard = null;
+  if (b.goals && b.goals.length) {
+    goalCard = el("div", { class: "home-card" },
+      el("div", { class: "hc-head" }, el("h3", {}, "Objectifs"), el("span", { class: "spacer" }),
+        el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("goals") }, "Gérer")),
+      el("div", { class: "hc-pad", style: "display:flex; flex-direction:column; gap:14px" },
+        b.goals.slice(0, 3).map(g => {
+          const current = +g.current || 0;
+          const p = g.target ? clamp(current / g.target, 0, 1) : 0;
+          const done = g.target > 0 && current >= g.target;
+          return el("div", {},
+            el("div", { class: "flex small mb8" }, el("span", {}, `${g.emoji || "🎯"} ${g.name}`), el("span", { class: "spacer" }),
+              el("b", { class: "mono" }, fmtMoney(current, cur, { dec: 0 }) + " / " + fmtMoney(g.target, cur, { dec: 0 }))),
+            el("div", { class: "pbar" }, el("i", { style: `width:${p * 100}%; background:${g.color || "var(--accent)"}` })),
+            el("div", { class: "xs muted", style: "margin-top:5px" },
+              done ? "Objectif atteint" : `Reste ${fmtMoney(Math.max(0, (g.target || 0) - current), cur, { dec: 0 })}`));
+        }))
+    );
   }
 
-  function kpi(label, value, sub, tone) {
-    return el("div", { class: "card kpi" },
-      el("div", { class: "k-label" }, label),
-      el("div", { class: "k-value " + (tone || "") }, value),
-      el("div", { class: "k-sub" }, sub || "")
-    );
+  const stack = el("div", { class: "home-stack" }, hero, analysisCard, depCard, upCard, goalCard);
+  root.append(el("div", { class: "content-inner" }, stack));
+
+  // ---- helpers ----
+  function moneyHero(v, cur) {
+    const s = fmtMoney(v, cur);
+    const mt = s.match(/^([\s\d., \-+]+)(.*)$/);
+    if (!mt || !mt[2]) return [s];
+    return [mt[1].trim(), el("span", { class: "cur" }, " " + mt[2].trim())];
+  }
+  function sparkline(vals, neg) {
+    const n = vals.length;
+    if (n < 2) return el("div");
+    const W = 320, H = 46, pad = 4;
+    const min = Math.min(...vals), max = Math.max(...vals), span = (max - min) || 1;
+    const x = i => (i / (n - 1) * W).toFixed(1);
+    const y = v => (H - pad - (v - min) / span * (H - pad * 2)).toFixed(1);
+    const pts = vals.map((v, i) => `${x(i)},${y(v)}`).join(" ");
+    const col = neg ? "var(--danger)" : "var(--accent)";
+    const area = `0,${H} ${pts} ${W},${H}`;
+    const svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none" aria-hidden="true">`
+      + `<polygon points="${area}" fill="${col}" opacity="0.10"/>`
+      + `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>`
+      + `<circle cx="${x(n - 1)}" cy="${y(vals[n - 1])}" r="3.2" fill="${col}"/></svg>`;
+    return el("div", { class: "spark", html: svg });
+  }
+  function upRow(b, u, cur) {
+    const income = u.item.kind === "income";
+    return el("div", { class: "item-row", style: "cursor:default" },
+      el("div", { class: "i-emoji", style: "font-size:12px; font-weight:700; flex-direction:column; line-height:1.1; display:flex; align-items:center; justify-content:center" },
+        el("span", {}, String(+u.date.slice(8))), el("span", { class: "xs muted" }, MOIS[+u.date.slice(5, 7) - 1].slice(0, 4) + ".")),
+      el("div", { class: "i-main" },
+        el("div", { class: "i-name" }, u.item.name || "(sans nom)"),
+        el("div", { class: "i-sub" }, u.item._debt ? "mensualité de crédit" : catLabel(b, u.item.categoryId))),
+      el("div", { class: "i-amt " + (income ? "pos" : "") }, fmtMoney(income ? u.amount : -u.amount, cur, { sign: true })));
+  }
+  function alertNode(a) {
+    return el("div", { class: "home-card" }, el("div", { class: "hc-pad" },
+      el("div", { class: "alert a-" + (a.type === "danger" ? "danger" : a.type === "warn" ? "warn" : "info") },
+        el("span", { class: "a-ico", html: ico(a.icon, 17) }), el("span", {}, a.text))));
+  }
+  function insightNode(it) {
+    const toneCls = { danger: "danger", warn: "warn", good: "ok", info: "info", opp: "info" };
+    return el("div", { class: "home-card" }, el("div", { class: "hc-pad insight" },
+      el("div", { class: "alert a-" + (toneCls[it.tone] || "info"), style: "flex:1; min-width:0" },
+        el("span", { class: "a-ico", html: ico(it.icon, 17) }), el("span", {}, it.text)),
+      el("div", { class: "insight-act" },
+        it.action ? el("button", { class: "btn btn-sm btn-p", onclick: () => { const r = it.action.run(); if (typeof r === "string") toast("✅ " + r); } }, it.action.label) : null,
+        el("button", { class: "btn btn-sm btn-ghost btn-ico", title: "Ignorer", html: ico("x", 15), onclick: () => { Intel.dismiss(it.id); persist(); renderApp(); } }))));
   }
 }

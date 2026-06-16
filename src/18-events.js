@@ -159,7 +159,7 @@ function openEventEditor(b, ev) {
         fField("Nom", nameI, { full: true }),
         fField("Emoji", emojiI), fField("Date", dateI),
         fField("Notes", notesI, { full: true })),
-      el("div", { class: "small mt16 mb8", style: "font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--tx2)" }, "Changements liés"),
+      el("div", { class: "small mt16 mb8", style: "font-weight:650; color:var(--tx2)" }, "Changements liés"),
       linkedBox),
     foot: [
       !isNew ? el("button", {
