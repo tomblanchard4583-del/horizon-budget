@@ -673,7 +673,14 @@ svg:has(.dslice:hover) .dslice:not(:hover){opacity:.45}
 /* ============ utilitaires ============ */
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => [...(root || document).querySelectorAll(sel)];
-const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+const uid = () => {
+  if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  // fallback : 8 octets aléatoires → hex (crypto.getRandomValues si dispo, sinon Math.random)
+  const bytes = new Uint8Array(8);
+  if (typeof crypto !== "undefined" && crypto.getRandomValues) crypto.getRandomValues(bytes);
+  else bytes.forEach((_, i) => { bytes[i] = Math.random() * 256 | 0; });
+  return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
+};
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const round2 = v => Math.round(v * 100) / 100;
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));

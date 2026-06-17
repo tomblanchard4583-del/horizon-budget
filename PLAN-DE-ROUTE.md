@@ -23,11 +23,11 @@ Quand l'utilisateur dit « réfère-toi au plan de route et travaille en autonom
 
 ## ⏯️ REPRENDRE ICI
 
-**État global :** 🟧 En cours — fondations techniques posées (P0 ✅), PR-1 (bilan mensuel) ✅, **PR-2 (notifications) ❌ ABANDONNÉ**. Sprint 2 fiabilité : T1-1 ✅, T1-2 ✅, T1-3 ✅. Sprint 2 terminé. Prochaine : Sprint 3 (confiance & enveloppes).
+**État global :** 🟧 En cours — fondations techniques posées (P0 ✅), PR-1 (bilan mensuel) ✅, **PR-2 (notifications) ❌ ABANDONNÉ**. Sprint 2 fiabilité : T1-1 ✅, T1-2 ✅, T1-3 ✅. Sprint 2 terminé. Sprint 3 en cours : T2-1 ✅.
 
-**Prochaine action :** Tâche **T2-1 — `uid()` cryptographique** (Sprint 3, plus rapide que PR-3/PR-4 car S).
+**Prochaine action :** Tâche **PR-3 — Verrou applicatif (biométrie / code)** (Sprint 3).
 
-**Contexte pour démarrer :** T1-3 livré — `State.sync.lamport` + `stampChanges` Lamport + `_ts` wall-clock sur records + `mergeSettings` champ par champ + `_revs` par champ settings. Prochaine (ordre sprint 3) : T2-1 `uid()` crypto (S), puis PR-3 verrou biométrie (M), PR-4 enveloppes (M), T2-2 PBKDF2 (M), T2-3 XSS audit (M). Voir section [Sprint 3](#-sprint-3--confiance--enveloppes).
+**Contexte pour démarrer :** T2-1 livré — `uid()` utilise `crypto.randomUUID()` (fallback `getRandomValues` 8 octets hex) dans `src/00-utils.js:5`. Prochaine (ordre sprint 3) : PR-3 verrou biométrie (M), PR-4 enveloppes (M), T2-2 PBKDF2 (M), T2-3 XSS audit (M). Voir section [Sprint 3](#-sprint-3--confiance--enveloppes).
 
 **En suspens :** décisions stratégiques **PR-X (agrégation DSP2)** — ne rien coder sans arbitrage Tom (casse potentiellement le local-first).
 
@@ -141,9 +141,10 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 - **Pourquoi :** se rapprocher de la vraie méthode enveloppe (forces #1 et #8 du rapport) sans casser l'hybride.
 - **Critère :** par catégorie, reste affiché et alerte au franchissement d'un seuil paramétrable.
 
-#### T2-1 — `uid()` cryptographique `⬜ À FAIRE` · S
-- Remplacer `Math.random().toString(36)…` (`00-utils.js:5`) par `crypto.randomUUID()` (fallback si indisponible). Anciens ids restent valides.
+#### T2-1 — `uid()` cryptographique `✅ FAIT` · S
+- Remplacer `Math.random().toString(36)…` (`00-utils.js:5`) par `crypto.randomUUID()` (fallback `getRandomValues` 8 octets hex si `randomUUID` indisponible). Anciens ids restent valides.
 - **Pourquoi :** en fusion CRDT, une collision d'id corrompt le merge.
+- **Livré :** `src/00-utils.js:5` — `uid()` rewritten. Vérif : `node --check` OK, `build.py` OK (26 modules), `npm test` 47 verts.
 
 #### T2-2 — Durcissement crypto sync `⬜ À FAIRE` · M
 - PBKDF2 150 000 → **600 000** itérations (`30-sync.js:135`, OWASP 2026). Migration : champ de version dans le payload chiffré pour déchiffrer l'ancien et ré-chiffrer au nouveau format. Documenter dans l'UI que **le code de salon EST la clé**.
@@ -203,4 +204,5 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 - **2026-06-17** — **PR-1 ✅ LIVRÉ** Bilan mensuel factuel + **auto-trigger supprimé**. Fichiers : `src/21-review.js` (nouveau, 240 lignes), `src/99-app.js` (auto-trigger `maybeShow` supprimé — manuel seulement), `src/15-tracking.js` (bouton « Bilan du mois »), `PLAN-DE-ROUTE.md`, `AUDIT-2026-PRODUIT-UX.md`. Vérif : `node --check` + `build.py` + `npm test` (37 verts) OK, navigateur : aucune modale auto à l'ouverture, bouton Suivi fonctionnel. **Commit 656d1c7** initial + commit suivant suppression auto-trigger.
 - **2026-06-17** — **T1-1 ✅ LIVRÉ** Stockage IndexedDB (fallback localStorage). Fichiers : `src/02-store.js` (helpers IDB, `loadStateAsync()`, `persistSync()`, migration auto), `src/99-app.js` (init `.then()`, `beforeunload` → `persistSync()`), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK (26 modules) + `npm test` 37 verts. Navigateur : IDB contient état, app rend sans erreur. Prochaine : **T1-2**.
 - **2026-06-17** — **T1-2 ✅ LIVRÉ** Mémoïsation de `project()`. Fichiers : `src/04-engine.js` (`_projectCache` WeakMap, clé interne `_stateVersion|months|from|mode|inflation|startBalance`), `src/02-store.js` (`_stateVersion` + incrément dans `persist()`), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK (26 modules) + `npm test` 37 verts. Prochaine : **T1-3**.
+- **2026-06-17** — **T2-1 ✅ LIVRÉ** `uid()` cryptographique. Fichier : `src/00-utils.js` (`crypto.randomUUID()` + fallback `getRandomValues`). Vérif : `node --check` + `build.py` OK + `npm test` 47 verts. Prochaine : **PR-3**.
 - **2026-06-17** — **T1-3 ✅ LIVRÉ** Sync : Lamport + fusion settings champ par champ. Fichiers : `src/30-sync.js` (`STABLE_SKIP`, `DEVICE_LOCAL_SETTINGS`, `_prevSettingsSnap`, `stampChanges` Lamport+`_ts`, `_maxRevInDoc`, `mergeSettings`, `mergeArr` rétrocompat `_ts||_rev`, `applyDoc` simplifié+Lamport, Lamport update dans `pushNow`+`poll`), `src/02-store.js` (`State.sync.lamport`), `tests/sync.test.js` (10 tests CRDT), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK + `npm test` 47 verts. Prochaine : **T2-1**.
