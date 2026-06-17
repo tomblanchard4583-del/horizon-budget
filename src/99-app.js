@@ -185,7 +185,7 @@ applyTheme();
 Custom.apply();
 Sync.init();
 if (!State.onboarded || !State.budgets.length) showOnboarding();
-else renderApp();
+else { renderApp(); MonthReview.maybeShow(curBudget()); }
 window.addEventListener("beforeunload", () => {
   if (window._wipe) return; // effacement volontaire : ne pas re-sauvegarder
   clearTimeout(_saveTimer);

@@ -20,6 +20,7 @@ function viewTracking(root) {
     el("h3", { style: "min-width:170px; text-align:center" }, fmtYm(ym)),
     el("button", { class: "btn btn-ico", title: "Mois suivant", html: ico("chevR", 18), onclick: () => { _trackYm = addMonths(ym, 1); renderApp(); } }),
     el("span", { class: "spacer" }),
+    el("button", { class: "btn btn-sm", html: ico("flag", 15) + "<span>Bilan du mois</span>", onclick: () => MonthReview.open(b, ym) }),
     el("button", { class: "btn btn-sm", html: ico("up", 15) + "<span>Importer CSV</span>", onclick: () => openCsvImport(b) }),
     el("button", { class: "btn btn-sm", html: ico("down", 15) + "<span>Exporter</span>", onclick: exportTransactionsCSV }),
     el("button", { class: "btn btn-p btn-sm", html: ico("plus", 15) + "<span>Transaction</span>", onclick: () => openTxEditor(b, null, ym === ymNow ? todayStr() : ym + "-01") })
