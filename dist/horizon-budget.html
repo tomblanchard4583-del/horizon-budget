@@ -1001,6 +1001,37 @@ const BUDGET_COLORS = ["#10b981", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#
 "use strict";
 /* ============ état global & persistance ============ */
 const STORE_KEY = "horizon-budget-v1";
+const _IDB_NAME  = "horizon-budget";
+const _IDB_STORE = "state";
+const _IDB_KEY   = "v1";
+
+let _idbP = null;
+function _idbOpen() {
+  if (_idbP) return _idbP;
+  _idbP = new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error("no-idb")); return; }
+    const req = indexedDB.open(_IDB_NAME, 1);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(_IDB_STORE);
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror   = () => { _idbP = null; reject(req.error); };
+  });
+  return _idbP;
+}
+function _idbWrite(json) {
+  return _idbOpen().then(db => new Promise((resolve, reject) => {
+    const tx = db.transaction(_IDB_STORE, "readwrite");
+    tx.objectStore(_IDB_STORE).put(json, _IDB_KEY);
+    tx.oncomplete = resolve;
+    tx.onerror    = () => reject(tx.error);
+  }));
+}
+function _idbRead() {
+  return _idbOpen().then(db => new Promise((resolve, reject) => {
+    const req = db.transaction(_IDB_STORE, "readonly").objectStore(_IDB_STORE).get(_IDB_KEY);
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror   = () => reject(req.error);
+  }));
+}
 
 const State = {
   version: 1,
@@ -1076,33 +1107,55 @@ function newItem(kind) {
 }
 
 let _saveTimer = null;
+let _lastJson   = null;
+
 function persist() {
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(State)); }
-    catch (e) { toast("⚠️ Sauvegarde locale impossible (stockage plein ?)"); }
+    const json = JSON.stringify(State);
+    _lastJson = json;
+    _idbWrite(json).catch(() => {
+      try { localStorage.setItem(STORE_KEY, json); }
+      catch (e) { toast("⚠️ Sauvegarde locale impossible (stockage plein ?)"); }
+    });
   }, 250);
   if (window.Sync && State.sync.enabled) Sync.schedulePush();
 }
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORE_KEY);
-    if (!raw) return;
-    const data = JSON.parse(raw);
-    if (data && data.version >= 1) {
-      const sync = Object.assign({}, State.sync, data.sync || {});
-      const settings = Object.assign({}, State.settings, data.settings || {});
-      const intel = Object.assign({}, State.intel, data.intel || {});
-      const ai = Object.assign({}, State.ai, data.ai || {});
-      Object.assign(State, data);
-      State.sync = sync;       // garantit les nouveaux champs même sur anciennes sauvegardes
-      State.settings = settings;
-      State.intel = intel;
-      State.ai = ai;
-      delete State.gami;       // reliquat d'une ancienne version
+/* Écriture synchrone pour beforeunload — localStorage comme copie d'urgence. */
+function persistSync() {
+  clearTimeout(_saveTimer);
+  const json = _lastJson || JSON.stringify(State);
+  try { localStorage.setItem(STORE_KEY, json); } catch (e) {}
+}
+
+function _applyRaw(raw) {
+  const data = JSON.parse(raw);
+  if (!data || data.version < 1) return;
+  const sync     = Object.assign({}, State.sync,     data.sync     || {});
+  const settings = Object.assign({}, State.settings, data.settings || {});
+  const intel    = Object.assign({}, State.intel,    data.intel    || {});
+  const ai       = Object.assign({}, State.ai,       data.ai       || {});
+  Object.assign(State, data);
+  State.sync = sync; State.settings = settings; State.intel = intel; State.ai = ai;
+  delete State.gami;
+}
+
+async function loadStateAsync() {
+  let raw = null;
+  try { raw = await _idbRead(); } catch (e) {}
+  if (!raw) {
+    /* Migration depuis localStorage */
+    try { raw = localStorage.getItem(STORE_KEY); } catch (e) {}
+    if (raw) {
+      _idbWrite(raw)
+        .then(() => { try { localStorage.removeItem(STORE_KEY); } catch (e) {} })
+        .catch(() => {});
     }
-  } catch (e) { console.warn("État illisible, démarrage à neuf", e); }
+  }
+  if (!raw) return;
+  try { _applyRaw(raw); }
+  catch (e) { console.warn("État illisible, démarrage à neuf", e); }
 }
 
 const curBudget = () => State.budgets.find(b => b.id === State.activeBudgetId) || State.budgets.find(b => !b.archived) || State.budgets[0] || null;
@@ -7138,17 +7191,17 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---- démarrage ---- */
-loadState();
-Custom.ensure();
-applyTheme();
-Custom.apply();
-Sync.init();
-if (!State.onboarded || !State.budgets.length) showOnboarding();
-else { renderApp(); }
+loadStateAsync().then(() => {
+  Custom.ensure();
+  applyTheme();
+  Custom.apply();
+  Sync.init();
+  if (!State.onboarded || !State.budgets.length) showOnboarding();
+  else { renderApp(); }
+});
 window.addEventListener("beforeunload", () => {
   if (window._wipe) return; // effacement volontaire : ne pas re-sauvegarder
-  clearTimeout(_saveTimer);
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(State)); } catch (e) {}
+  persistSync();
 });
 
 </script>

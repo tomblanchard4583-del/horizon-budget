@@ -179,15 +179,15 @@ document.addEventListener("keydown", e => {
 });
 
 /* ---- démarrage ---- */
-loadState();
-Custom.ensure();
-applyTheme();
-Custom.apply();
-Sync.init();
-if (!State.onboarded || !State.budgets.length) showOnboarding();
-else { renderApp(); }
+loadStateAsync().then(() => {
+  Custom.ensure();
+  applyTheme();
+  Custom.apply();
+  Sync.init();
+  if (!State.onboarded || !State.budgets.length) showOnboarding();
+  else { renderApp(); }
+});
 window.addEventListener("beforeunload", () => {
   if (window._wipe) return; // effacement volontaire : ne pas re-sauvegarder
-  clearTimeout(_saveTimer);
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(State)); } catch (e) {}
+  persistSync();
 });

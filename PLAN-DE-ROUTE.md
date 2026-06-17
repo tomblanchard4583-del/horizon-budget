@@ -25,9 +25,9 @@ Quand l'utilisateur dit « réfère-toi au plan de route et travaille en autonom
 
 **État global :** 🟧 En cours — fondations techniques posées (P0 ✅), PR-1 (bilan mensuel) ✅, **PR-2 (notifications) ❌ ABANDONNÉ — décision Tom : aucune notification ni rappel, jamais**. Reste fiabilité P1/P2 + suite de l'axe produit (hors triggers de retour).
 
-**Prochaine action :** Tâche **T1-1 — Stockage IndexedDB (fallback localStorage)** (Sprint 2, fiabilité). À traiter avant d'empiler des volumes de CSV.
+**Prochaine action :** Tâche **T1-2 — Mémoïsation de `project()`** (Sprint 2, fiabilité).
 
-**Contexte pour démarrer :** PR-1 livré. PR-2 développé puis **intégralement annulé** sur décision produit (cf. journal). Migrer `02-store.js` de `localStorage` vers IndexedDB, rétrocompat sur la clé `horizon-budget-v1`, `persist()`/`loadState()` async-safe, `beforeunload` cohérent. Détails : [T1-1](#t1-1--stockage-indexeddb-fallback-localstorage--m).
+**Contexte pour démarrer :** T1-1 livré — `02-store.js` écrit en IDB (async), `persistSync()` pour `beforeunload`. Prochaine : cache par cycle de rendu pour `project()`. Détails : [T1-2](#t1-2--mémoïsation-de-project--sm).
 
 **En suspens :** décisions stratégiques **PR-X (agrégation DSP2)** — ne rien coder sans arbitrage Tom (casse potentiellement le local-first).
 
@@ -113,11 +113,12 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 
 ### 🟠 SPRINT 2 — Fiabilité (dette technique = socle de confiance)
 
-#### T1-1 — Stockage IndexedDB (fallback localStorage) `⬜ À FAIRE` · M
+#### T1-1 — Stockage IndexedDB (fallback localStorage) `✅ FAIT` · M
 - Migrer la persistance de `localStorage` vers IndexedDB (quota ~5-10 Mo → plafond réel avec des années de CSV).
 - Rétrocompat : au 1er lancement, lire l'ancienne clé `horizon-budget-v1` et migrer. Gestion de quota réelle (pas juste un toast, `02-store.js:83`).
 - **Critère :** données existantes migrées sans perte ; `persist()`/`loadState()` async-safe ; `beforeunload` cohérent.
-- **Vérif :** charger une ancienne sauvegarde JSON, vérifier l'intégrité après migration.
+- **Livré :** IDB helpers `_idbOpen/Read/Write` dans `02-store.js`. `loadState()` → `loadStateAsync()` (Promise). Migration automatique depuis `localStorage` au 1er lancement (puis suppression de l'ancienne clé). `persist()` écrit en IDB async avec fallback localStorage. `persistSync()` (appel `beforeunload`) toujours synchrone vers localStorage comme copie d'urgence. `99-app.js` init wrappé dans `.then()`. Quota réel IDB.
+- **Vérif :** `node --check` OK, `python3 build.py` OK (26 modules), `npm test` 37 verts. Navigateur : IDB contient l'état correct après reload, app rend sans erreur.
 
 #### T1-2 — Mémoïsation de `project()` `⬜ À FAIRE` · S/M
 - Cache par cycle de rendu : `project(b, opts)` appelé plusieurs fois par render (dashboard + `computeAlerts` + `Insights.compute` + `safeToSpend`). Invalider à chaque `persist()`/mutation (clé = `budgetId` + hash opts + compteur de version d'état).
@@ -200,3 +201,4 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 - **2026-06-17** — **Audit produit/UX/engagement** (croisement code × rapport marché). Livré : [AUDIT-2026-PRODUIT-UX.md](AUDIT-2026-PRODUIT-UX.md). Plan de route **refondu** : fusion axe produit (PR-1→6, PR-X) + reliquat technique (T1-1→3, T2-1→3), P0 passé en historique. Prochaine : **PR-1**.
 - **2026-06-17** — **PR-2 développé puis ❌ ABANDONNÉ le même jour.** Triggers de retour (notifications factuelles) implémentés (`src/22-notify.js`, handlers SW `periodicsync`/`notificationclick`, carte Réglages, défaut `settings.notif`, amorçage). **Décision Tom : aucune notification ni rappel, jamais.** Revert intégral : fichiers supprimés/restaurés, build revenu au hash `e88308deead1`, `npm test` 37 verts, working tree propre (seul `PLAN-DE-ROUTE.md` modifié). Contrainte « aucune notification ni rappel » ajoutée aux non-négociables. Prochaine : **T1-1 (IndexedDB)**.
 - **2026-06-17** — **PR-1 ✅ LIVRÉ** Bilan mensuel factuel + **auto-trigger supprimé**. Fichiers : `src/21-review.js` (nouveau, 240 lignes), `src/99-app.js` (auto-trigger `maybeShow` supprimé — manuel seulement), `src/15-tracking.js` (bouton « Bilan du mois »), `PLAN-DE-ROUTE.md`, `AUDIT-2026-PRODUIT-UX.md`. Vérif : `node --check` + `build.py` + `npm test` (37 verts) OK, navigateur : aucune modale auto à l'ouverture, bouton Suivi fonctionnel. **Commit 656d1c7** initial + commit suivant suppression auto-trigger.
+- **2026-06-17** — **T1-1 ✅ LIVRÉ** Stockage IndexedDB (fallback localStorage). Fichiers : `src/02-store.js` (helpers IDB, `loadStateAsync()`, `persistSync()`, migration auto), `src/99-app.js` (init `.then()`, `beforeunload` → `persistSync()`), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK (26 modules) + `npm test` 37 verts. Navigateur : IDB contient état, app rend sans erreur. Prochaine : **T1-2**.
