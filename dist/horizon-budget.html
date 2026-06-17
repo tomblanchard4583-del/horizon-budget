@@ -2513,6 +2513,49 @@ const Intel = (() => {
     return true;
   }
 
+  /* Résumé en langage naturel du bilan mensuel (données agrégées uniquement, jamais l'historique brut) */
+  async function aiSummarizeReview(data) {
+    const cur = data.cur;
+    const fmt = v => fmtMoney(v, cur, { dec: 0 });
+    const topStr = data.topCats.map(t => {
+      const label = t.cat ? t.cat.name : (t.id === "_debt" ? "Crédits" : "Sans catégorie");
+      return `${label} ${fmt(t.amount)}`;
+    }).join(", ");
+    const moverStr = data.mover
+      ? `Variation notable : ${data.mover.cat ? data.mover.cat.name : "une catégorie"} ${fmt(data.mover.amount)} ce mois (${data.mover.delta > 0 ? "+" : ""}${Math.round(data.mover.pct * 100)} % vs moy. 3 mois ${fmt(data.mover.avg)}).`
+      : "";
+    const capStr = data.cap ? `Cap : ${data.cap.text}` : "";
+    const prompt = `Tu es un assistant financier factuel et sobre.
+Bilan ${data.ym} (données agrégées, aucun historique brut) :
+- Revenus : ${fmt(data.income.real)}${data.income.planned > 0 ? ` (prévu ${fmt(data.income.planned)})` : ""}
+- Dépenses : ${fmt(data.expense.real)}${data.expense.planned > 0 ? ` (prévu ${fmt(data.expense.planned)})` : ""}
+- Solde du mois : ${fmt(data.net)}
+- Top dépenses : ${topStr || "–"}
+${moverStr}
+- Solde compte : ${fmt(data.balStart)} → ${fmt(data.balEnd)}
+${capStr}
+Rédige un résumé factuel de 3 à 4 phrases en français. Aucun encouragement, aucune félicitation, aucun emoji. Ton sobre, chiffré, direct.`;
+    return callAI(prompt);
+  }
+
+  /* Répond à « puis-je me permettre X € ? » via les données de projection (jamais l'historique brut) */
+  async function aiCanAfford(b, amount, description, proj, sts) {
+    const cur = b.currency;
+    const fmt = v => fmtMoney(v, cur, { dec: 0 });
+    const planned = plannedMonth(b, ymOf(todayStr()));
+    const projStr = proj.slice(1, 7).map((r, i) => `M+${i + 1}: ${fmt(r.balance)}`).join(", ");
+    const desc = description ? `« ${description} »` : "cette dépense";
+    const prompt = `Tu es un assistant financier factuel et sobre.
+Situation financière résumée (données agrégées, aucun historique brut) :
+- Reste à vivre ce mois : ${fmt(sts.dispo)} sur ${sts.daysLeft} jours (${fmt(sts.perDay)}/jour)
+- Revenus prévus / mois : ${fmt(planned.income)}
+- Dépenses prévues / mois : ${fmt(planned.expense)}
+- Projection solde 6 mois : ${projStr}
+Question : "Puis-je me permettre ${desc} pour ${fmt(amount)} ?"
+Réponds en 2 à 3 phrases factuelles : impact sur la trésorerie, viabilité au regard de la projection. Aucun emoji, aucun encouragement.`;
+    return callAI(prompt);
+  }
+
   /* Catégorise en lot des libellés inconnus. entries = [{label, kind}] → Map label→categoryId */
   async function aiCategorize(b, entries) {
     const catNames = kind => b.categories.filter(c => c.kind === kind && c.parentId).map(c => c.name);
@@ -2541,7 +2584,7 @@ Réponds UNIQUEMENT un tableau JSON, sans autre texte : [{"i":1,"cat":"<nom exac
     merchantKey, isCashWithdrawal, suggest, learn, bumpCat, topCats,
     recordSplit, splitFor, detectRecurring, dismiss,
     rememberCsvMap, knownCsvMap,
-    aiReady, aiTest, aiCategorize,
+    aiReady, aiTest, aiCategorize, aiSummarizeReview, aiCanAfford,
   };
 })();
 
@@ -3004,7 +3047,35 @@ function viewDashboard(root) {
     );
   }
 
-  const stack = el("div", { class: "home-stack" }, hero, analysisCard, depCard, upCard, goalCard);
+  let aiCard = null;
+  if (typeof Intel !== "undefined" && Intel.aiReady()) {
+    const aiInput = el("input", { type: "number", placeholder: "Montant €", class: "input", style: "width:100px; flex-shrink:0" });
+    const aiDesc = el("input", { type: "text", placeholder: "Description (optionnel)", class: "input", style: "flex:1; min-width:0" });
+    const aiResult = el("div", { class: "xs muted", style: "padding-top:8px; white-space:pre-wrap" });
+    let aiSubmit;
+    aiSubmit = el("button", { class: "btn btn-sm btn-p", onclick: async () => {
+      const amt = parseFloat(aiInput.value);
+      if (!amt || amt <= 0) return;
+      aiSubmit.disabled = true;
+      aiResult.textContent = "Analyse en cours…";
+      try {
+        const txt = await Intel.aiCanAfford(b, amt, aiDesc.value.trim(), proj, sts);
+        aiResult.textContent = txt;
+      } catch (e) {
+        aiResult.textContent = "Erreur IA : " + (e.message || e);
+      }
+      aiSubmit.disabled = false;
+    }}, "Analyser");
+    aiCard = el("div", { class: "home-card" },
+      el("div", { class: "hc-head" },
+        el("h3", {}, "Puis-je me permettre… ?"),
+        el("span", { class: "a-ico", html: ico("spark", 17) })),
+      el("div", { class: "hc-pad" },
+        el("div", { class: "flex", style: "gap:8px; flex-wrap:wrap" }, aiInput, aiDesc, aiSubmit),
+        aiResult));
+  }
+
+  const stack = el("div", { class: "home-stack" }, hero, analysisCard, depCard, upCard, goalCard, aiCard);
   root.append(el("div", { class: "content-inner" }, stack));
 
   // ---- helpers ----
@@ -6271,6 +6342,27 @@ const MonthReview = (() => {
   /* ---------- rendu : modale de bilan ---------- */
   function open(b, ym) {
     const d = compute(b, ym);
+    const aiAvail = Intel.aiReady();
+    let aiBox = aiAvail ? el("div", { style: "display:flex; flex-direction:column; gap:14px" }) : null;
+    let aiBtn = null;
+    if (aiAvail) {
+      aiBtn = el("button", { class: "btn", onclick: async () => {
+        aiBtn.disabled = true;
+        aiBtn.textContent = "Analyse en cours…";
+        try {
+          const txt = await Intel.aiSummarizeReview(d);
+          aiBox.innerHTML = "";
+          aiBox.append(el("div", { class: "card card-pad" },
+            el("div", { class: "alert a-info" },
+              el("span", { class: "a-ico", html: ico("spark", 17) }),
+              el("span", {}, txt))));
+        } catch (e) {
+          aiBox.textContent = "Erreur IA : " + (e.message || e);
+        }
+        aiBtn.textContent = "Résumé IA";
+        aiBtn.disabled = false;
+      }}, "Résumé IA");
+    }
     const cur = d.cur;
     const expDiff = d.expense.real - d.expense.planned;
     const expPct = d.expense.planned > 0 ? d.expense.real / d.expense.planned : 0;
@@ -6332,12 +6424,13 @@ const MonthReview = (() => {
       title: "Bilan de " + fmtYm(ym),
       lg: true,
       body: empty || el("div", { style: "display:flex; flex-direction:column; gap:14px; padding:2px 0 6px" },
-        statRow, expCard, topCard, moverCard, saveCard, capCard),
+        statRow, expCard, topCard, moverCard, saveCard, capCard, aiBox),
       foot: [
         el("span", { class: "spacer" }),
+        aiBtn,
         el("button", { class: "btn", onclick: () => { m.close(); go("tracking"); } }, "Voir les opérations"),
         el("button", { class: "btn btn-p", onclick: () => m.close() }, "Fermer"),
-      ],
+      ].filter(Boolean),
     });
     return m;
   }

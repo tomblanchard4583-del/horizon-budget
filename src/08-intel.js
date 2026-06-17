@@ -266,6 +266,49 @@ const Intel = (() => {
     return true;
   }
 
+  /* Résumé en langage naturel du bilan mensuel (données agrégées uniquement, jamais l'historique brut) */
+  async function aiSummarizeReview(data) {
+    const cur = data.cur;
+    const fmt = v => fmtMoney(v, cur, { dec: 0 });
+    const topStr = data.topCats.map(t => {
+      const label = t.cat ? t.cat.name : (t.id === "_debt" ? "Crédits" : "Sans catégorie");
+      return `${label} ${fmt(t.amount)}`;
+    }).join(", ");
+    const moverStr = data.mover
+      ? `Variation notable : ${data.mover.cat ? data.mover.cat.name : "une catégorie"} ${fmt(data.mover.amount)} ce mois (${data.mover.delta > 0 ? "+" : ""}${Math.round(data.mover.pct * 100)} % vs moy. 3 mois ${fmt(data.mover.avg)}).`
+      : "";
+    const capStr = data.cap ? `Cap : ${data.cap.text}` : "";
+    const prompt = `Tu es un assistant financier factuel et sobre.
+Bilan ${data.ym} (données agrégées, aucun historique brut) :
+- Revenus : ${fmt(data.income.real)}${data.income.planned > 0 ? ` (prévu ${fmt(data.income.planned)})` : ""}
+- Dépenses : ${fmt(data.expense.real)}${data.expense.planned > 0 ? ` (prévu ${fmt(data.expense.planned)})` : ""}
+- Solde du mois : ${fmt(data.net)}
+- Top dépenses : ${topStr || "–"}
+${moverStr}
+- Solde compte : ${fmt(data.balStart)} → ${fmt(data.balEnd)}
+${capStr}
+Rédige un résumé factuel de 3 à 4 phrases en français. Aucun encouragement, aucune félicitation, aucun emoji. Ton sobre, chiffré, direct.`;
+    return callAI(prompt);
+  }
+
+  /* Répond à « puis-je me permettre X € ? » via les données de projection (jamais l'historique brut) */
+  async function aiCanAfford(b, amount, description, proj, sts) {
+    const cur = b.currency;
+    const fmt = v => fmtMoney(v, cur, { dec: 0 });
+    const planned = plannedMonth(b, ymOf(todayStr()));
+    const projStr = proj.slice(1, 7).map((r, i) => `M+${i + 1}: ${fmt(r.balance)}`).join(", ");
+    const desc = description ? `« ${description} »` : "cette dépense";
+    const prompt = `Tu es un assistant financier factuel et sobre.
+Situation financière résumée (données agrégées, aucun historique brut) :
+- Reste à vivre ce mois : ${fmt(sts.dispo)} sur ${sts.daysLeft} jours (${fmt(sts.perDay)}/jour)
+- Revenus prévus / mois : ${fmt(planned.income)}
+- Dépenses prévues / mois : ${fmt(planned.expense)}
+- Projection solde 6 mois : ${projStr}
+Question : "Puis-je me permettre ${desc} pour ${fmt(amount)} ?"
+Réponds en 2 à 3 phrases factuelles : impact sur la trésorerie, viabilité au regard de la projection. Aucun emoji, aucun encouragement.`;
+    return callAI(prompt);
+  }
+
   /* Catégorise en lot des libellés inconnus. entries = [{label, kind}] → Map label→categoryId */
   async function aiCategorize(b, entries) {
     const catNames = kind => b.categories.filter(c => c.kind === kind && c.parentId).map(c => c.name);
@@ -294,6 +337,6 @@ Réponds UNIQUEMENT un tableau JSON, sans autre texte : [{"i":1,"cat":"<nom exac
     merchantKey, isCashWithdrawal, suggest, learn, bumpCat, topCats,
     recordSplit, splitFor, detectRecurring, dismiss,
     rememberCsvMap, knownCsvMap,
-    aiReady, aiTest, aiCategorize,
+    aiReady, aiTest, aiCategorize, aiSummarizeReview, aiCanAfford,
   };
 })();

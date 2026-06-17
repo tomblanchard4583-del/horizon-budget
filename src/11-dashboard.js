@@ -92,7 +92,35 @@ function viewDashboard(root) {
     );
   }
 
-  const stack = el("div", { class: "home-stack" }, hero, analysisCard, depCard, upCard, goalCard);
+  let aiCard = null;
+  if (typeof Intel !== "undefined" && Intel.aiReady()) {
+    const aiInput = el("input", { type: "number", placeholder: "Montant €", class: "input", style: "width:100px; flex-shrink:0" });
+    const aiDesc = el("input", { type: "text", placeholder: "Description (optionnel)", class: "input", style: "flex:1; min-width:0" });
+    const aiResult = el("div", { class: "xs muted", style: "padding-top:8px; white-space:pre-wrap" });
+    let aiSubmit;
+    aiSubmit = el("button", { class: "btn btn-sm btn-p", onclick: async () => {
+      const amt = parseFloat(aiInput.value);
+      if (!amt || amt <= 0) return;
+      aiSubmit.disabled = true;
+      aiResult.textContent = "Analyse en cours…";
+      try {
+        const txt = await Intel.aiCanAfford(b, amt, aiDesc.value.trim(), proj, sts);
+        aiResult.textContent = txt;
+      } catch (e) {
+        aiResult.textContent = "Erreur IA : " + (e.message || e);
+      }
+      aiSubmit.disabled = false;
+    }}, "Analyser");
+    aiCard = el("div", { class: "home-card" },
+      el("div", { class: "hc-head" },
+        el("h3", {}, "Puis-je me permettre… ?"),
+        el("span", { class: "a-ico", html: ico("spark", 17) })),
+      el("div", { class: "hc-pad" },
+        el("div", { class: "flex", style: "gap:8px; flex-wrap:wrap" }, aiInput, aiDesc, aiSubmit),
+        aiResult));
+  }
+
+  const stack = el("div", { class: "home-stack" }, hero, analysisCard, depCard, upCard, goalCard, aiCard);
   root.append(el("div", { class: "content-inner" }, stack));
 
   // ---- helpers ----

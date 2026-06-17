@@ -94,6 +94,27 @@ const MonthReview = (() => {
   /* ---------- rendu : modale de bilan ---------- */
   function open(b, ym) {
     const d = compute(b, ym);
+    const aiAvail = Intel.aiReady();
+    let aiBox = aiAvail ? el("div", { style: "display:flex; flex-direction:column; gap:14px" }) : null;
+    let aiBtn = null;
+    if (aiAvail) {
+      aiBtn = el("button", { class: "btn", onclick: async () => {
+        aiBtn.disabled = true;
+        aiBtn.textContent = "Analyse en cours…";
+        try {
+          const txt = await Intel.aiSummarizeReview(d);
+          aiBox.innerHTML = "";
+          aiBox.append(el("div", { class: "card card-pad" },
+            el("div", { class: "alert a-info" },
+              el("span", { class: "a-ico", html: ico("spark", 17) }),
+              el("span", {}, txt))));
+        } catch (e) {
+          aiBox.textContent = "Erreur IA : " + (e.message || e);
+        }
+        aiBtn.textContent = "Résumé IA";
+        aiBtn.disabled = false;
+      }}, "Résumé IA");
+    }
     const cur = d.cur;
     const expDiff = d.expense.real - d.expense.planned;
     const expPct = d.expense.planned > 0 ? d.expense.real / d.expense.planned : 0;
@@ -155,12 +176,13 @@ const MonthReview = (() => {
       title: "Bilan de " + fmtYm(ym),
       lg: true,
       body: empty || el("div", { style: "display:flex; flex-direction:column; gap:14px; padding:2px 0 6px" },
-        statRow, expCard, topCard, moverCard, saveCard, capCard),
+        statRow, expCard, topCard, moverCard, saveCard, capCard, aiBox),
       foot: [
         el("span", { class: "spacer" }),
+        aiBtn,
         el("button", { class: "btn", onclick: () => { m.close(); go("tracking"); } }, "Voir les opérations"),
         el("button", { class: "btn btn-p", onclick: () => m.close() }, "Fermer"),
-      ],
+      ].filter(Boolean),
     });
     return m;
   }
