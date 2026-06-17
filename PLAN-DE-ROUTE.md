@@ -23,11 +23,11 @@ Quand l'utilisateur dit « réfère-toi au plan de route et travaille en autonom
 
 ## ⏯️ REPRENDRE ICI
 
-**État global :** 🟧 En cours — fondations techniques posées (P0 ✅), PR-1 (bilan mensuel) ✅, reste fiabilité P1/P2 + suite de l'axe produit.
+**État global :** 🟧 En cours — fondations techniques posées (P0 ✅), PR-1 (bilan mensuel) ✅, **PR-2 (notifications) ❌ ABANDONNÉ — décision Tom : aucune notification ni rappel, jamais**. Reste fiabilité P1/P2 + suite de l'axe produit (hors triggers de retour).
 
-**Prochaine action :** Tâche **PR-2 — Triggers de retour (notifications factuelles, opt-in)**. C'est le maillon manquant n°1 de la boucle d'habitude (aucun déclencheur de retour aujourd'hui). En parallèle, la dette technique **T1-1 (IndexedDB)** reste à traiter avant d'empiler des volumes de données.
+**Prochaine action :** Tâche **T1-1 — Stockage IndexedDB (fallback localStorage)** (Sprint 2, fiabilité). À traiter avant d'empiler des volumes de CSV.
 
-**Contexte pour démarrer :** PR-1 livré (bilan mensuel factuel). Reste à brancher le **Trigger** : notifications locales sobres (Notification API + Periodic Background Sync où dispo, fallback rappel à l'ouverture), opt-in dans Réglages, source = `Insights`/`computeAlerts` existants. **Aucune notif motivante/anxiogène.** Détails : [PR-2](#pr-2--triggers-de-retour-notifications-factuelles-opt-in-).
+**Contexte pour démarrer :** PR-1 livré. PR-2 développé puis **intégralement annulé** sur décision produit (cf. journal). Migrer `02-store.js` de `localStorage` vers IndexedDB, rétrocompat sur la clé `horizon-budget-v1`, `persist()`/`loadState()` async-safe, `beforeunload` cohérent. Détails : [T1-1](#t1-1--stockage-indexeddb-fallback-localstorage--m).
 
 **En suspens :** décisions stratégiques **PR-X (agrégation DSP2)** — ne rien coder sans arbitrage Tom (casse potentiellement le local-first).
 
@@ -67,7 +67,8 @@ npm test          # = node --test tests/*.test.js   (37 tests verts au 2026-06-1
 
 ### ⛔ Contraintes non négociables
 - **Aucune dépendance npm** au runtime. Outils de dev : Node natif uniquement (`node --test`).
-- **Pas de gamification** : ni streaks, ni confettis, ni toasts ludiques, ni cheerleading. Accompagnement **factuel chiffré** uniquement. Les leviers « jeu » du rapport sont traduits en équivalents sobres (bilan factuel, notif factuelle).
+- **Pas de gamification** : ni streaks, ni confettis, ni toasts ludiques, ni cheerleading. Accompagnement **factuel chiffré** uniquement. Les leviers « jeu » du rapport sont traduits en équivalents sobres (bilan factuel).
+- **Aucune notification ni rappel** (décision Tom, 2026-06-17) : ni notification système, ni push, ni Periodic Background Sync, ni e-mail, ni rappel incitant à revenir dans l'app. L'app ne sollicite jamais l'utilisateur ; elle n'apporte de la valeur que lorsqu'il l'ouvre de lui-même. Ne pas reproposer de « triggers de retour » (cf. PR-2 abandonné).
 - **Vie privée d'abord** : rien ne sort de l'appareil sans action explicite. Sync chiffrée E2E ; le serveur ne voit qu'un blob. Clé IA locale, jamais synchronisée.
 - **Mono-fichier** : app finale = un seul HTML autonome. Pas de CSP (script inline) → l'échappement (`esc()`) est l'unique défense XSS.
 - Respecter le style existant (français, vanilla, `el()` pour le DOM, pas de framework). Ne pas re-densifier l'UI (acquis de la refonte).
@@ -100,15 +101,13 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 - **100 % factuel** : aucun « bravo », aucun confetti, ton des `Insights` actuels.
 - Réutilise `realMonthByCat`, `plannedMonth`, `project`, `goalEta`. **Aucun nouveau moteur financier.**
 - **Pourquoi :** le « moment waouh » récurrent (#5 du rapport) — rendez-vous sobre qui ramène l'utilisateur. Manquant auparavant.
-- **Livré :** nouveau module `src/21-review.js` (`MonthReview {compute, open, maybeShow}`). Déclenchement auto au démarrage via `MonthReview.maybeShow(curBudget())` (`99-app.js`), une seule fois par mois (drapeau `b.lastReviewYm`, par budget), sauté si le mois précédent n'a aucune opération. Bouton « Bilan du mois » ajouté dans l'en-tête du Suivi (`15-tracking.js`, ouvre le bilan du mois affiché).
+- **Livré :** nouveau module `src/21-review.js` (`MonthReview {compute, open, maybeShow}`). Bouton « Bilan du mois » dans l'en-tête du Suivi (`15-tracking.js`, ouvre le bilan du mois affiché). Déclenchement **manuel uniquement** (auto-trigger `maybeShow` supprimé de `99-app.js` — décision Tom 2026-06-17 : l'app ne sollicite jamais l'utilisateur).
 - **Vérif :** `node --check` OK, `python3 build.py` OK (26 modules), `npm test` OK. Vérif navigateur : compute correct (dépensé 1150/800, mover Alimentation +475 %, solde 600→1450), modale rend proprement en sombre/mobile, auto-trigger n'ouvre qu'une fois, zéro erreur console.
 
-#### PR-2 — Triggers de retour (notifications factuelles, opt-in) `⬜ À FAIRE` · M/L
-- Notifications **locales sobres**, jamais culpabilisantes : « 3 échéances cette semaine », « relevé à importer », « point bas de trésorerie prévu le … ». Source = `Insights` / `computeAlerts` existants.
-- Opt-in explicite (réglage), Notification API + Periodic Background Sync où dispo ; fallback : rappel à l'ouverture. Fréquence réglable, coupure totale possible.
-- **Aucune notif « motivante » ni anxiogène** — uniquement des faits actionnables (contrainte anti-gamif).
-- **Pourquoi :** la boucle Hooked d'Horizon est **amputée du Trigger** (PWA sans push) → rien ne ramène l'utilisateur = cause n°1 d'abandon.
-- **Critère :** activation depuis Réglages, choix de fréquence, réception d'une notif factuelle, coupure effective. Permission refusée → dégradation propre.
+#### PR-2 — Triggers de retour (notifications factuelles, opt-in) `❌ ABANDONNÉ` · décision Tom
+- **Décision produit définitive (2026-06-17, Tom) : aucune notification, aucun rappel, rien qui incite à revenir dans l'app.** Contrainte ajoutée aux [⛔ Contraintes non négociables](#-contraintes-non-négociables).
+- Tâche développée puis **intégralement revertée** le même jour. Supprimé : `src/22-notify.js`, handlers `periodicsync`/`notificationclick` + cache notif (`assets/sw.js`), carte « 🔔 Rappels » (`20-settings.js`), défaut `settings.notif` (`02-store.js`), amorçage (`99-app.js`). Build revenu au hash `e88308deead1` (identique à pré-PR-2).
+- **Ne pas reproposer de notifications/rappels/triggers de retour.** Le levier « rétention par Trigger » du rapport marché est écarté pour ce produit ; la rétention passe uniquement par la valeur consultée quand l'utilisateur ouvre l'app de lui-même.
 
 ---
 
@@ -199,4 +198,5 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 
 - **2026-06-16** — Audit technique initial → plan de route (fiabilité). P0-1 (tests) et P0-2 (a11y) livrés.
 - **2026-06-17** — **Audit produit/UX/engagement** (croisement code × rapport marché). Livré : [AUDIT-2026-PRODUIT-UX.md](AUDIT-2026-PRODUIT-UX.md). Plan de route **refondu** : fusion axe produit (PR-1→6, PR-X) + reliquat technique (T1-1→3, T2-1→3), P0 passé en historique. Prochaine : **PR-1**.
-- **2026-06-17** — **PR-1 ✅** Bilan mensuel factuel. Fichiers : `src/21-review.js` (nouveau module `MonthReview`), `99-app.js` (déclenchement auto au démarrage), `15-tracking.js` (bouton « Bilan du mois »). Vérif : `node --check` + `build.py` + `npm test` OK, rendu navigateur validé (compute, modale sombre/mobile, auto-trigger une seule fois, zéro erreur console). **Non commité** (en attente d'autorisation). Prochaine : **PR-2 (notifications factuelles)**.
+- **2026-06-17** — **PR-2 développé puis ❌ ABANDONNÉ le même jour.** Triggers de retour (notifications factuelles) implémentés (`src/22-notify.js`, handlers SW `periodicsync`/`notificationclick`, carte Réglages, défaut `settings.notif`, amorçage). **Décision Tom : aucune notification ni rappel, jamais.** Revert intégral : fichiers supprimés/restaurés, build revenu au hash `e88308deead1`, `npm test` 37 verts, working tree propre (seul `PLAN-DE-ROUTE.md` modifié). Contrainte « aucune notification ni rappel » ajoutée aux non-négociables. Prochaine : **T1-1 (IndexedDB)**.
+- **2026-06-17** — **PR-1 ✅ LIVRÉ** Bilan mensuel factuel + **auto-trigger supprimé**. Fichiers : `src/21-review.js` (nouveau, 240 lignes), `src/99-app.js` (auto-trigger `maybeShow` supprimé — manuel seulement), `src/15-tracking.js` (bouton « Bilan du mois »), `PLAN-DE-ROUTE.md`, `AUDIT-2026-PRODUIT-UX.md`. Vérif : `node --check` + `build.py` + `npm test` (37 verts) OK, navigateur : aucune modale auto à l'ouverture, bouton Suivi fonctionnel. **Commit 656d1c7** initial + commit suivant suppression auto-trigger.
