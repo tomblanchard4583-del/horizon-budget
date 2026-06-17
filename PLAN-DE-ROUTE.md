@@ -23,11 +23,11 @@ Quand l'utilisateur dit « réfère-toi au plan de route et travaille en autonom
 
 ## ⏯️ REPRENDRE ICI
 
-**État global :** 🟧 En cours — fondations techniques posées (P0 ✅), PR-1 (bilan mensuel) ✅, **PR-2 (notifications) ❌ ABANDONNÉ — décision Tom : aucune notification ni rappel, jamais**. Reste fiabilité P1/P2 + suite de l'axe produit (hors triggers de retour).
+**État global :** 🟧 En cours — fondations techniques posées (P0 ✅), PR-1 (bilan mensuel) ✅, **PR-2 (notifications) ❌ ABANDONNÉ**. Sprint 2 fiabilité : T1-1 ✅, T1-2 ✅, T1-3 ✅. Sprint 2 terminé. Prochaine : Sprint 3 (confiance & enveloppes).
 
-**Prochaine action :** Tâche **T1-2 — Mémoïsation de `project()`** (Sprint 2, fiabilité).
+**Prochaine action :** Tâche **T2-1 — `uid()` cryptographique** (Sprint 3, plus rapide que PR-3/PR-4 car S).
 
-**Contexte pour démarrer :** T1-1 livré — `02-store.js` écrit en IDB (async), `persistSync()` pour `beforeunload`. Prochaine : cache par cycle de rendu pour `project()`. Détails : [T1-2](#t1-2--mémoïsation-de-project--sm).
+**Contexte pour démarrer :** T1-3 livré — `State.sync.lamport` + `stampChanges` Lamport + `_ts` wall-clock sur records + `mergeSettings` champ par champ + `_revs` par champ settings. Prochaine (ordre sprint 3) : T2-1 `uid()` crypto (S), puis PR-3 verrou biométrie (M), PR-4 enveloppes (M), T2-2 PBKDF2 (M), T2-3 XSS audit (M). Voir section [Sprint 3](#-sprint-3--confiance--enveloppes).
 
 **En suspens :** décisions stratégiques **PR-X (agrégation DSP2)** — ne rien coder sans arbitrage Tom (casse potentiellement le local-first).
 
@@ -120,11 +120,11 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 - **Livré :** IDB helpers `_idbOpen/Read/Write` dans `02-store.js`. `loadState()` → `loadStateAsync()` (Promise). Migration automatique depuis `localStorage` au 1er lancement (puis suppression de l'ancienne clé). `persist()` écrit en IDB async avec fallback localStorage. `persistSync()` (appel `beforeunload`) toujours synchrone vers localStorage comme copie d'urgence. `99-app.js` init wrappé dans `.then()`. Quota réel IDB.
 - **Vérif :** `node --check` OK, `python3 build.py` OK (26 modules), `npm test` 37 verts. Navigateur : IDB contient l'état correct après reload, app rend sans erreur.
 
-#### T1-2 — Mémoïsation de `project()` `⬜ À FAIRE` · S/M
+#### T1-2 — Mémoïsation de `project()` `✅ FAIT` · S/M
 - Cache par cycle de rendu : `project(b, opts)` appelé plusieurs fois par render (dashboard + `computeAlerts` + `Insights.compute` + `safeToSpend`). Invalider à chaque `persist()`/mutation (clé = `budgetId` + hash opts + compteur de version d'état).
 - **Critère :** résultats identiques, appels réduits (compteur temporaire), aucun cache périmé après édition.
 
-#### T1-3 — Sync : version logique + fusion fine des réglages `⬜ À FAIRE` · M
+#### T1-3 — Sync : version logique + fusion fine des réglages `✅ FAIT` · M
 - Remplacer `_rev = Date.now()` (`30-sync.js:56`) par un **compteur de Lamport** par appareil (immunisé à la dérive d'horloge). Fusionner `settings` **champ par champ** (aujourd'hui last-writer-wins sur l'objet entier, `30-sync.js:91`).
 - **Critère :** test CRDT (2 répliques, champs différents → fusion garde les deux ; horloges désync → pas de perte systématique).
 
@@ -202,3 +202,5 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 - **2026-06-17** — **PR-2 développé puis ❌ ABANDONNÉ le même jour.** Triggers de retour (notifications factuelles) implémentés (`src/22-notify.js`, handlers SW `periodicsync`/`notificationclick`, carte Réglages, défaut `settings.notif`, amorçage). **Décision Tom : aucune notification ni rappel, jamais.** Revert intégral : fichiers supprimés/restaurés, build revenu au hash `e88308deead1`, `npm test` 37 verts, working tree propre (seul `PLAN-DE-ROUTE.md` modifié). Contrainte « aucune notification ni rappel » ajoutée aux non-négociables. Prochaine : **T1-1 (IndexedDB)**.
 - **2026-06-17** — **PR-1 ✅ LIVRÉ** Bilan mensuel factuel + **auto-trigger supprimé**. Fichiers : `src/21-review.js` (nouveau, 240 lignes), `src/99-app.js` (auto-trigger `maybeShow` supprimé — manuel seulement), `src/15-tracking.js` (bouton « Bilan du mois »), `PLAN-DE-ROUTE.md`, `AUDIT-2026-PRODUIT-UX.md`. Vérif : `node --check` + `build.py` + `npm test` (37 verts) OK, navigateur : aucune modale auto à l'ouverture, bouton Suivi fonctionnel. **Commit 656d1c7** initial + commit suivant suppression auto-trigger.
 - **2026-06-17** — **T1-1 ✅ LIVRÉ** Stockage IndexedDB (fallback localStorage). Fichiers : `src/02-store.js` (helpers IDB, `loadStateAsync()`, `persistSync()`, migration auto), `src/99-app.js` (init `.then()`, `beforeunload` → `persistSync()`), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK (26 modules) + `npm test` 37 verts. Navigateur : IDB contient état, app rend sans erreur. Prochaine : **T1-2**.
+- **2026-06-17** — **T1-2 ✅ LIVRÉ** Mémoïsation de `project()`. Fichiers : `src/04-engine.js` (`_projectCache` WeakMap, clé interne `_stateVersion|months|from|mode|inflation|startBalance`), `src/02-store.js` (`_stateVersion` + incrément dans `persist()`), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK (26 modules) + `npm test` 37 verts. Prochaine : **T1-3**.
+- **2026-06-17** — **T1-3 ✅ LIVRÉ** Sync : Lamport + fusion settings champ par champ. Fichiers : `src/30-sync.js` (`STABLE_SKIP`, `DEVICE_LOCAL_SETTINGS`, `_prevSettingsSnap`, `stampChanges` Lamport+`_ts`, `_maxRevInDoc`, `mergeSettings`, `mergeArr` rétrocompat `_ts||_rev`, `applyDoc` simplifié+Lamport, Lamport update dans `pushNow`+`poll`), `src/02-store.js` (`State.sync.lamport`), `tests/sync.test.js` (10 tests CRDT), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK + `npm test` 47 verts. Prochaine : **T2-1**.

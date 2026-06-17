@@ -1,6 +1,14 @@
 "use strict";
 /* ============ moteur de projection ============ */
 
+/*
+ * Cache de project() — WeakMap(budget obj → Map(versionKey → result)).
+ * Clé externe = référence de l'objet budget (GC auto, pas de collision entre tests).
+ * Clé interne inclut _stateVersion : persist() l'incrémente, rendant les résultats
+ * périmés inaccessibles sans avoir à vider la Map manuellement.
+ */
+const _projectCache = new WeakMap();
+
 /* Solde réel au début d'un mois : solde initial + transactions antérieures. */
 function balanceAtMonthStart(budget, ym) {
   let bal = +budget.initialBalance || 0;
@@ -24,6 +32,12 @@ function project(budget, opts) {
   const from = opts.from || ymOf(todayStr());
   const mode = opts.scenarioMode || State.settings.scenarioMode || "expected";
   const inflation = opts.inflation ?? State.settings.inflation ?? 2;
+
+  const _cacheKey = `${_stateVersion}|${months}|${from}|${mode}|${inflation}|${opts.startBalance ?? ""}`;
+  let _budgetCache = _projectCache.get(budget);
+  if (!_budgetCache) { _budgetCache = new Map(); _projectCache.set(budget, _budgetCache); }
+  const _cached = _budgetCache.get(_cacheKey);
+  if (_cached) return _cached;
 
   let balance = opts.startBalance ?? balanceAtMonthStart(budget, from);
   const accBal = {}; budget.accounts.forEach(a => accBal[a.id] = +a.balance || 0);
@@ -92,6 +106,7 @@ function project(budget, opts) {
       goalBal: { ...goalBal },
     });
   }
+  _budgetCache.set(_cacheKey, out);
   return out;
 }
 

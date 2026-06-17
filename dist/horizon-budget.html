@@ -1063,6 +1063,7 @@ const State = {
     deviceName: "",
     graveyard: {},            // tombstones { "type:id": rev } — SYNCHRONISÉ via le document
     lastRev: 0,               // dernière révision serveur vue par cet appareil
+    lamport: 0,               // compteur de Lamport par appareil (incrémenté à chaque stamp)
   },
 };
 
@@ -1108,8 +1109,10 @@ function newItem(kind) {
 
 let _saveTimer = null;
 let _lastJson   = null;
+let _stateVersion = 0;
 
 function persist() {
+  _stateVersion++;
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
     const json = JSON.stringify(State);
@@ -1439,6 +1442,14 @@ function debtPayoffYm(debt) {
 "use strict";
 /* ============ moteur de projection ============ */
 
+/*
+ * Cache de project() — WeakMap(budget obj → Map(versionKey → result)).
+ * Clé externe = référence de l'objet budget (GC auto, pas de collision entre tests).
+ * Clé interne inclut _stateVersion : persist() l'incrémente, rendant les résultats
+ * périmés inaccessibles sans avoir à vider la Map manuellement.
+ */
+const _projectCache = new WeakMap();
+
 /* Solde réel au début d'un mois : solde initial + transactions antérieures. */
 function balanceAtMonthStart(budget, ym) {
   let bal = +budget.initialBalance || 0;
@@ -1462,6 +1473,12 @@ function project(budget, opts) {
   const from = opts.from || ymOf(todayStr());
   const mode = opts.scenarioMode || State.settings.scenarioMode || "expected";
   const inflation = opts.inflation ?? State.settings.inflation ?? 2;
+
+  const _cacheKey = `${_stateVersion}|${months}|${from}|${mode}|${inflation}|${opts.startBalance ?? ""}`;
+  let _budgetCache = _projectCache.get(budget);
+  if (!_budgetCache) { _budgetCache = new Map(); _projectCache.set(budget, _budgetCache); }
+  const _cached = _budgetCache.get(_cacheKey);
+  if (_cached) return _cached;
 
   let balance = opts.startBalance ?? balanceAtMonthStart(budget, from);
   const accBal = {}; budget.accounts.forEach(a => accBal[a.id] = +a.balance || 0);
@@ -1530,6 +1547,7 @@ function project(budget, opts) {
       goalBal: { ...goalBal },
     });
   }
+  _budgetCache.set(_cacheKey, out);
   return out;
 }
 
@@ -6266,6 +6284,7 @@ const Sync = (() => {
   const GRAVE_TTL = 90 * 86400000; // 90 jours
 
   let _base = {};            // empreinte du dernier état synchronisé { "type:id": contentString }
+  let _prevSettingsSnap = {}; // snapshot des valeurs de settings au dernier buildBase() — pour détection par champ
   let _pushTimer = null;
   let _pollTimer = null;
   let _busy = false;
@@ -6273,20 +6292,30 @@ const Sync = (() => {
   let status = "off";        // off | connecting | synced | syncing | offline | error
   let lastError = "";
 
-  /* ---------- sérialisation stable (ignore _rev) ---------- */
+  /* Champs ignorés par stable() — métadonnées de sync, pas du contenu. */
+  const STABLE_SKIP = new Set(["_rev", "_ts", "_revs"]);
+  /* Champs de settings locaux à l'appareil : jamais fusionnés depuis le distant. */
+  const DEVICE_LOCAL_SETTINGS = new Set(["theme"]);
+
+  /* ---------- sérialisation stable (ignore métadonnées sync) ---------- */
   function stable(v) {
     if (Array.isArray(v)) return "[" + v.map(stable).join(",") + "]";
     if (v && typeof v === "object")
-      return "{" + Object.keys(v).filter(k => k !== "_rev").sort()
+      return "{" + Object.keys(v).filter(k => !STABLE_SKIP.has(k)).sort()
         .map(k => JSON.stringify(k) + ":" + stable(v[k])).join(",") + "}";
     return JSON.stringify(v);
   }
   function budgetScalar(b) {
     const o = {};
-    for (const k in b) if (!SUBCOLLS.includes(k) && k !== "_rev") o[k] = b[k];
+    for (const k in b) if (!SUBCOLLS.includes(k) && !STABLE_SKIP.has(k)) o[k] = b[k];
     return stable(o);
   }
   function buildBase() {
+    _prevSettingsSnap = {};
+    for (const k in State.settings) {
+      if (STABLE_SKIP.has(k)) continue;
+      _prevSettingsSnap[k] = JSON.stringify(State.settings[k]);
+    }
     const m = {};
     m["settings:_"] = stable(State.settings);
     for (const b of State.budgets) {
@@ -6297,15 +6326,35 @@ const Sync = (() => {
     return m;
   }
 
-  /* ---------- détection des changements locaux → stamping _rev + tombstones ---------- */
+  /* ---------- détection des changements locaux → stamping _rev/_ts + tombstones ---------- */
   function stampChanges() {
-    const now = Date.now();
+    // Lamport : initialiser depuis Date.now() si premier usage (rétrocompat timestamps existants)
+    if (!State.sync.lamport) State.sync.lamport = Date.now();
+    State.sync.lamport++;
+    const L = State.sync.lamport;
+    const ts = Date.now();
+
     const seen = {};
     const mark = (key, contentNow, rec) => {
       seen[key] = 1;
-      if (_base[key] !== contentNow) rec._rev = now;
+      if (_base[key] !== contentNow) { rec._rev = L; rec._ts = ts; }
     };
-    { const c = stable(State.settings); seen["settings:_"] = 1; if (_base["settings:_"] !== c) State.settings._rev = now; }
+
+    // Settings : détection par champ pour _revs
+    const settingsStable = stable(State.settings);
+    seen["settings:_"] = 1;
+    if (_base["settings:_"] !== settingsStable) {
+      State.settings._rev = L;
+      State.settings._ts = ts;
+      if (!State.settings._revs) State.settings._revs = {};
+      for (const k in State.settings) {
+        if (STABLE_SKIP.has(k)) continue;
+        if (_prevSettingsSnap[k] !== JSON.stringify(State.settings[k])) {
+          State.settings._revs[k] = L;
+        }
+      }
+    }
+
     for (const b of State.budgets) {
       mark("budget:" + b.id, budgetScalar(b), b);
       for (const sc of SUBCOLLS) for (const r of (b[sc] || [])) mark(sc + ":" + r.id, stable(r), r);
@@ -6314,7 +6363,7 @@ const Sync = (() => {
     // suppressions : présents dans la base mais plus dans l'état courant
     for (const key in _base) {
       if (key === "settings:_") continue;
-      if (!seen[key]) State.sync.graveyard[key] = now;
+      if (!seen[key]) State.sync.graveyard[key] = ts; // wall-clock pour compatibilité TTL
     }
     pruneGraveyard();
     _base = buildBase();
@@ -6324,6 +6373,18 @@ const Sync = (() => {
     for (const k in State.sync.graveyard) if (State.sync.graveyard[k] < cut) delete State.sync.graveyard[k];
   }
 
+  /* Max _rev vu dans un document — pour mettre à jour le compteur de Lamport local. */
+  function _maxRevInDoc(doc) {
+    let m = 0;
+    if (doc && doc.settings) m = Math.max(m, doc.settings._rev || 0);
+    for (const b of (doc && doc.budgets || [])) {
+      m = Math.max(m, b._rev || 0);
+      for (const sc of SUBCOLLS) for (const r of (b[sc] || [])) m = Math.max(m, r._rev || 0);
+    }
+    for (const t of (doc && doc.transactions || [])) m = Math.max(m, t._rev || 0);
+    return m;
+  }
+
   /* ---------- fusion de deux documents ---------- */
   function mergeArr(a, b, type, grave) {
     const out = {};
@@ -6331,14 +6392,44 @@ const Sync = (() => {
     for (const r of (b || [])) { const ex = out[r.id]; if (!ex || (r._rev || 0) > (ex._rev || 0)) out[r.id] = r; }
     return Object.values(out).filter(r => {
       const g = grave[type + ":" + r.id];
-      return !(g && g >= (r._rev || 0));
+      if (!g) return true;
+      // Comparer le graveyard (wall-clock) avec _ts du record si disponible (nouveaux records),
+      // sinon avec _rev (anciens records dont _rev était un timestamp wall-clock).
+      const rTs = r._ts || r._rev || 0;
+      return !(g >= rTs);
     });
   }
+
+  /* Fusion champ par champ des settings — chaque champ garde la version au _revs le plus élevé. */
+  function mergeSettings(L_set, R_set) {
+    const l_revs = (L_set && L_set._revs) || {};
+    const r_revs = (R_set && R_set._revs) || {};
+    const out = {}, out_revs = {};
+    const allKeys = new Set([
+      ...Object.keys(L_set || {}),
+      ...Object.keys(R_set || {}),
+    ].filter(k => !STABLE_SKIP.has(k)));
+    for (const k of allKeys) {
+      if (DEVICE_LOCAL_SETTINGS.has(k)) {
+        // Champ local à l'appareil : toujours garder la valeur de L (l'appareil local)
+        out[k] = k in (L_set || {}) ? L_set[k] : (R_set || {})[k];
+      } else {
+        const l_r = l_revs[k] || 0;
+        const r_r = r_revs[k] || 0;
+        if (r_r > l_r) { out[k] = (R_set || {})[k]; out_revs[k] = r_r; }
+        else            { out[k] = (L_set || {})[k]; out_revs[k] = l_r; }
+      }
+    }
+    out._rev  = Math.max((L_set && L_set._rev) || 0, (R_set && R_set._rev) || 0);
+    out._revs = out_revs;
+    return out;
+  }
+
   function mergeDoc(L, R) {
     const grave = {};
     for (const k in (L.graveyard || {})) grave[k] = L.graveyard[k];
     for (const k in (R.graveyard || {})) grave[k] = Math.max(grave[k] || 0, R.graveyard[k]);
-    const settings = ((R.settings && R.settings._rev || 0) > (L.settings && L.settings._rev || 0)) ? R.settings : L.settings;
+    const settings = mergeSettings(L.settings, R.settings);
     const bmap = {};
     for (const x of (L.budgets || [])) (bmap[x.id] = bmap[x.id] || {}).L = x;
     for (const x of (R.budgets || [])) (bmap[x.id] = bmap[x.id] || {}).R = x;
@@ -6363,14 +6454,14 @@ const Sync = (() => {
     transactions: State.transactions, graveyard: State.sync.graveyard,
   });
   function applyDoc(doc) {
-    if (doc.settings) {
-      const localTheme = State.settings.theme; // le thème reste un choix par appareil
-      State.settings = doc.settings;
-      if (!State.settings.theme) State.settings.theme = localTheme;
-    }
+    // mergeSettings() conserve déjà les champs DEVICE_LOCAL_SETTINGS depuis L (local),
+    // donc State.settings.theme est déjà correct dans doc.settings.
+    if (doc.settings) State.settings = doc.settings;
     State.budgets = doc.budgets || [];
     State.transactions = doc.transactions || [];
     State.sync.graveyard = doc.graveyard || {};
+    // Mettre à jour le Lamport local pour qu'il reste ≥ à toute valeur vue
+    State.sync.lamport = Math.max(State.sync.lamport || 0, _maxRevInDoc(doc));
     if (!State.budgets.find(b => b.id === State.activeBudgetId))
       State.activeBudgetId = (State.budgets.find(b => !b.archived) || State.budgets[0] || {}).id || null;
   }
@@ -6491,6 +6582,8 @@ const Sync = (() => {
       let changedRemote = false;
       for (let attempt = 0; attempt < 5; attempt++) {
         const remote = await getRow();
+        // Mettre à jour Lamport depuis les données distantes avant de fusionner
+        if (remote && remote.doc) State.sync.lamport = Math.max(State.sync.lamport || 0, _maxRevInDoc(remote.doc));
         const merged = remote ? mergeDoc(local, remote.doc || {}) : local;
         const ok = remote ? await patchRow(merged, remote.rev) : await insertRow(merged);
         if (ok) {
@@ -6536,6 +6629,7 @@ const Sync = (() => {
     try {
       const remote = await getRow();
       if (remote && remote.rev > (State.sync.lastRev || 0)) {
+        if (remote.doc) State.sync.lamport = Math.max(State.sync.lamport || 0, _maxRevInDoc(remote.doc));
         const merged = mergeDoc(docFromState(), remote.doc || {});
         applyDoc(merged);
         State.sync.lastRev = remote.rev;

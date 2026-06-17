@@ -63,6 +63,7 @@ const State = {
     deviceName: "",
     graveyard: {},            // tombstones { "type:id": rev } — SYNCHRONISÉ via le document
     lastRev: 0,               // dernière révision serveur vue par cet appareil
+    lamport: 0,               // compteur de Lamport par appareil (incrémenté à chaque stamp)
   },
 };
 
@@ -108,8 +109,10 @@ function newItem(kind) {
 
 let _saveTimer = null;
 let _lastJson   = null;
+let _stateVersion = 0;
 
 function persist() {
+  _stateVersion++;
   clearTimeout(_saveTimer);
   _saveTimer = setTimeout(() => {
     const json = JSON.stringify(State);
