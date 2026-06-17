@@ -87,6 +87,23 @@ function occurrenceDatesInMonth(item, ym) {
   return out;
 }
 
+/* Jours actifs d'un poste « réparti » dans le mois (chaque jour reçoit une part égale du total). */
+function spreadDatesInMonth(item, ym) {
+  if (!itemCoversMonth(item, ym)) return [];
+  const interval = FREQ_MONTHS[item.freq] || 1;
+  const anchor = monthIndex(item.startDate || (ym + "-01"));
+  const mi = monthIndex(ym);
+  if (mi < anchor || (mi - anchor) % interval !== 0) return []; // mois non couvert par l'intervalle
+  const dim = daysInMonth(ym);
+  const mStart = ym + "-01", mEnd = ym + "-" + String(dim).padStart(2, "0");
+  const lo = item.startDate && item.startDate > mStart ? item.startDate : mStart;
+  const hi = item.endDate && item.endDate < mEnd ? item.endDate : mEnd;
+  if (lo > hi) return [];
+  const out = [];
+  for (let d = +lo.slice(8); d <= +hi.slice(8); d++) out.push(ym + "-" + String(d).padStart(2, "0"));
+  return out;
+}
+
 /* Total du poste sur un mois donné. */
 function monthlyAmount(item, ym, scenarioMode, inflation) {
   const n = occurrenceDatesInMonth(item, ym).length;
@@ -102,7 +119,7 @@ function monthlyEquivalent(item) {
 /* Description lisible de la récurrence d'un poste. */
 function freqLabel(item) {
   let s = FREQS[item.freq].label.toLowerCase();
-  if (FREQ_MONTHS[item.freq] && item.day) s += ` le ${item.day}`;
+  if (FREQ_MONTHS[item.freq]) s += item.spread ? " · réparti sur le mois" : (item.day ? ` le ${item.day}` : "");
   if (item.freq === "once") s = "le " + fmtDate(item.startDate);
   const now = todayStr();
   if (item.startDate && item.startDate > now && item.freq !== "once") s += ` · à partir de ${fmtDateShort(item.startDate)} ${item.startDate.slice(0, 4)}`;

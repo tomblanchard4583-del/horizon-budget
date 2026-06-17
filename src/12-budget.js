@@ -134,10 +134,14 @@ function openItemEditor(b, item, isNew, onSaved) {
   const amountInp = moneyInput({ value: it.amount || "", cur: "€" });
   const catSel = catSelect(b, it.kind, it.categoryId);
   const freqSel = selectInput(Object.entries(FREQS).map(([v, f]) => ({ value: v, label: f.label })), it.freq);
-  const dayInp = selectInput(Array.from({ length: 28 }, (_, i) => ({ value: i + 1, label: "le " + (i + 1) })), clamp(it.day || 1, 1, 28));
+  const dayInp = selectInput(
+    [{ value: "spread", label: "réparti sur le mois (sans date)" },
+     ...Array.from({ length: 28 }, (_, i) => ({ value: i + 1, label: "le " + (i + 1) }))],
+    it.spread ? "spread" : clamp(it.day || 1, 1, 28));
   const startInp = el("input", { class: "input", type: "date", value: it.startDate || "" });
   // choisir une date de début ajuste le jour du mois (évite un 1ᵉʳ versement raté)
   startInp.addEventListener("change", () => {
+    if (dayInp.value === "spread") return; // poste réparti : pas de jour fixe
     const d = +startInp.value.slice(8);
     if (d >= 1 && d <= 28) dayInp.value = String(d);
   });
@@ -252,7 +256,8 @@ function openItemEditor(b, item, isNew, onSaved) {
     it.amount = numVal(amountInp);
     it.categoryId = catSel.value || null;
     it.freq = freqSel.value;
-    it.day = +dayInp.value || 1;
+    it.spread = monthFreq() && dayInp.value === "spread";
+    it.day = it.spread ? 1 : (+dayInp.value || 1);
     it.startDate = startInp.value || todayStr();
     it.endDate = hasEnd.checked && endInp.value ? endInp.value : null;
     it.variable = varChk.checked;

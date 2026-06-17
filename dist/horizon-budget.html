@@ -1106,6 +1106,7 @@ function newItem(kind) {
     id: uid(), kind, name: "", categoryId: null,
     amount: 0, variable: false, min: null, max: null,
     freq: "monthly", day: 1,                 // jour du mois (mensuel+) ou jour de semaine (hebdo)
+    spread: false,                           // poste « enveloppe » réparti sur le mois, sans date précise
     startDate: todayStr().slice(0, 8) + "01",
     endDate: null,
     growth: 0,                               // % par an ; "inf" = suivre l'inflation
@@ -1376,6 +1377,23 @@ function occurrenceDatesInMonth(item, ym) {
   return out;
 }
 
+/* Jours actifs d'un poste « réparti » dans le mois (chaque jour reçoit une part égale du total). */
+function spreadDatesInMonth(item, ym) {
+  if (!itemCoversMonth(item, ym)) return [];
+  const interval = FREQ_MONTHS[item.freq] || 1;
+  const anchor = monthIndex(item.startDate || (ym + "-01"));
+  const mi = monthIndex(ym);
+  if (mi < anchor || (mi - anchor) % interval !== 0) return []; // mois non couvert par l'intervalle
+  const dim = daysInMonth(ym);
+  const mStart = ym + "-01", mEnd = ym + "-" + String(dim).padStart(2, "0");
+  const lo = item.startDate && item.startDate > mStart ? item.startDate : mStart;
+  const hi = item.endDate && item.endDate < mEnd ? item.endDate : mEnd;
+  if (lo > hi) return [];
+  const out = [];
+  for (let d = +lo.slice(8); d <= +hi.slice(8); d++) out.push(ym + "-" + String(d).padStart(2, "0"));
+  return out;
+}
+
 /* Total du poste sur un mois donné. */
 function monthlyAmount(item, ym, scenarioMode, inflation) {
   const n = occurrenceDatesInMonth(item, ym).length;
@@ -1391,7 +1409,7 @@ function monthlyEquivalent(item) {
 /* Description lisible de la récurrence d'un poste. */
 function freqLabel(item) {
   let s = FREQS[item.freq].label.toLowerCase();
-  if (FREQ_MONTHS[item.freq] && item.day) s += ` le ${item.day}`;
+  if (FREQ_MONTHS[item.freq]) s += item.spread ? " · réparti sur le mois" : (item.day ? ` le ${item.day}` : "");
   if (item.freq === "once") s = "le " + fmtDate(item.startDate);
   const now = todayStr();
   if (item.startDate && item.startDate > now && item.freq !== "once") s += ` · à partir de ${fmtDateShort(item.startDate)} ${item.startDate.slice(0, 4)}`;
@@ -1569,6 +1587,15 @@ function dayFlows(budget, ym) {
   const map = {};
   const mode = State.settings.scenarioMode, inf = State.settings.inflation;
   for (const it of budget.items) {
+    if (it.spread && FREQ_MONTHS[it.freq]) {
+      // poste « enveloppe » : on étale le total du mois sur chaque jour actif
+      const dates = spreadDatesInMonth(it, ym);
+      if (dates.length) {
+        const per = monthlyAmount(it, ym, mode, inf) / dates.length;
+        for (const date of dates) (map[date] = map[date] || []).push({ item: it, amount: per });
+      }
+      continue;
+    }
     for (const date of occurrenceDatesInMonth(it, ym)) {
       (map[date] = map[date] || []).push({ item: it, amount: amountAt(it, ym, mode, inf) });
     }
@@ -3159,10 +3186,14 @@ function openItemEditor(b, item, isNew, onSaved) {
   const amountInp = moneyInput({ value: it.amount || "", cur: "€" });
   const catSel = catSelect(b, it.kind, it.categoryId);
   const freqSel = selectInput(Object.entries(FREQS).map(([v, f]) => ({ value: v, label: f.label })), it.freq);
-  const dayInp = selectInput(Array.from({ length: 28 }, (_, i) => ({ value: i + 1, label: "le " + (i + 1) })), clamp(it.day || 1, 1, 28));
+  const dayInp = selectInput(
+    [{ value: "spread", label: "réparti sur le mois (sans date)" },
+     ...Array.from({ length: 28 }, (_, i) => ({ value: i + 1, label: "le " + (i + 1) }))],
+    it.spread ? "spread" : clamp(it.day || 1, 1, 28));
   const startInp = el("input", { class: "input", type: "date", value: it.startDate || "" });
   // choisir une date de début ajuste le jour du mois (évite un 1ᵉʳ versement raté)
   startInp.addEventListener("change", () => {
+    if (dayInp.value === "spread") return; // poste réparti : pas de jour fixe
     const d = +startInp.value.slice(8);
     if (d >= 1 && d <= 28) dayInp.value = String(d);
   });
@@ -3277,7 +3308,8 @@ function openItemEditor(b, item, isNew, onSaved) {
     it.amount = numVal(amountInp);
     it.categoryId = catSel.value || null;
     it.freq = freqSel.value;
-    it.day = +dayInp.value || 1;
+    it.spread = monthFreq() && dayInp.value === "spread";
+    it.day = it.spread ? 1 : (+dayInp.value || 1);
     it.startDate = startInp.value || todayStr();
     it.endDate = hasEnd.checked && endInp.value ? endInp.value : null;
     it.variable = varChk.checked;

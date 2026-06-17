@@ -99,6 +99,7 @@ function newItem(kind) {
     id: uid(), kind, name: "", categoryId: null,
     amount: 0, variable: false, min: null, max: null,
     freq: "monthly", day: 1,                 // jour du mois (mensuel+) ou jour de semaine (hebdo)
+    spread: false,                           // poste « enveloppe » réparti sur le mois, sans date précise
     startDate: todayStr().slice(0, 8) + "01",
     endDate: null,
     growth: 0,                               // % par an ; "inf" = suivre l'inflation

@@ -121,6 +121,15 @@ function dayFlows(budget, ym) {
   const map = {};
   const mode = State.settings.scenarioMode, inf = State.settings.inflation;
   for (const it of budget.items) {
+    if (it.spread && FREQ_MONTHS[it.freq]) {
+      // poste « enveloppe » : on étale le total du mois sur chaque jour actif
+      const dates = spreadDatesInMonth(it, ym);
+      if (dates.length) {
+        const per = monthlyAmount(it, ym, mode, inf) / dates.length;
+        for (const date of dates) (map[date] = map[date] || []).push({ item: it, amount: per });
+      }
+      continue;
+    }
     for (const date of occurrenceDatesInMonth(it, ym)) {
       (map[date] = map[date] || []).push({ item: it, amount: amountAt(it, ym, mode, inf) });
     }
