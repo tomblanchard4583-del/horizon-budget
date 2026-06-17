@@ -31,8 +31,34 @@ function viewSettings(root) {
       fField("Inflation par défaut (projections)", inflI),
       fField("Animations d'interface", el("label", { class: "switch", style: "margin-top:8px" },
         el("input", { type: "checkbox", checked: s.juice !== false, onchange: e => { s.juice = e.target.checked; persist(); } }),
-        el("span", { class: "tr" })))),
-    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios. Les animations respectent le réglage « réduire les animations » de votre système.")
+        el("span", { class: "tr" }))),
+      fField("Alerte enveloppe (% consommé)", (() => {
+        const sel = el("select", { class: "input", style: "width:auto" },
+          ...[60, 70, 80, 90].map(v => {
+            const o = el("option", { value: String(v) }, v + " %");
+            if ((s.envelopeAlertPct ?? 80) === v) o.selected = true;
+            return o;
+          }));
+        sel.addEventListener("change", () => { s.envelopeAlertPct = +sel.value; persist(); renderApp(); });
+        return sel;
+      })())),
+    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios. Les animations respectent le réglage « réduire les animations » de votre système. Le seuil d'alerte enveloppe colore les barres en orange quand le budget atteint le pourcentage choisi.")
+  );
+
+  const partnerNameI = el("input", {
+    class: "input", value: s.partnerName || "", placeholder: "ex. Marie",
+    oninput: debounce(e => { s.partnerName = e.target.value.trim(); persist(); }, 400)
+  });
+  const coupleCard = el("div", { class: "card card-pad" },
+    el("div", { class: "flex mb12" },
+      el("h3", {}, "👫 Mode couple"),
+      el("span", { class: "spacer" }),
+      el("label", { class: "switch" },
+        el("input", { type: "checkbox", checked: !!s.coupleMode, onchange: e => { s.coupleMode = e.target.checked; persist(); renderApp(); } }),
+        el("span", { class: "tr" }))),
+    s.coupleMode ? el("div", { class: "form-grid" },
+      fField("Prénom du/de la partenaire", partnerNameI)) : null,
+    el("p", { class: "xs muted mt12" }, "Active la ventilation des dépenses entre vous deux. Dans l'onglet Suivi, chaque transaction peut être marquée « " + (s.firstName || "Moi") + " », « " + (s.partnerName || "Partenaire") + " » ou « Commun », et un tableau de répartition compare vos parts respectives.")
   );
 
   // Personnalisation = contenu (catégories) + accès aux sections rangées
@@ -77,8 +103,8 @@ function viewSettings(root) {
       el("span", { class: "spacer" }),
       State.sync.enabled ? el("span", { class: "badge b-pos" }, "active · " + syncStatusText()) : el("span", { class: "badge b-mut" }, "inactive")),
     State.sync.enabled
-      ? el("p", { class: "small muted mb12" }, `Salon « ${State.sync.room} » : chaque modification est chiffrée puis envoyée automatiquement ; vos autres appareils se mettent à jour en quelques secondes.`)
-      : el("p", { class: "small muted mb12" }, "Reliez Mac, iPhone, Android — et la famille : modifications synchronisées en quasi temps réel, chiffrées de bout en bout, via une base gratuite qui vous appartient (~5 min de configuration, guide pas-à-pas intégré). Même code de salon = budget commun ; codes différents = données séparées."),
+      ? el("p", { class: "small muted mb12" }, `Salon « ${State.sync.room} » : chaque modification est chiffrée (AES-256-GCM) puis envoyée automatiquement ; vos autres appareils se mettent à jour en quelques secondes. Le code de salon est la clé de chiffrement — ne le communiquez qu'aux personnes de confiance.`)
+      : el("p", { class: "small muted mb12" }, "Reliez Mac, iPhone, Android — et la famille : modifications synchronisées en quasi temps réel, chiffrées de bout en bout (AES-256-GCM), via une base gratuite qui vous appartient (~5 min de configuration, guide pas-à-pas intégré). Le code de salon est la clé de chiffrement : même code = budget commun, codes différents = données séparées."),
     el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" },
       el("button", { class: "btn " + (State.sync.enabled ? "" : "btn-p"), onclick: () => openSyncSetup() }, State.sync.enabled ? "⚙️ Gérer la synchro" : "☁️ Activer la synchro"),
       State.sync.enabled ? el("button", { class: "btn", onclick: () => { Sync.pushNow(); toast("🔄 Synchronisation lancée"); } }, "🔄 Synchroniser maintenant") : null)
@@ -139,5 +165,5 @@ function viewSettings(root) {
   );
 
   root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
-    generalCard, contentCard, aiCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
+    generalCard, coupleCard, contentCard, aiCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
 }

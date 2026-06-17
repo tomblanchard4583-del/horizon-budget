@@ -23,11 +23,11 @@ Quand l'utilisateur dit « réfère-toi au plan de route et travaille en autonom
 
 ## ⏯️ REPRENDRE ICI
 
-**État global :** 🟧 En cours — fondations techniques posées (P0 ✅), PR-1 (bilan mensuel) ✅, **PR-2 (notifications) ❌ ABANDONNÉ**. Sprint 2 fiabilité : T1-1 ✅, T1-2 ✅, T1-3 ✅. Sprint 2 terminé. Sprint 3 en cours : T2-1 ✅.
+**État global :** 🟧 Sprint 4 en cours — Sprints 1-3 terminés. PR-5 ✅.
 
-**Prochaine action :** Tâche **PR-3 — Verrou applicatif (biométrie / code)** (Sprint 3).
+**Prochaine action :** **PR-6 — Usage agentique élargi de l'IA** (Sprint 4, dernier).
 
-**Contexte pour démarrer :** T2-1 livré — `uid()` utilise `crypto.randomUUID()` (fallback `getRandomValues` 8 octets hex) dans `src/00-utils.js:5`. Prochaine (ordre sprint 3) : PR-3 verrou biométrie (M), PR-4 enveloppes (M), T2-2 PBKDF2 (M), T2-3 XSS audit (M). Voir section [Sprint 3](#-sprint-3--confiance--enveloppes).
+**Contexte pour démarrer :** PR-5 livré — mode couple natif. `settings.coupleMode` + `settings.partnerName`. `t.owner` ("me"|"them"|"shared") sur transactions. Éditeur tx : segControl propriétaire si coupleMode actif. Suivi : carte répartition 3 totaux + filtres Tous/Moi/Partenaire/Commun + badge sur chaque ligne. Réglages : carte coupleCard. Fichiers : `src/02-store.js`, `src/15-tracking.js`, `src/20-settings.js`. Voir section [Sprint 4](#-sprint-4--différenciation).
 
 **En suspens :** décisions stratégiques **PR-X (agrégation DSP2)** — ne rien coder sans arbitrage Tom (casse potentiellement le local-first).
 
@@ -132,36 +132,40 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 
 ### 🟡 SPRINT 3 — Confiance & enveloppes
 
-#### PR-3 — Verrou applicatif (biométrie / code) `⬜ À FAIRE` · M
+#### PR-3 — Verrou applicatif (biométrie / code) `❌ ÉCARTÉ` · décision Tom
 - Verrouillage optionnel à l'ouverture : WebAuthn (Face ID/Touch ID) ou code local, délai de verrouillage configurable. Données financières aujourd'hui visibles sans barrière.
 - Local uniquement, cohérent local-first. **Critère :** verrouillage après inactivité, déverrouillage biométrie/code, désactivable.
 
-#### PR-4 — Renforcer le côté enveloppe (gap plan↔banque) `⬜ À FAIRE` · M
+#### PR-4 — Renforcer le côté enveloppe (gap plan↔banque) `✅ FAIT` · M
 - Exposer un **« reste par enveloppe/catégorie »** en cours de mois (`plannedMonth` − `realMonthByCat`) + avertissement **avant** dépassement, pas seulement après.
 - **Pourquoi :** se rapprocher de la vraie méthode enveloppe (forces #1 et #8 du rapport) sans casser l'hybride.
 - **Critère :** par catégorie, reste affiché et alerte au franchissement d'un seuil paramétrable.
+- **Livré :** `src/02-store.js` (`envelopeAlertPct: 80` dans settings), `src/styles.css` (`.pbar.warn>i` orange), `src/04-engine.js` (`computeAlerts` alerte d'approche + alerte dépassement séparées), `src/15-tracking.js` (reste par catégorie, barre orange/rouge, carte renommée « Enveloppes du mois »), `src/20-settings.js` (select seuil 60/70/80/90 %). Vérif : `node --check` OK, `build.py` OK (26 modules), `npm test` 47 verts.
 
 #### T2-1 — `uid()` cryptographique `✅ FAIT` · S
 - Remplacer `Math.random().toString(36)…` (`00-utils.js:5`) par `crypto.randomUUID()` (fallback `getRandomValues` 8 octets hex si `randomUUID` indisponible). Anciens ids restent valides.
 - **Pourquoi :** en fusion CRDT, une collision d'id corrompt le merge.
 - **Livré :** `src/00-utils.js:5` — `uid()` rewritten. Vérif : `node --check` OK, `build.py` OK (26 modules), `npm test` 47 verts.
 
-#### T2-2 — Durcissement crypto sync `⬜ À FAIRE` · M
-- PBKDF2 150 000 → **600 000** itérations (`30-sync.js:135`, OWASP 2026). Migration : champ de version dans le payload chiffré pour déchiffrer l'ancien et ré-chiffrer au nouveau format. Documenter dans l'UI que **le code de salon EST la clé**.
+#### T2-2 — Durcissement crypto sync `✅ FAIT` · M
+- PBKDF2 150 000 → **600 000** itérations (`30-sync.js`, OWASP 2026). Migration : champ `v:2` dans le payload chiffré ; lecture v1 (150k) transparente, écriture toujours v2 (600k). Cache clé par `room|version`. Note UI dans syncCard.
 - **Critère :** ancien salon toujours lisible (migration), nouveau salon en 600k, pas de blocage UI.
+- **Livré :** `src/30-sync.js` (`_ITER {1:150000, 2:600000}`, `roomKey(v=2)`, cache `_keyCache[room|v]`, `encryptDoc → {e,v:2}`, `decryptDoc` détecte v via `doc.v`), `src/20-settings.js` (note AES-256-GCM + avertissement code de salon). Vérif : `node --check` OK, `build.py` OK (26 modules), `npm test` 47 verts.
 
-#### T2-3 — Passe XSS systématique `⬜ À FAIRE` · M
+#### T2-3 — Passe XSS systématique `✅ FAIT` · M
 - Auditer chaque `html:`/`innerHTML` recevant du texte utilisateur (libellés, noms de postes/budgets/objectifs/catégories, notes) → confirmer `esc()` ou textNode.
 - **Pourquoi :** mono-fichier inline, pas de CSP, l'échappement est l'unique défense.
 - **Critère :** un libellé `<img src=x onerror=alert(1)>` s'affiche littéralement partout (liste, tooltips, modales, exports).
+- **Résultat :** codebase propre, zéro injection. `el()` children → `document.createTextNode()`. `html:` uniquement pour SVG icons ou `esc()` explicite. `innerHTML` directs : tooltips charts (`esc(name/label)`), `projTip` (`esc()`), debts hint (`fmtMoney`), sync chip (hardcodé). Aucune modification nécessaire.
 
 ---
 
 ### 🟢 SPRINT 4 — Différenciation
 
-#### PR-5 — Mode couple natif `⬜ À FAIRE` · L
+#### PR-5 — Mode couple natif `✅ FAIT` · L
 - Au-dessus du salon de sync existant : marquage d'opérations *à moi / à toi / commun*, vues filtrées, répartition (3 totaux).
 - **Pourquoi :** marché mal servi hors Monarch (#7). **Critère :** dans un budget partagé, ventiler par personne et voir les trois totaux.
+- **Livré :** `src/02-store.js` (`coupleMode:false`, `partnerName:""`), `src/15-tracking.js` (`_trackOwner`, `coupleTotals()`, carte répartition 3 KPIs + filtres tabs, badge ligne, `t.owner` dans éditeur via `segControl`), `src/20-settings.js` (carte `coupleCard` toggle + champ prénom partenaire). Vérif : `node --check` OK, `build.py` OK (26 modules), `npm test` 47 verts.
 
 #### PR-6 — Usage agentique élargi de l'IA `⬜ À FAIRE` · M
 - L'IA opt-in ne sert qu'à l'import. L'étendre (toujours opt-in, clé locale) : résumer le bilan mensuel en langage naturel, répondre à « puis-je me permettre X ? » via `project`.
@@ -204,5 +208,9 @@ Légende statut : `⬜ À FAIRE` · `🚧 EN COURS` · `✅ FAIT` · `⏸️ EN 
 - **2026-06-17** — **PR-1 ✅ LIVRÉ** Bilan mensuel factuel + **auto-trigger supprimé**. Fichiers : `src/21-review.js` (nouveau, 240 lignes), `src/99-app.js` (auto-trigger `maybeShow` supprimé — manuel seulement), `src/15-tracking.js` (bouton « Bilan du mois »), `PLAN-DE-ROUTE.md`, `AUDIT-2026-PRODUIT-UX.md`. Vérif : `node --check` + `build.py` + `npm test` (37 verts) OK, navigateur : aucune modale auto à l'ouverture, bouton Suivi fonctionnel. **Commit 656d1c7** initial + commit suivant suppression auto-trigger.
 - **2026-06-17** — **T1-1 ✅ LIVRÉ** Stockage IndexedDB (fallback localStorage). Fichiers : `src/02-store.js` (helpers IDB, `loadStateAsync()`, `persistSync()`, migration auto), `src/99-app.js` (init `.then()`, `beforeunload` → `persistSync()`), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK (26 modules) + `npm test` 37 verts. Navigateur : IDB contient état, app rend sans erreur. Prochaine : **T1-2**.
 - **2026-06-17** — **T1-2 ✅ LIVRÉ** Mémoïsation de `project()`. Fichiers : `src/04-engine.js` (`_projectCache` WeakMap, clé interne `_stateVersion|months|from|mode|inflation|startBalance`), `src/02-store.js` (`_stateVersion` + incrément dans `persist()`), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK (26 modules) + `npm test` 37 verts. Prochaine : **T1-3**.
+- **2026-06-17** — **PR-5 ✅ LIVRÉ** Mode couple natif. Fichiers : `src/02-store.js`, `src/15-tracking.js`, `src/20-settings.js`. Vérif OK, 47 tests verts. Prochaine : **PR-6**.
+- **2026-06-17** — **T2-3 ✅ LIVRÉ (audit propre)** Passe XSS — zéro faille. Aucun fichier modifié. Sprint 3 terminé. Prochaine : **PR-5 ou PR-6** (Sprint 4, arbitrage Tom).
+- **2026-06-17** — **T2-2 ✅ LIVRÉ** PBKDF2 600k (v2) + rétrocompat v1. Fichiers : `src/30-sync.js`, `src/20-settings.js`. Vérif OK, 47 tests verts. Prochaine : **T2-3**.
+- **2026-06-17** — **PR-4 ✅ LIVRÉ** Enveloppes : reste/catégorie + alerte approche. Fichiers : `src/02-store.js`, `src/styles.css`, `src/04-engine.js`, `src/15-tracking.js`, `src/20-settings.js`. Vérif : `node --check` + `build.py` + `npm test` 47 verts. **PR-3 ❌ ÉCARTÉ** (décision Tom). Prochaine : **T2-2**.
 - **2026-06-17** — **T2-1 ✅ LIVRÉ** `uid()` cryptographique. Fichier : `src/00-utils.js` (`crypto.randomUUID()` + fallback `getRandomValues`). Vérif : `node --check` + `build.py` OK + `npm test` 47 verts. Prochaine : **PR-3**.
 - **2026-06-17** — **T1-3 ✅ LIVRÉ** Sync : Lamport + fusion settings champ par champ. Fichiers : `src/30-sync.js` (`STABLE_SKIP`, `DEVICE_LOCAL_SETTINGS`, `_prevSettingsSnap`, `stampChanges` Lamport+`_ts`, `_maxRevInDoc`, `mergeSettings`, `mergeArr` rétrocompat `_ts||_rev`, `applyDoc` simplifié+Lamport, Lamport update dans `pushNow`+`poll`), `src/02-store.js` (`State.sync.lamport`), `tests/sync.test.js` (10 tests CRDT), `dist/`, `docs/`, `PLAN-DE-ROUTE.md`. Vérif : `node --check` + `build.py` OK + `npm test` 47 verts. Prochaine : **T2-1**.

@@ -309,6 +309,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 .pbar{height:9px; border-radius:99px; background:var(--bg2); overflow:hidden; position:relative}
 .pbar>i{display:block; height:100%; border-radius:99px; background:linear-gradient(90deg, var(--accent-deep), var(--accent)); transition:width .85s var(--ease)}
 .pbar.over>i{background:var(--danger)}
+.pbar.warn>i{background:var(--warn)}
 .pbar .pmark{position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--tx3)}
 
 /* ---------- calendar ---------- */
@@ -1052,6 +1053,9 @@ const State = {
     scenarioMode: "expected", // expected | optimistic | pessimistic
     firstName: "",
     juice: true,              // micro-animations & célébrations
+    envelopeAlertPct: 80,    // % du budget consommé déclenchant une alerte d'approche
+    coupleMode: false,       // ventilation des dépenses entre les deux personnes
+    partnerName: "",         // prénom du/de la partenaire (affiché dans l'UI couple)
   },
   activeBudgetId: null,
   budgets: [],
@@ -1635,15 +1639,19 @@ function computeAlerts(budget) {
     }
   }
 
-  // dépassement réel du mois en cours
+  // dépassement et approche du seuil — mois en cours
   const real = realMonthByCat(budget, ymNow);
   const planned = m0 ? m0.byCat : {};
-  let overCount = 0;
+  const alertPct = (State.settings.envelopeAlertPct ?? 80) / 100;
+  let overCount = 0, nearCount = 0;
   for (const [catId, spent] of Object.entries(real.byCat)) {
     const plan = planned[catId] || 0;
-    if (plan > 0 && spent > plan * 1.05) overCount++;
+    if (plan <= 0) continue;
+    if (spent > plan * 1.05) overCount++;
+    else if (spent >= plan * alertPct) nearCount++;
   }
   if (overCount) alerts.push({ type: "warn", icon: "receipt", text: `${overCount} catégorie${overCount > 1 ? "s" : ""} dépasse${overCount > 1 ? "nt" : ""} déjà le budget prévu ce mois-ci.` });
+  if (nearCount) alerts.push({ type: "info", icon: "receipt", text: `${nearCount} catégorie${nearCount > 1 ? "s" : ""} approche${nearCount > 1 ? "nt" : ""} la limite budgétaire (>${Math.round(alertPct * 100)} %).` });
 
   // fonds d'urgence
   const monthlyExp = m0 ? m0.expense : 0;
@@ -4562,6 +4570,7 @@ function calAddPlanned(b, kind, date) {
 
 let _trackYm = null;
 let _trackSearch = "";
+let _trackOwner = "all"; // "all" | "me" | "them" | "shared"
 
 function viewTracking(root) {
   const b = curBudget();
@@ -4573,6 +4582,20 @@ function viewTracking(root) {
   const real = realMonthByCat(b, ym);
   const planned = plannedMonth(b, ym);
   const remaining = planned.expense - real.expense;
+
+  // mode couple — totaux par propriétaire
+  const coupleOn = !!State.settings.coupleMode;
+  const myName = State.settings.firstName || "Moi";
+  const themName = State.settings.partnerName || "Partenaire";
+  function coupleTotals() {
+    const out = { me: 0, them: 0, shared: 0, unset: 0 };
+    for (const t of State.transactions) {
+      if (t.budgetId !== b.id || ymOf(t.date) !== ym || t.kind !== "expense") continue;
+      const key = t.owner === "me" ? "me" : t.owner === "them" ? "them" : t.owner === "shared" ? "shared" : "unset";
+      out[key] += +t.amount || 0;
+    }
+    return out;
+  }
 
   const head = el("div", { class: "flex", style: "flex-wrap:wrap; gap:10px" },
     el("button", { class: "btn btn-ico", title: "Mois précédent", html: ico("chevL", 18), onclick: () => { _trackYm = addMonths(ym, -1); renderApp(); } }),
@@ -4591,26 +4614,53 @@ function viewTracking(root) {
     kpiBox("Revenus encaissés", fmtMoney(real.income, cur), planned.income ? `sur ${fmtMoney(planned.income, cur)} prévus` : "", "pos")
   );
 
+  // carte couple : 3 totaux (visible uniquement si coupleMode actif)
+  const coupleCard = coupleOn ? (() => {
+    const tot = coupleTotals();
+    const total = tot.me + tot.them + tot.shared + tot.unset || 1;
+    return el("div", { class: "card card-pad" },
+      el("div", { class: "flex mb12" },
+        el("h3", {}, "👫 Répartition couple"),
+        el("span", { class: "spacer" }),
+        tot.unset > 0 ? el("span", { class: "badge b-warn" }, `${fmtMoney(tot.unset, cur, { dec: 0 })} non attribués`) : null),
+      el("div", { class: "grid g3" },
+        kpiBox(myName, fmtMoney(tot.me, cur, { dec: 0 }), `${Math.round(tot.me / total * 100)} % des dépenses`, ""),
+        kpiBox(themName, fmtMoney(tot.them, cur, { dec: 0 }), `${Math.round(tot.them / total * 100)} % des dépenses`, ""),
+        kpiBox("Commun", fmtMoney(tot.shared, cur, { dec: 0 }), `${Math.round(tot.shared / total * 100)} % des dépenses`, "")),
+      el("div", { class: "subtabs", style: "margin-top:14px; margin-bottom:0" },
+        [["all", "Toutes"], ["me", myName], ["them", themName], ["shared", "Commun"]].map(([v, lbl]) =>
+          el("button", { class: "subtab" + (_trackOwner === v ? " active" : ""), onclick: () => { _trackOwner = v; renderApp(); } }, lbl))));
+  })() : null;
+
   // prévu vs réel par catégorie
   const catIds = new Set([...Object.keys(planned.byCat), ...Object.keys(real.byCat)]);
+  const alertPct = (State.settings.envelopeAlertPct ?? 80) / 100;
   const rows = [...catIds].map(id => {
     const c = catById(b, id);
     return { id, cat: c, plan: planned.byCat[id] || 0, spent: real.byCat[id] || 0 };
   }).filter(r => r.plan > 0.005 || r.spent > 0.005).sort((a, z) => z.plan + z.spent - a.plan - a.spent);
 
   const compareCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Prévu vs réel par catégorie")),
+    el("div", { class: "card-head" }, el("h3", {}, "Enveloppes du mois")),
     rows.length ? el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:13px" },
       rows.map(r => {
         const pct = r.plan > 0 ? r.spent / r.plan : (r.spent > 0 ? 2 : 0);
+        const isOver = pct > 1.001;
+        const isNear = !isOver && r.plan > 0 && pct >= alertPct;
+        const reste = r.plan - r.spent;
+        let resteLabel, resteTone;
+        if (isOver) { resteLabel = `−${fmtMoney(r.spent - r.plan, cur, { dec: 0 })} dépassé`; resteTone = "neg"; }
+        else if (r.plan > 0) { resteLabel = `reste ${fmtMoney(Math.max(0, reste), cur, { dec: 0 })}`; resteTone = isNear ? "warn-tx" : "muted"; }
+        else { resteLabel = ""; resteTone = "muted"; }
         return el("div", {},
           el("div", { class: "flex small", style: "margin-bottom:5px" },
             el("span", {}, `${r.cat ? r.cat.emoji + " " + r.cat.name : "💳 Crédits & sans catégorie"}`),
             el("span", { class: "spacer" }),
-            el("span", { class: "mono " + (pct > 1.001 ? "neg" : "muted") },
-              `${fmtMoney(r.spent, cur, { dec: 0 })} / ${fmtMoney(r.plan, cur, { dec: 0 })}`)),
-          el("div", { class: "pbar" + (pct > 1.001 ? " over" : "") },
-            el("i", { style: `width:${clamp(pct, 0, 1) * 100}%; background:${pct > 1.001 ? "" : (r.cat ? r.cat.color : "var(--accent)")}` }))
+            el("span", { class: "mono " + (isOver ? "neg" : "muted") },
+              `${fmtMoney(r.spent, cur, { dec: 0 })} / ${fmtMoney(r.plan, cur, { dec: 0 })}`),
+            r.plan > 0 ? el("span", { class: "mono xs " + resteTone, style: "margin-left:8px; min-width:90px; text-align:right" }, resteLabel) : null),
+          el("div", { class: "pbar" + (isOver ? " over" : isNear ? " warn" : "") },
+            el("i", { style: `width:${clamp(pct, 0, 1) * 100}%; background:${isOver || isNear ? "" : (r.cat ? r.cat.color : "var(--accent)")}` }))
         );
       })
     ) : emptyState("📊", "Rien à comparer", "Ajoutez des transactions ou planifiez des postes pour voir la comparaison.")
@@ -4623,6 +4673,7 @@ function viewTracking(root) {
     const txs = State.transactions
       .filter(t => t.budgetId === b.id && ymOf(t.date) === ym)
       .filter(t => !_trackSearch || (t.label || "").toLowerCase().includes(_trackSearch) || catLabel(b, t.categoryId).toLowerCase().includes(_trackSearch))
+      .filter(t => !coupleOn || _trackOwner === "all" || (t.owner || "unset") === _trackOwner)
       .sort((a, z) => z.date.localeCompare(a.date));
     txCount.textContent = `Transactions (${txs.length})`;
     txList.innerHTML = "";
@@ -4636,6 +4687,9 @@ function viewTracking(root) {
             ? t.splits.map(s => `${catLabel(b, s.categoryId)} ${fmtMoney(s.amount, cur, { dec: 0 })}`).join(" + ")
             : catLabel(b, t.categoryId)))),
         el("div", { class: "i-amt " + (t.kind === "income" ? "pos" : "") },
+          coupleOn && t.owner && t.owner !== "unset"
+            ? el("span", { class: "badge b-mut", style: "margin-right:6px; font-size:10px" }, t.owner === "me" ? myName : t.owner === "them" ? themName : "Commun")
+            : null,
           fmtMoney(t.kind === "income" ? +t.amount : -t.amount, cur, { sign: true }))
       );
     })) : emptyState("🧾", _trackSearch ? "Aucun résultat" : "Aucune transaction ce mois-ci",
@@ -4681,7 +4735,9 @@ function viewTracking(root) {
 
   const grid = el("div", { class: "dash-grid" });
   Custom.renderInto(grid, "page.tracking", [
-    { id: "head", node: head, span: 12 }, { id: "kpis", node: kpis, span: 12 }, { id: "sugg", node: suggCard, span: 12 },
+    { id: "head", node: head, span: 12 }, { id: "kpis", node: kpis, span: 12 },
+    { id: "couple", node: coupleCard, span: 12 },
+    { id: "sugg", node: suggCard, span: 12 },
     { id: "compare", node: compareCard, span: 6 }, { id: "list", node: listCard, span: 6 },
   ], { axis: "grid" });
   root.append(el("div", { class: "content-inner" }, grid));
@@ -4775,6 +4831,13 @@ function openTxEditor(b, tx, defaultDate) {
     predict();
   });
 
+  // sélecteur de propriétaire (mode couple uniquement)
+  const ownerSeg = State.settings.coupleMode ? segControl([
+    { value: "me", label: State.settings.firstName || "Moi" },
+    { value: "them", label: State.settings.partnerName || "Partenaire" },
+    { value: "shared", label: "Commun" },
+  ], t.owner || "me", v => { t.owner = v; }) : null;
+
   const m = modal({
     title: isNew ? "Nouvelle transaction" : "Modifier la transaction",
     body: el("div", {},
@@ -4783,6 +4846,7 @@ function openTxEditor(b, tx, defaultDate) {
         fField("Montant", amountInp),
         fField("Date", dateInp),
         fField("Libellé", el("div", {}, labelInp, hint), { full: true }),
+        ownerSeg ? fField("Payé par", el("div", {}, ownerSeg)) : null,
         catZone)),
     foot: [
       !isNew ? el("button", {
@@ -4813,6 +4877,7 @@ function openTxEditor(b, tx, defaultDate) {
             t.splits = undefined;
             t.categoryId = catSel.value || null;
           }
+          if (!State.settings.coupleMode) delete t.owner;
           if (isNew) State.transactions.push(t);
           else Object.assign(State.transactions.find(x => x.id === t.id), t);
           Intel.learn(b, t);            // mémorise marchand → catégorie (et les ventilations)
@@ -5973,8 +6038,34 @@ function viewSettings(root) {
       fField("Inflation par défaut (projections)", inflI),
       fField("Animations d'interface", el("label", { class: "switch", style: "margin-top:8px" },
         el("input", { type: "checkbox", checked: s.juice !== false, onchange: e => { s.juice = e.target.checked; persist(); } }),
-        el("span", { class: "tr" })))),
-    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios. Les animations respectent le réglage « réduire les animations » de votre système.")
+        el("span", { class: "tr" }))),
+      fField("Alerte enveloppe (% consommé)", (() => {
+        const sel = el("select", { class: "input", style: "width:auto" },
+          ...[60, 70, 80, 90].map(v => {
+            const o = el("option", { value: String(v) }, v + " %");
+            if ((s.envelopeAlertPct ?? 80) === v) o.selected = true;
+            return o;
+          }));
+        sel.addEventListener("change", () => { s.envelopeAlertPct = +sel.value; persist(); renderApp(); });
+        return sel;
+      })())),
+    el("p", { class: "xs muted mt12" }, "L'inflation s'applique aux postes réglés sur « suit l'inflation » et permet de tester des scénarios. Les animations respectent le réglage « réduire les animations » de votre système. Le seuil d'alerte enveloppe colore les barres en orange quand le budget atteint le pourcentage choisi.")
+  );
+
+  const partnerNameI = el("input", {
+    class: "input", value: s.partnerName || "", placeholder: "ex. Marie",
+    oninput: debounce(e => { s.partnerName = e.target.value.trim(); persist(); }, 400)
+  });
+  const coupleCard = el("div", { class: "card card-pad" },
+    el("div", { class: "flex mb12" },
+      el("h3", {}, "👫 Mode couple"),
+      el("span", { class: "spacer" }),
+      el("label", { class: "switch" },
+        el("input", { type: "checkbox", checked: !!s.coupleMode, onchange: e => { s.coupleMode = e.target.checked; persist(); renderApp(); } }),
+        el("span", { class: "tr" }))),
+    s.coupleMode ? el("div", { class: "form-grid" },
+      fField("Prénom du/de la partenaire", partnerNameI)) : null,
+    el("p", { class: "xs muted mt12" }, "Active la ventilation des dépenses entre vous deux. Dans l'onglet Suivi, chaque transaction peut être marquée « " + (s.firstName || "Moi") + " », « " + (s.partnerName || "Partenaire") + " » ou « Commun », et un tableau de répartition compare vos parts respectives.")
   );
 
   // Personnalisation = contenu (catégories) + accès aux sections rangées
@@ -6019,8 +6110,8 @@ function viewSettings(root) {
       el("span", { class: "spacer" }),
       State.sync.enabled ? el("span", { class: "badge b-pos" }, "active · " + syncStatusText()) : el("span", { class: "badge b-mut" }, "inactive")),
     State.sync.enabled
-      ? el("p", { class: "small muted mb12" }, `Salon « ${State.sync.room} » : chaque modification est chiffrée puis envoyée automatiquement ; vos autres appareils se mettent à jour en quelques secondes.`)
-      : el("p", { class: "small muted mb12" }, "Reliez Mac, iPhone, Android — et la famille : modifications synchronisées en quasi temps réel, chiffrées de bout en bout, via une base gratuite qui vous appartient (~5 min de configuration, guide pas-à-pas intégré). Même code de salon = budget commun ; codes différents = données séparées."),
+      ? el("p", { class: "small muted mb12" }, `Salon « ${State.sync.room} » : chaque modification est chiffrée (AES-256-GCM) puis envoyée automatiquement ; vos autres appareils se mettent à jour en quelques secondes. Le code de salon est la clé de chiffrement — ne le communiquez qu'aux personnes de confiance.`)
+      : el("p", { class: "small muted mb12" }, "Reliez Mac, iPhone, Android — et la famille : modifications synchronisées en quasi temps réel, chiffrées de bout en bout (AES-256-GCM), via une base gratuite qui vous appartient (~5 min de configuration, guide pas-à-pas intégré). Le code de salon est la clé de chiffrement : même code = budget commun, codes différents = données séparées."),
     el("div", { class: "flex", style: "flex-wrap:wrap; gap:8px" },
       el("button", { class: "btn " + (State.sync.enabled ? "" : "btn-p"), onclick: () => openSyncSetup() }, State.sync.enabled ? "⚙️ Gérer la synchro" : "☁️ Activer la synchro"),
       State.sync.enabled ? el("button", { class: "btn", onclick: () => { Sync.pushNow(); toast("🔄 Synchronisation lancée"); } }, "🔄 Synchroniser maintenant") : null)
@@ -6081,7 +6172,7 @@ function viewSettings(root) {
   );
 
   root.append(el("div", { class: "content-inner grid", style: "gap:16px" },
-    generalCard, contentCard, aiCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
+    generalCard, coupleCard, contentCard, aiCard, syncCard, dataCard, installCard, dangerCard, aboutCard));
 }
 
 
@@ -6507,35 +6598,44 @@ const Sync = (() => {
       State.activeBudgetId = (State.budgets.find(b => !b.archived) || State.budgets[0] || {}).id || null;
   }
 
-  /* ---------- chiffrement de bout en bout (AES-256-GCM, clé dérivée du code de salon) ---------- */
-  let _keyCache = { room: null, key: null };
-  async function roomKey() {
+  /* ---------- chiffrement de bout en bout (AES-256-GCM, clé dérivée du code de salon) ----------
+   * v1 : 150 000 itérations PBKDF2 (legacy, lecture seule)
+   * v2 : 600 000 itérations PBKDF2 (OWASP 2026, écriture par défaut)
+   * Le payload v2 porte { e: "base64", v: 2 } ; v1 n'a pas de champ v.
+   * Migration transparente : un salon v1 est déchiffré en v1 puis ré-écrit en v2 au prochain push.
+   * Le code de salon EST la clé — ne jamais l'envoyer à un tiers ni le stocker en clair.
+   */
+  const _ITER = { 1: 150000, 2: 600000 };
+  const _keyCache = {};
+  async function roomKey(v = 2) {
     const room = State.sync.room.trim().toUpperCase();
-    if (_keyCache.room === room && _keyCache.key) return _keyCache.key;
+    const cacheKey = room + "|" + v;
+    if (_keyCache[cacheKey]) return _keyCache[cacheKey];
     const mat = await crypto.subtle.importKey("raw", new TextEncoder().encode(room), "PBKDF2", false, ["deriveKey"]);
     const key = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt: new TextEncoder().encode("horizon-budget:" + room), iterations: 150000, hash: "SHA-256" },
+      { name: "PBKDF2", salt: new TextEncoder().encode("horizon-budget:" + room), iterations: _ITER[v], hash: "SHA-256" },
       mat, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-    _keyCache = { room, key };
+    _keyCache[cacheKey] = key;
     return key;
   }
   async function encryptDoc(doc) {
-    const key = await roomKey();
+    const key = await roomKey(2);
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(doc))));
     const all = new Uint8Array(iv.length + ct.length);
     all.set(iv); all.set(ct, iv.length);
     let bin = ""; for (let i = 0; i < all.length; i += 8192) bin += String.fromCharCode.apply(null, all.subarray(i, i + 8192));
-    return { e: btoa(bin) }; // seul un blob chiffré part sur le serveur
+    return { e: btoa(bin), v: 2 }; // seul un blob chiffré part sur le serveur
   }
   async function decryptDoc(doc) {
     if (!doc) return doc;
     if (!doc.e) return doc; // document historique non chiffré : accepté en lecture
+    const v = doc.v === 2 ? 2 : 1;
     const bin = atob(doc.e);
     const all = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) all[i] = bin.charCodeAt(i);
     try {
-      const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: all.subarray(0, 12) }, await roomKey(), all.subarray(12));
+      const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: all.subarray(0, 12) }, await roomKey(v), all.subarray(12));
       return JSON.parse(new TextDecoder().decode(pt));
     } catch (e) {
       throw new Error("Déchiffrement impossible — code de salon incorrect ?");

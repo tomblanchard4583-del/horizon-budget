@@ -43,6 +43,9 @@ const State = {
     scenarioMode: "expected", // expected | optimistic | pessimistic
     firstName: "",
     juice: true,              // micro-animations & célébrations
+    envelopeAlertPct: 80,    // % du budget consommé déclenchant une alerte d'approche
+    coupleMode: false,       // ventilation des dépenses entre les deux personnes
+    partnerName: "",         // prénom du/de la partenaire (affiché dans l'UI couple)
   },
   activeBudgetId: null,
   budgets: [],

@@ -198,35 +198,44 @@ const Sync = (() => {
       State.activeBudgetId = (State.budgets.find(b => !b.archived) || State.budgets[0] || {}).id || null;
   }
 
-  /* ---------- chiffrement de bout en bout (AES-256-GCM, clé dérivée du code de salon) ---------- */
-  let _keyCache = { room: null, key: null };
-  async function roomKey() {
+  /* ---------- chiffrement de bout en bout (AES-256-GCM, clé dérivée du code de salon) ----------
+   * v1 : 150 000 itérations PBKDF2 (legacy, lecture seule)
+   * v2 : 600 000 itérations PBKDF2 (OWASP 2026, écriture par défaut)
+   * Le payload v2 porte { e: "base64", v: 2 } ; v1 n'a pas de champ v.
+   * Migration transparente : un salon v1 est déchiffré en v1 puis ré-écrit en v2 au prochain push.
+   * Le code de salon EST la clé — ne jamais l'envoyer à un tiers ni le stocker en clair.
+   */
+  const _ITER = { 1: 150000, 2: 600000 };
+  const _keyCache = {};
+  async function roomKey(v = 2) {
     const room = State.sync.room.trim().toUpperCase();
-    if (_keyCache.room === room && _keyCache.key) return _keyCache.key;
+    const cacheKey = room + "|" + v;
+    if (_keyCache[cacheKey]) return _keyCache[cacheKey];
     const mat = await crypto.subtle.importKey("raw", new TextEncoder().encode(room), "PBKDF2", false, ["deriveKey"]);
     const key = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt: new TextEncoder().encode("horizon-budget:" + room), iterations: 150000, hash: "SHA-256" },
+      { name: "PBKDF2", salt: new TextEncoder().encode("horizon-budget:" + room), iterations: _ITER[v], hash: "SHA-256" },
       mat, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-    _keyCache = { room, key };
+    _keyCache[cacheKey] = key;
     return key;
   }
   async function encryptDoc(doc) {
-    const key = await roomKey();
+    const key = await roomKey(2);
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(doc))));
     const all = new Uint8Array(iv.length + ct.length);
     all.set(iv); all.set(ct, iv.length);
     let bin = ""; for (let i = 0; i < all.length; i += 8192) bin += String.fromCharCode.apply(null, all.subarray(i, i + 8192));
-    return { e: btoa(bin) }; // seul un blob chiffré part sur le serveur
+    return { e: btoa(bin), v: 2 }; // seul un blob chiffré part sur le serveur
   }
   async function decryptDoc(doc) {
     if (!doc) return doc;
     if (!doc.e) return doc; // document historique non chiffré : accepté en lecture
+    const v = doc.v === 2 ? 2 : 1;
     const bin = atob(doc.e);
     const all = new Uint8Array(bin.length);
     for (let i = 0; i < bin.length; i++) all[i] = bin.charCodeAt(i);
     try {
-      const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: all.subarray(0, 12) }, await roomKey(), all.subarray(12));
+      const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: all.subarray(0, 12) }, await roomKey(v), all.subarray(12));
       return JSON.parse(new TextDecoder().decode(pt));
     } catch (e) {
       throw new Error("Déchiffrement impossible — code de salon incorrect ?");

@@ -3,6 +3,7 @@
 
 let _trackYm = null;
 let _trackSearch = "";
+let _trackOwner = "all"; // "all" | "me" | "them" | "shared"
 
 function viewTracking(root) {
   const b = curBudget();
@@ -14,6 +15,20 @@ function viewTracking(root) {
   const real = realMonthByCat(b, ym);
   const planned = plannedMonth(b, ym);
   const remaining = planned.expense - real.expense;
+
+  // mode couple — totaux par propriétaire
+  const coupleOn = !!State.settings.coupleMode;
+  const myName = State.settings.firstName || "Moi";
+  const themName = State.settings.partnerName || "Partenaire";
+  function coupleTotals() {
+    const out = { me: 0, them: 0, shared: 0, unset: 0 };
+    for (const t of State.transactions) {
+      if (t.budgetId !== b.id || ymOf(t.date) !== ym || t.kind !== "expense") continue;
+      const key = t.owner === "me" ? "me" : t.owner === "them" ? "them" : t.owner === "shared" ? "shared" : "unset";
+      out[key] += +t.amount || 0;
+    }
+    return out;
+  }
 
   const head = el("div", { class: "flex", style: "flex-wrap:wrap; gap:10px" },
     el("button", { class: "btn btn-ico", title: "Mois précédent", html: ico("chevL", 18), onclick: () => { _trackYm = addMonths(ym, -1); renderApp(); } }),
@@ -32,26 +47,53 @@ function viewTracking(root) {
     kpiBox("Revenus encaissés", fmtMoney(real.income, cur), planned.income ? `sur ${fmtMoney(planned.income, cur)} prévus` : "", "pos")
   );
 
+  // carte couple : 3 totaux (visible uniquement si coupleMode actif)
+  const coupleCard = coupleOn ? (() => {
+    const tot = coupleTotals();
+    const total = tot.me + tot.them + tot.shared + tot.unset || 1;
+    return el("div", { class: "card card-pad" },
+      el("div", { class: "flex mb12" },
+        el("h3", {}, "👫 Répartition couple"),
+        el("span", { class: "spacer" }),
+        tot.unset > 0 ? el("span", { class: "badge b-warn" }, `${fmtMoney(tot.unset, cur, { dec: 0 })} non attribués`) : null),
+      el("div", { class: "grid g3" },
+        kpiBox(myName, fmtMoney(tot.me, cur, { dec: 0 }), `${Math.round(tot.me / total * 100)} % des dépenses`, ""),
+        kpiBox(themName, fmtMoney(tot.them, cur, { dec: 0 }), `${Math.round(tot.them / total * 100)} % des dépenses`, ""),
+        kpiBox("Commun", fmtMoney(tot.shared, cur, { dec: 0 }), `${Math.round(tot.shared / total * 100)} % des dépenses`, "")),
+      el("div", { class: "subtabs", style: "margin-top:14px; margin-bottom:0" },
+        [["all", "Toutes"], ["me", myName], ["them", themName], ["shared", "Commun"]].map(([v, lbl]) =>
+          el("button", { class: "subtab" + (_trackOwner === v ? " active" : ""), onclick: () => { _trackOwner = v; renderApp(); } }, lbl))));
+  })() : null;
+
   // prévu vs réel par catégorie
   const catIds = new Set([...Object.keys(planned.byCat), ...Object.keys(real.byCat)]);
+  const alertPct = (State.settings.envelopeAlertPct ?? 80) / 100;
   const rows = [...catIds].map(id => {
     const c = catById(b, id);
     return { id, cat: c, plan: planned.byCat[id] || 0, spent: real.byCat[id] || 0 };
   }).filter(r => r.plan > 0.005 || r.spent > 0.005).sort((a, z) => z.plan + z.spent - a.plan - a.spent);
 
   const compareCard = el("div", { class: "card" },
-    el("div", { class: "card-head" }, el("h3", {}, "Prévu vs réel par catégorie")),
+    el("div", { class: "card-head" }, el("h3", {}, "Enveloppes du mois")),
     rows.length ? el("div", { class: "card-pad", style: "display:flex; flex-direction:column; gap:13px" },
       rows.map(r => {
         const pct = r.plan > 0 ? r.spent / r.plan : (r.spent > 0 ? 2 : 0);
+        const isOver = pct > 1.001;
+        const isNear = !isOver && r.plan > 0 && pct >= alertPct;
+        const reste = r.plan - r.spent;
+        let resteLabel, resteTone;
+        if (isOver) { resteLabel = `−${fmtMoney(r.spent - r.plan, cur, { dec: 0 })} dépassé`; resteTone = "neg"; }
+        else if (r.plan > 0) { resteLabel = `reste ${fmtMoney(Math.max(0, reste), cur, { dec: 0 })}`; resteTone = isNear ? "warn-tx" : "muted"; }
+        else { resteLabel = ""; resteTone = "muted"; }
         return el("div", {},
           el("div", { class: "flex small", style: "margin-bottom:5px" },
             el("span", {}, `${r.cat ? r.cat.emoji + " " + r.cat.name : "💳 Crédits & sans catégorie"}`),
             el("span", { class: "spacer" }),
-            el("span", { class: "mono " + (pct > 1.001 ? "neg" : "muted") },
-              `${fmtMoney(r.spent, cur, { dec: 0 })} / ${fmtMoney(r.plan, cur, { dec: 0 })}`)),
-          el("div", { class: "pbar" + (pct > 1.001 ? " over" : "") },
-            el("i", { style: `width:${clamp(pct, 0, 1) * 100}%; background:${pct > 1.001 ? "" : (r.cat ? r.cat.color : "var(--accent)")}` }))
+            el("span", { class: "mono " + (isOver ? "neg" : "muted") },
+              `${fmtMoney(r.spent, cur, { dec: 0 })} / ${fmtMoney(r.plan, cur, { dec: 0 })}`),
+            r.plan > 0 ? el("span", { class: "mono xs " + resteTone, style: "margin-left:8px; min-width:90px; text-align:right" }, resteLabel) : null),
+          el("div", { class: "pbar" + (isOver ? " over" : isNear ? " warn" : "") },
+            el("i", { style: `width:${clamp(pct, 0, 1) * 100}%; background:${isOver || isNear ? "" : (r.cat ? r.cat.color : "var(--accent)")}` }))
         );
       })
     ) : emptyState("📊", "Rien à comparer", "Ajoutez des transactions ou planifiez des postes pour voir la comparaison.")
@@ -64,6 +106,7 @@ function viewTracking(root) {
     const txs = State.transactions
       .filter(t => t.budgetId === b.id && ymOf(t.date) === ym)
       .filter(t => !_trackSearch || (t.label || "").toLowerCase().includes(_trackSearch) || catLabel(b, t.categoryId).toLowerCase().includes(_trackSearch))
+      .filter(t => !coupleOn || _trackOwner === "all" || (t.owner || "unset") === _trackOwner)
       .sort((a, z) => z.date.localeCompare(a.date));
     txCount.textContent = `Transactions (${txs.length})`;
     txList.innerHTML = "";
@@ -77,6 +120,9 @@ function viewTracking(root) {
             ? t.splits.map(s => `${catLabel(b, s.categoryId)} ${fmtMoney(s.amount, cur, { dec: 0 })}`).join(" + ")
             : catLabel(b, t.categoryId)))),
         el("div", { class: "i-amt " + (t.kind === "income" ? "pos" : "") },
+          coupleOn && t.owner && t.owner !== "unset"
+            ? el("span", { class: "badge b-mut", style: "margin-right:6px; font-size:10px" }, t.owner === "me" ? myName : t.owner === "them" ? themName : "Commun")
+            : null,
           fmtMoney(t.kind === "income" ? +t.amount : -t.amount, cur, { sign: true }))
       );
     })) : emptyState("🧾", _trackSearch ? "Aucun résultat" : "Aucune transaction ce mois-ci",
@@ -122,7 +168,9 @@ function viewTracking(root) {
 
   const grid = el("div", { class: "dash-grid" });
   Custom.renderInto(grid, "page.tracking", [
-    { id: "head", node: head, span: 12 }, { id: "kpis", node: kpis, span: 12 }, { id: "sugg", node: suggCard, span: 12 },
+    { id: "head", node: head, span: 12 }, { id: "kpis", node: kpis, span: 12 },
+    { id: "couple", node: coupleCard, span: 12 },
+    { id: "sugg", node: suggCard, span: 12 },
     { id: "compare", node: compareCard, span: 6 }, { id: "list", node: listCard, span: 6 },
   ], { axis: "grid" });
   root.append(el("div", { class: "content-inner" }, grid));
@@ -216,6 +264,13 @@ function openTxEditor(b, tx, defaultDate) {
     predict();
   });
 
+  // sélecteur de propriétaire (mode couple uniquement)
+  const ownerSeg = State.settings.coupleMode ? segControl([
+    { value: "me", label: State.settings.firstName || "Moi" },
+    { value: "them", label: State.settings.partnerName || "Partenaire" },
+    { value: "shared", label: "Commun" },
+  ], t.owner || "me", v => { t.owner = v; }) : null;
+
   const m = modal({
     title: isNew ? "Nouvelle transaction" : "Modifier la transaction",
     body: el("div", {},
@@ -224,6 +279,7 @@ function openTxEditor(b, tx, defaultDate) {
         fField("Montant", amountInp),
         fField("Date", dateInp),
         fField("Libellé", el("div", {}, labelInp, hint), { full: true }),
+        ownerSeg ? fField("Payé par", el("div", {}, ownerSeg)) : null,
         catZone)),
     foot: [
       !isNew ? el("button", {
@@ -254,6 +310,7 @@ function openTxEditor(b, tx, defaultDate) {
             t.splits = undefined;
             t.categoryId = catSel.value || null;
           }
+          if (!State.settings.coupleMode) delete t.owner;
           if (isNew) State.transactions.push(t);
           else Object.assign(State.transactions.find(x => x.id === t.id), t);
           Intel.learn(b, t);            // mémorise marchand → catégorie (et les ventilations)

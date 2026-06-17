@@ -167,15 +167,19 @@ function computeAlerts(budget) {
     }
   }
 
-  // dépassement réel du mois en cours
+  // dépassement et approche du seuil — mois en cours
   const real = realMonthByCat(budget, ymNow);
   const planned = m0 ? m0.byCat : {};
-  let overCount = 0;
+  const alertPct = (State.settings.envelopeAlertPct ?? 80) / 100;
+  let overCount = 0, nearCount = 0;
   for (const [catId, spent] of Object.entries(real.byCat)) {
     const plan = planned[catId] || 0;
-    if (plan > 0 && spent > plan * 1.05) overCount++;
+    if (plan <= 0) continue;
+    if (spent > plan * 1.05) overCount++;
+    else if (spent >= plan * alertPct) nearCount++;
   }
   if (overCount) alerts.push({ type: "warn", icon: "receipt", text: `${overCount} catégorie${overCount > 1 ? "s" : ""} dépasse${overCount > 1 ? "nt" : ""} déjà le budget prévu ce mois-ci.` });
+  if (nearCount) alerts.push({ type: "info", icon: "receipt", text: `${nearCount} catégorie${nearCount > 1 ? "s" : ""} approche${nearCount > 1 ? "nt" : ""} la limite budgétaire (>${Math.round(alertPct * 100)} %).` });
 
   // fonds d'urgence
   const monthlyExp = m0 ? m0.expense : 0;
