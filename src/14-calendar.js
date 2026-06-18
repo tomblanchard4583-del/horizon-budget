@@ -203,6 +203,11 @@ function calRenderMonth(b, inner) {
   const negDays = rows.filter(r => r.run < 0).length;
   const endBal = rows.length ? rows[rows.length - 1].run : startBal;
 
+  // enveloppes « sans date » : comptées au mois, jamais placées sur un jour
+  const env = isPast ? { expense: 0, income: 0, items: [] } : monthEnvelopes(b, ym);
+  const totInAll = totIn + env.income, totOutAll = totOut + env.expense;
+  const endBalEnv = endBal - env.expense + env.income;
+
   // navigation + raccourci « aller à »
   const jump = el("input", { class: "input cal-jump", type: "month", value: ym, title: "Aller à un mois",
     onchange: e => { if (e.target.value) { _calYm = e.target.value; renderApp(); } } });
@@ -217,14 +222,33 @@ function calRenderMonth(b, inner) {
 
   // statistiques du mois
   const lbl = isPast ? "réel" : "prévu";
+  const datedCount = rows.reduce((s, r) => s + r.cell.planned.length, 0);
   inner.append(el("div", { class: "grid cal-stats" },
-    calStat(`Entrées (${lbl})`, fmtMoney(totIn, cur, { dec: 0 }), `${MOIS[+ym.slice(5, 7) - 1]}`, "pos"),
-    calStat(`Sorties (${lbl})`, fmtMoney(totOut, cur, { dec: 0 }), `${rows.reduce((s, r) => s + r.cell.planned.length, 0)} échéances planifiées`),
-    calStat("Solde net du mois", fmtMoney(totIn - totOut, cur, { dec: 0, sign: true }), totIn - totOut >= 0 ? "le mois rapporte" : "le mois coûte", totIn - totOut < 0 ? "neg" : "pos"),
-    calStat("Solde fin de mois", fmtMoney(endBal, cur, { dec: 0 }), isPast ? "solde réel reconstitué" : "projeté", endBal < 0 ? "neg" : "pos"),
+    calStat(`Entrées (${lbl})`, fmtMoney(totInAll, cur, { dec: 0 }), `${MOIS[+ym.slice(5, 7) - 1]}`, "pos"),
+    calStat(`Sorties (${lbl})`, fmtMoney(totOutAll, cur, { dec: 0 }),
+      `${datedCount} échéance${datedCount > 1 ? "s" : ""} datée${datedCount > 1 ? "s" : ""}` + (env.items.length ? ` · ${env.items.length} enveloppe${env.items.length > 1 ? "s" : ""}` : "")),
+    calStat("Solde net du mois", fmtMoney(totInAll - totOutAll, cur, { dec: 0, sign: true }), totInAll - totOutAll >= 0 ? "le mois rapporte" : "le mois coûte", totInAll - totOutAll < 0 ? "neg" : "pos"),
+    calStat("Solde fin de mois", fmtMoney(endBalEnv, cur, { dec: 0 }), isPast ? "solde réel reconstitué" : (env.items.length ? "projeté, enveloppes incluses" : "projeté"), endBalEnv < 0 ? "neg" : "pos"),
     calStat("Jour le plus bas", lowest.date ? fmtMoney(lowest.run, cur, { dec: 0 }) : "—",
       lowest.date ? `le ${+lowest.date.slice(8)} ${MOIS[+ym.slice(5, 7) - 1].slice(0, 4)}.` + (negDays ? ` · ${negDays} j négatif${negDays > 1 ? "s" : ""}` : "") : "",
       lowest.run < 0 ? "neg" : "")));
+
+  // bandeau enveloppes « sans date » : postes du mois non rattachés à un jour
+  if (env.items.length) {
+    inner.append(el("div", { class: "card cal-env mt12" },
+      el("div", { class: "cal-env-head" },
+        el("b", {}, "Enveloppes du mois (sans date)"),
+        el("span", { class: "spacer", style: "flex:1" }),
+        el("b", { class: "mono " + (env.expense > env.income ? "neg" : "pos") },
+          fmtMoney(env.income - env.expense, cur, { dec: 0, sign: true }))),
+      el("div", { class: "cal-env-list" }, env.items.map(e => el("div", { class: "cal-env-row" },
+        el("span", {}, e.item.name || "(sans nom)"),
+        el("span", { class: "spacer", style: "flex:1" }),
+        el("span", { class: "mono " + (e.item.kind === "income" ? "pos" : "neg") },
+          `${e.item.kind === "income" ? "+" : "−"}${fmtMoney(e.amount, cur, { dec: 0 })}`)))),
+      el("div", { class: "xs muted", style: "margin-top:6px" },
+        "Dépensé à un moment quelconque du mois — compté dans le total et le solde de fin de mois, mais jamais déduit d'un jour précis.")));
+  }
 
   // grille
   const grid = el("div", { class: "cal-grid mt12" });
@@ -260,7 +284,9 @@ function calRenderMonth(b, inner) {
   inner.append(el("div", { class: "small muted mt12" },
     isPast
       ? "Mois passé : soldes et totaux reconstitués à partir des transactions réellement saisies."
-      : "Le montant en bas de chaque case est le solde projeté en fin de journée (échéances planifiées). Les cases rouges signalent un passage sous zéro — décalez une échéance pour l'éviter."));
+      : "Le montant en bas de chaque case est le solde projeté en fin de journée, d'après les seules échéances datées." +
+        (env.items.length ? " Les enveloppes sans date ne sont pas déduites au jour le jour ; elles sont comptées dans le solde de fin de mois ci-dessus." : "") +
+        " Les cases rouges signalent un passage sous zéro — décalez une échéance pour l'éviter."));
 }
 
 /* ============ VUE SEMAINE ============ */

@@ -87,33 +87,6 @@ function occurrenceDatesInMonth(item, ym) {
   return out;
 }
 
-/* Jours actifs d'un poste « réparti » dans le mois (chaque jour reçoit une part égale du total). */
-function spreadDatesInMonth(item, ym) {
-  if (!itemCoversMonth(item, ym)) return [];
-  const interval = FREQ_MONTHS[item.freq] || 1;
-  const anchor = monthIndex(item.startDate || (ym + "-01"));
-  const mi = monthIndex(ym);
-  if (mi < anchor || (mi - anchor) % interval !== 0) return []; // mois non couvert par l'intervalle
-  const dim = daysInMonth(ym);
-  const mStart = ym + "-01", mEnd = ym + "-" + String(dim).padStart(2, "0");
-  const lo = item.startDate && item.startDate > mStart ? item.startDate : mStart;
-  const hi = item.endDate && item.endDate < mEnd ? item.endDate : mEnd;
-  if (lo > hi) return [];
-
-  // Si jour fixe spécifié, retourner juste ce jour
-  if (item.day) {
-    const day = clamp(+item.day, 1, dim);
-    const date = ym + "-" + String(day).padStart(2, "0");
-    if (date >= lo && date <= hi) return [date];
-    return [];
-  }
-
-  // Sinon, retourner tous les jours du mois (vraie répartition)
-  const out = [];
-  for (let d = +lo.slice(8); d <= +hi.slice(8); d++) out.push(ym + "-" + String(d).padStart(2, "0"));
-  return out;
-}
-
 /* Total du poste sur un mois donné. */
 function monthlyAmount(item, ym, scenarioMode, inflation) {
   const n = occurrenceDatesInMonth(item, ym).length;

@@ -121,15 +121,8 @@ function dayFlows(budget, ym) {
   const map = {};
   const mode = State.settings.scenarioMode, inf = State.settings.inflation;
   for (const it of budget.items) {
-    if (it.spread && FREQ_MONTHS[it.freq]) {
-      // poste « enveloppe » : on étale le total du mois sur chaque jour actif
-      const dates = spreadDatesInMonth(it, ym);
-      if (dates.length) {
-        const per = monthlyAmount(it, ym, mode, inf) / dates.length;
-        for (const date of dates) (map[date] = map[date] || []).push({ item: it, amount: per });
-      }
-      continue;
-    }
+    // poste « enveloppe » sans date : non placé sur un jour (cf. monthEnvelopes)
+    if (it.spread && FREQ_MONTHS[it.freq]) continue;
     for (const date of occurrenceDatesInMonth(it, ym)) {
       (map[date] = map[date] || []).push({ item: it, amount: amountAt(it, ym, mode, inf) });
     }
@@ -143,6 +136,25 @@ function dayFlows(budget, ym) {
     }
   }
   return map;
+}
+
+/*
+ * Enveloppes « sans date » du mois : postes répartis (it.spread) comptés comme un total
+ * mensuel, jamais placés sur un jour précis. Sert au bandeau du calendrier et à
+ * réconcilier le solde de fin de mois (qui, lui, les inclut via project()).
+ */
+function monthEnvelopes(budget, ym) {
+  const mode = State.settings.scenarioMode, inf = State.settings.inflation;
+  const items = [];
+  let expense = 0, income = 0;
+  for (const it of budget.items) {
+    if (!(it.spread && FREQ_MONTHS[it.freq])) continue;
+    const amt = monthlyAmount(it, ym, mode, inf);
+    if (!amt) continue;
+    items.push({ item: it, amount: amt });
+    if (it.kind === "income") income += amt; else expense += amt;
+  }
+  return { expense, income, items };
 }
 
 /* Alertes intelligentes sur le budget courant. */
