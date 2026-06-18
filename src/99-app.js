@@ -49,15 +49,157 @@ const ROUTE = {
 let _view = "dashboard";
 const _sub = { suivi: "tracking", avenir: "projection" };
 
+/* Ordre des onglets : détermine le sens du slide (gauche/droite) entre vues. */
+const NAV_ORDER = { dashboard: 0, budget: 1, suivi: 2, avenir: 3, budgets: 4, settings: 5, help: 6 };
+
+function isMobile() { return window.matchMedia("(max-width: 880px)").matches; }
+
+/* Enrobe une mutation du DOM dans une transition de vue directionnelle (no-op si non supporté / reduced-motion). */
+function navAnimate(dir, fn) {
+  if (!document.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { fn(); return; }
+  document.documentElement.setAttribute("data-vtdir", dir);
+  document.startViewTransition(fn);
+}
+
 function go(key) {
   const r = ROUTE[key] || ROUTE.dashboard;
-  _view = r[0];
-  if (r[1]) _sub[_view] = r[1];
-  if (HUBS[_view] && !_sub[_view]) _sub[_view] = HUBS[_view].def;
-  renderApp();
-  const c = $(".content");
-  if (c) c.scrollTop = 0;
+  const targetView = r[0];
+  // Phase 2 : sur mobile, naviguer entre deux onglets = swipe animé (pas de reconstruction).
+  if (isMobile() && Pager.has() && Pager.isTab(_view) && Pager.isTab(targetView) && !r[1]) {
+    Pager.goToTab(targetView);
+    return;
+  }
+  const from = NAV_ORDER[_view] ?? 0, to = NAV_ORDER[targetView] ?? 0;
+  navAnimate(to < from ? "back" : "fwd", () => {
+    _view = targetView;
+    if (r[1]) _sub[_view] = r[1];
+    if (HUBS[_view] && !_sub[_view]) _sub[_view] = HUBS[_view].def;
+    renderApp();
+    const c = $(".content");
+    if (c) c.scrollTop = 0;
+  });
 }
+
+/* Contenu de la barre du haut (titre + budget) — partagé entre renderApp et la synchro du pager. */
+function topTitleInner(v, b) {
+  return [
+    el("h1", {}, v.label),
+    el("div", { class: "sub" }, `${b.emoji} ${b.name}`,
+      State.budgets.filter(x => !x.archived).length > 1
+        ? el("span", { class: "ico", html: I.chevD, style: "width:12px;height:12px;display:inline-grid;place-items:center;vertical-align:-1px;margin-left:3px;opacity:.6" })
+        : null,
+      ` · ${v.sub()}`),
+  ];
+}
+
+/* Met à jour la barre du haut + la barre du bas sans tout reconstruire (pendant/à la fin d'un swipe). */
+function syncChrome() {
+  const v = VIEWS[_view] || VIEWS.dashboard, b = curBudget();
+  const t = $(".topbar-title"); if (t && b) t.replaceChildren(...topTitleInner(v, b));
+  $$(".bottomnav .bn-tab").forEach(btn => btn.classList.toggle("active", btn.dataset.k === _view));
+  const meta = $('meta[name="theme-color"]'); // inchangé, conservé pour cohérence
+}
+
+/* ---- Pager mobile : les 4 onglets montés côte à côte, glissables au doigt ---- */
+const Pager = (() => {
+  const KEYS = TABS.map(t => t.k);
+  const N = KEYS.length;
+  let track = null, panes = [], rendered = [], idx = 0, frac = 0;
+  let raf = null, vel = 0, dragging = false, axis = null, x0 = 0, y0 = 0, f0 = 0, lastX = 0, lastT = 0;
+
+  const paneW = () => (track ? track.clientWidth : window.innerWidth) || 1;
+
+  function renderPane(i) {
+    if (rendered[i] || !panes[i]) return;
+    panes[i].innerHTML = "";
+    VIEWS[KEYS[i]].render(panes[i]);
+    Juice.view(panes[i]);
+    rendered[i] = true;
+  }
+  const ensureNear = i => [i - 1, i, i + 1].forEach(j => { if (j >= 0 && j < N) renderPane(j); });
+
+  function paint() {
+    if (!track || !track.isConnected) return;
+    track.style.transform = `translate3d(${-frac * paneW()}px,0,0)`; // un seul transform → composité, zéro repaint
+  }
+
+  function setActive(i) {
+    i = Math.max(0, Math.min(N - 1, i));
+    if (_view === KEYS[i]) return;
+    _view = KEYS[i];
+    syncChrome();
+  }
+
+  function spring() {
+    const k = 240, d = 28, dt = 1 / 60;
+    vel += (-k * (frac - idx) - d * vel) * dt;
+    frac += vel * dt;
+    paint(); setActive(Math.round(frac));
+    if (Math.abs(vel) > 0.002 || Math.abs(frac - idx) > 0.002) raf = requestAnimationFrame(spring);
+    else { frac = idx; paint(); setActive(idx); raf = null; }
+  }
+
+  function settle(target, v) {
+    const t = Math.max(0, Math.min(N - 1, target));
+    if (t !== idx) Juice.buzz(7);            // micro-retour haptique au changement d'onglet
+    idx = t; if (v) vel = v;
+    ensureNear(idx);
+    if (!raf) raf = requestAnimationFrame(spring);
+  }
+
+  function onDown(e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    dragging = true; axis = null; x0 = lastX = e.clientX; y0 = e.clientY; f0 = frac; lastT = performance.now();
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    const dx = e.clientX - x0, dy = e.clientY - y0;
+    if (axis === null) {
+      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (axis === "x") track.setPointerCapture(e.pointerId);
+      else { dragging = false; return; }     // mouvement vertical → on laisse le scroll natif
+    }
+    let f = f0 - dx / paneW();
+    if (f < 0) f *= 0.35; else if (f > N - 1) f = (N - 1) + (f - (N - 1)) * 0.35; // rubberband
+    frac = f; paint(); setActive(Math.round(Math.max(0, Math.min(N - 1, frac))));
+    lastX = e.clientX; lastT = performance.now();
+    e.preventDefault();
+  }
+  function onUp(e) {
+    if (!dragging) return; dragging = false;
+    if (axis !== "x") return;
+    const v = (e.clientX - lastX) / (performance.now() - lastT + 1) / paneW() * 16; // vélocité normalisée
+    const moved = frac - f0;                                  // distance parcourue (fraction de page)
+    const dir = (Math.abs(moved) > 0.2 || Math.abs(v) > 0.4)  // 20 % de glissement OU un flick suffit
+      ? Math.sign(moved || -v) : 0;
+    settle(Math.round(f0) + dir, -v);
+  }
+
+  function mount(content, activeKey) {
+    idx = Math.max(0, KEYS.indexOf(activeKey)); frac = idx; rendered = new Array(N).fill(false);
+    content.classList.add("content--pager");
+    track = el("div", { class: "swipe-track" });
+    panes = KEYS.map(() => el("section", { class: "swipe-pane" }));
+    panes.forEach(p => track.appendChild(p));
+    content.appendChild(track);
+    ensureNear(idx); paint();
+    track.addEventListener("pointerdown", onDown);
+    track.addEventListener("pointermove", onMove);
+    track.addEventListener("pointerup", onUp);
+    track.addEventListener("pointercancel", onUp);
+  }
+
+  function goToTab(k) {
+    const i = KEYS.indexOf(k); if (i < 0) return false;
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    settle(i); return true;
+  }
+
+  window.addEventListener("resize", paint);
+  return { mount, goToTab, has: () => !!(track && track.isConnected), isTab: k => KEYS.includes(k) };
+})();
 
 function applyTheme() {
   const t = State.settings.theme;
@@ -69,6 +211,13 @@ function applyTheme() {
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => State.settings.theme === "auto" && applyTheme());
 
 function isDark() { return document.documentElement.getAttribute("data-theme") === "dark"; }
+
+/* Re-render au franchissement de la bascule mobile/desktop (montage/démontage du pager). */
+let _wasMobile = window.matchMedia("(max-width: 880px)").matches;
+window.addEventListener("resize", () => {
+  const m = window.matchMedia("(max-width: 880px)").matches;
+  if (m !== _wasMobile) { _wasMobile = m; if (curBudget()) renderApp(); }
+});
 
 function renderApp() {
   const app = $("#app");
@@ -103,10 +252,7 @@ function renderApp() {
   const gearBtn = el("button", { class: "btn btn-ghost btn-ico only-mobile", html: ico("gear", 18), title: "Réglages", onclick: () => go("settings") });
   const topbar = el("div", { class: "topbar" },
     el("button", { class: "topbar-title", onclick: openBudgetSwitcher, title: "Changer de budget" },
-      el("h1", {}, v.label),
-      el("div", { class: "sub" }, `${b.emoji} ${b.name}`,
-        State.budgets.filter(x => !x.archived).length > 1 ? el("span", { class: "ico", html: I.chevD, style: "width:12px;height:12px;display:inline-grid;place-items:center;vertical-align:-1px;margin-left:3px;opacity:.6" }) : null,
-        ` · ${v.sub()}`)),
+      ...topTitleInner(v, b)),
     el("div", { class: "topbar-actions" }, Sync.chipEl(), gearBtn, themeBtn));
 
   const content = el("div", { class: "content" });
@@ -114,7 +260,7 @@ function renderApp() {
 
   // ---- barre du bas (mobile) : 2 onglets · FAB central · 2 onglets ----
   const tabBtn = k => el("button", {
-    class: "bn-tab" + (_view === k ? " active" : ""), onclick: () => go(k)
+    class: "bn-tab" + (_view === k ? " active" : ""), "data-k": k, onclick: () => go(k)
   }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), VIEWS[k].label);
   const bottomnav = el("nav", { class: "bottomnav" },
     tabBtn("dashboard"), tabBtn("budget"),
@@ -122,8 +268,12 @@ function renderApp() {
     tabBtn("suivi"), tabBtn("avenir"));
 
   app.append(sidebar, main, bottomnav);
-  v.render(content);
-  Juice.view(content);
+  if (isMobile() && TABS.some(t => t.k === _view)) {
+    Pager.mount(content, _view);          // swipe horizontal entre les 4 onglets
+  } else {
+    v.render(content);
+    Juice.view(content);
+  }
 
   function navBtn(k, label, icon) {
     return el("button", { class: "nav-item" + (_view === k ? " active" : ""), title: label, onclick: () => go(k) },

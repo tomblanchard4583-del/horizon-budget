@@ -28,7 +28,24 @@
   --shadow-md: 0 2px 4px rgba(15,23,42,.05), 0 12px 28px -8px rgba(15,23,42,.14);
   --shadow-lg: 0 8px 24px -8px rgba(8,15,35,.18), 0 28px 72px -18px rgba(8,15,35,.4);
   --ease: cubic-bezier(.22,1,.36,1);
+  /* ressort façon Apple : léger dépassement, motion vivante mais sobre */
+  --spring: linear(0,.006,.025 2.8%,.101 6.1%,.539 18.9%,.721 25.3%,.849 31.5%,.937 38.1%,.968 41.8%,.991 45.7%,1.006 50.1%,1.013 55%,1.011 63.5%,1.003 78%,1);
 }
+/* coins « squircle » : courbure continue iOS quand le navigateur sait (sinon radius classique, invisible) */
+@supports (corner-shape: superellipse(1)){
+  .card,.home-card,.hero,.kpi,.modal,.btn,.btn-p,.input,select.input,textarea.input{ corner-shape: superellipse(2) }
+}
+/* ---- transitions de vue entre onglets (slide directionnel + fondu, discret) ---- */
+@keyframes vtOutL{ to{ transform: translateX(-26px); opacity:0 } }
+@keyframes vtInR { from{ transform: translateX(26px); opacity:0 } }
+@keyframes vtOutR{ to{ transform: translateX(26px); opacity:0 } }
+@keyframes vtInL { from{ transform: translateX(-26px); opacity:0 } }
+::view-transition-group(vt-content){ animation-duration:.36s }
+::view-transition-old(root),::view-transition-new(root){ animation-duration:.32s }
+html[data-vtdir="fwd"]::view-transition-old(vt-content){ animation:.36s var(--ease) both vtOutL }
+html[data-vtdir="fwd"]::view-transition-new(vt-content){ animation:.36s var(--ease) both vtInR }
+html[data-vtdir="back"]::view-transition-old(vt-content){ animation:.36s var(--ease) both vtOutR }
+html[data-vtdir="back"]::view-transition-new(vt-content){ animation:.36s var(--ease) both vtInL }
 [data-theme="light"]{
   --bg: #f4f6fa; --bg2:#eaeef5; --panel: #ffffff; --panel2:#f7f9fc;
   --line: #e6eaf2; --line2:#d6dde8;
@@ -36,6 +53,8 @@
   --navy:#111d3a; --navy-tx:#eef2fb;
   --chart-grid:#e8ecf3;
   --glass: rgba(255,255,255,.78);
+  --eth1:rgba(16,185,129,.13); --eth2:rgba(59,130,246,.10); --eth3:rgba(139,92,246,.10);
+  --hero-glass:rgba(255,255,255,.6); --hero-brd:rgba(255,255,255,.85);
   color-scheme: light;
 }
 [data-theme="dark"]{
@@ -45,6 +64,8 @@
   --navy:#0d1526; --navy-tx:#e7ecf7;
   --chart-grid:#1d2946;
   --glass: rgba(18,27,49,.72);
+  --eth1:rgba(16,185,129,.22); --eth2:rgba(59,130,246,.18); --eth3:rgba(139,92,246,.17);
+  --hero-glass:rgba(20,30,56,.55); --hero-brd:rgba(255,255,255,.1);
   --shadow: 0 1px 2px rgba(0,0,0,.3), 0 4px 12px -2px rgba(0,0,0,.25), 0 16px 40px -14px rgba(0,0,0,.4);
   --shadow-md: 0 2px 6px rgba(0,0,0,.35), 0 14px 32px -8px rgba(0,0,0,.5);
   --shadow-lg: 0 10px 28px -8px rgba(0,0,0,.5), 0 32px 80px -18px rgba(0,0,0,.65);
@@ -63,7 +84,15 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.015em}
 .nowrap{white-space:nowrap}
 
 /* ---------- layout ---------- */
-.app{height:100%; display:flex}
+/* « éther » : voile aurore plein écran, calque composité fixe (dérive lente, ne se repeint pas au scroll) */
+.ether{position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; contain:strict}
+.ether::before{content:""; position:absolute; inset:-15%;
+  background:radial-gradient(38% 42% at 16% 10%, var(--eth1), transparent 60%),
+            radial-gradient(40% 44% at 86% 6%, var(--eth2), transparent 62%),
+            radial-gradient(52% 56% at 62% 104%, var(--eth3), transparent 64%);
+  animation:etherDrift 28s var(--ease) infinite alternate; will-change:transform}
+@keyframes etherDrift{to{transform:translate3d(3%,2%,0) scale(1.08)}}
+.app{position:relative; z-index:1; height:100%; display:flex}
 .sidebar{width:var(--sidebar-w); flex:none; background:linear-gradient(178deg, var(--navy), color-mix(in srgb, var(--navy) 86%, #000)); color:var(--navy-tx); display:flex; flex-direction:column; padding:20px 13px 13px; gap:3px; overflow-y:auto; box-shadow:inset -1px 0 0 rgba(255,255,255,.05)}
 .brand{display:flex; align-items:center; gap:10px; padding:4px 10px 18px; font-weight:800; font-size:17px; letter-spacing:-.02em}
 .brand svg{flex:none; filter:drop-shadow(0 2px 6px rgba(16,185,129,.4))}
@@ -96,7 +125,12 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.015em}
 .topbar-title:hover{background:var(--panel2)}
 .topbar-title .sub{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .topbar-actions{margin-left:auto; display:flex; gap:8px; align-items:center}
-.content{flex:1; overflow-y:auto; padding:22px 26px calc(var(--bottomnav-h) + env(safe-area-inset-bottom)); -webkit-overflow-scrolling:touch}
+.content{flex:1; overflow-y:auto; padding:22px 26px calc(var(--bottomnav-h) + env(safe-area-inset-bottom)); -webkit-overflow-scrolling:touch; view-transition-name:vt-content}
+/* ---- pager swipe (mobile) : 4 onglets côte à côte dans un rail glissable ---- */
+.content--pager{padding:0; overflow:hidden; position:relative}
+.swipe-track{display:flex; height:100%; will-change:transform; touch-action:pan-y}
+.swipe-pane{flex:0 0 100%; width:100%; height:100%; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:22px 20px calc(var(--bottomnav-h) + env(safe-area-inset-bottom))}
+.swipe-pane::-webkit-scrollbar{width:0; display:none}
 .content-inner{max-width:1180px; margin:0 auto}
 .bottomnav{display:none}
 
@@ -119,7 +153,11 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.015em}
 .kpi .k-sub{font-size:12px; color:var(--tx2)}
 
 /* ---------- accueil : héros + cartes calmes ---------- */
-.hero{background:var(--panel); border:1px solid var(--line); border-radius:var(--radius-lg); box-shadow:var(--shadow); padding:22px 22px 18px}
+/* héros « reste à vivre » : carte translucide qui flotte dans l'éther */
+.hero{position:relative; overflow:hidden; isolation:isolate; background:var(--hero-glass); border:1px solid var(--hero-brd); border-radius:var(--radius-lg);
+  box-shadow:var(--shadow), 0 1px 0 rgba(255,255,255,.07) inset; padding:24px 22px 18px;
+  animation:heroFloat 7s var(--ease) infinite alternate; will-change:transform}
+@keyframes heroFloat{to{transform:translateY(-7px)}}
 .hero .h-label{font-size:14px; color:var(--tx2); font-weight:550}
 .hero .h-value{font-size:46px; line-height:1.02; font-weight:750; letter-spacing:-.03em; font-variant-numeric:tabular-nums; margin:6px 0 0}
 .hero .h-value.neg{color:var(--danger)} .hero .h-value.pos{color:var(--accent)}
@@ -221,7 +259,7 @@ table.tbl{width:100%; border-collapse:collapse; font-size:13px}
 
 /* ---------- modal ---------- */
 .modal-veil{position:fixed; inset:0; background:rgba(7,11,24,.52); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); z-index:90; display:flex; align-items:center; justify-content:center; padding:20px; animation:fadein .18s}
-.modal{background:var(--panel); border-radius:20px; width:100%; max-width:560px; max-height:calc(100vh - 60px); display:flex; flex-direction:column; box-shadow:var(--shadow-lg); animation:pop .28s var(--ease); border:1px solid var(--line)}
+.modal{background:var(--panel); border-radius:20px; width:100%; max-width:560px; max-height:calc(100vh - 60px); display:flex; flex-direction:column; box-shadow:var(--shadow-lg); animation:pop .42s var(--spring); border:1px solid var(--line)}
 [data-theme="dark"] .modal{box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.05)}
 .modal.modal-lg{max-width:760px}
 .modal-head{display:flex; align-items:center; gap:10px; padding:18px 22px 12px; flex:none}
@@ -517,11 +555,15 @@ details.adv[open] summary:before{transform:rotate(90deg)}
   .kpi .k-label{font-size:10.5px}
   .kpi .k-sub{font-size:11px}
   .bottomnav{display:flex; position:fixed; left:0; right:0; bottom:0; z-index:50; background:var(--glass); backdrop-filter:blur(18px) saturate(1.5); -webkit-backdrop-filter:blur(18px) saturate(1.5); border-top:1px solid var(--line); padding:5px 8px calc(3px + env(safe-area-inset-bottom)); justify-content:space-between; align-items:flex-end; box-shadow:0 -6px 24px -12px rgba(8,15,35,.18)}
-  .bottomnav .bn-tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; font-weight:600; color:var(--tx3); padding:5px 4px 3px; border-radius:13px; transition:color .15s; background:none; position:relative}
+  .bottomnav .bn-tab{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:10.5px; font-weight:600; color:var(--tx3); padding:5px 4px 3px; border-radius:13px; transition:color .15s, transform .4s var(--spring); background:none; position:relative}
   .bottomnav .bn-tab.active{color:var(--accent)}
-  .bottomnav .bn-tab .ico{width:24px; height:24px; display:grid; place-items:center}
-  .bottomnav .bn-fab{flex:none; width:56px; height:56px; border-radius:50%; background:linear-gradient(160deg, var(--accent), var(--accent-deep)); color:#fff; display:grid; place-items:center; box-shadow:0 8px 22px -6px rgba(16,185,129,.55), inset 0 1px 0 rgba(255,255,255,.25); transform:translateY(-12px); transition:transform .18s var(--ease)}
-  .bottomnav .bn-fab:active{transform:translateY(-12px) scale(.92)}
+  .bottomnav .bn-tab:active{transform:scale(.9)}
+  .bottomnav .bn-tab.active::before{content:""; position:absolute; inset:2px 8px 4px; border-radius:12px; background:var(--accent-soft); z-index:-1; animation:bnPill .4s var(--spring)}
+  @keyframes bnPill{from{transform:scale(.6); opacity:0}}
+  .bottomnav .bn-tab .ico{width:24px; height:24px; display:grid; place-items:center; transition:transform .4s var(--spring)}
+  .bottomnav .bn-tab.active .ico{transform:translateY(-1px) scale(1.08)}
+  .bottomnav .bn-fab{flex:none; width:56px; height:56px; border-radius:50%; background:linear-gradient(160deg, var(--accent), var(--accent-deep)); color:#fff; display:grid; place-items:center; box-shadow:0 8px 22px -6px rgba(16,185,129,.55), inset 0 1px 0 rgba(255,255,255,.25); transform:translateY(-12px); transition:transform .4s var(--spring)}
+  .bottomnav .bn-fab:active{transform:translateY(-12px) scale(.86)}
   .fab{display:none}
   .topbar h1{font-size:17px}
   .kpi .k-value{font-size:21px}
@@ -673,6 +715,7 @@ svg:has(.dslice:hover) .dslice:not(:hover){opacity:.45}
 </style>
 </head>
 <body>
+<div class="ether" aria-hidden="true"></div>
 <div id="app" class="app"></div>
 <script>
 /* ===== 00-utils.js ===== */
@@ -7414,15 +7457,157 @@ const ROUTE = {
 let _view = "dashboard";
 const _sub = { suivi: "tracking", avenir: "projection" };
 
+/* Ordre des onglets : détermine le sens du slide (gauche/droite) entre vues. */
+const NAV_ORDER = { dashboard: 0, budget: 1, suivi: 2, avenir: 3, budgets: 4, settings: 5, help: 6 };
+
+function isMobile() { return window.matchMedia("(max-width: 880px)").matches; }
+
+/* Enrobe une mutation du DOM dans une transition de vue directionnelle (no-op si non supporté / reduced-motion). */
+function navAnimate(dir, fn) {
+  if (!document.startViewTransition || window.matchMedia("(prefers-reduced-motion: reduce)").matches) { fn(); return; }
+  document.documentElement.setAttribute("data-vtdir", dir);
+  document.startViewTransition(fn);
+}
+
 function go(key) {
   const r = ROUTE[key] || ROUTE.dashboard;
-  _view = r[0];
-  if (r[1]) _sub[_view] = r[1];
-  if (HUBS[_view] && !_sub[_view]) _sub[_view] = HUBS[_view].def;
-  renderApp();
-  const c = $(".content");
-  if (c) c.scrollTop = 0;
+  const targetView = r[0];
+  // Phase 2 : sur mobile, naviguer entre deux onglets = swipe animé (pas de reconstruction).
+  if (isMobile() && Pager.has() && Pager.isTab(_view) && Pager.isTab(targetView) && !r[1]) {
+    Pager.goToTab(targetView);
+    return;
+  }
+  const from = NAV_ORDER[_view] ?? 0, to = NAV_ORDER[targetView] ?? 0;
+  navAnimate(to < from ? "back" : "fwd", () => {
+    _view = targetView;
+    if (r[1]) _sub[_view] = r[1];
+    if (HUBS[_view] && !_sub[_view]) _sub[_view] = HUBS[_view].def;
+    renderApp();
+    const c = $(".content");
+    if (c) c.scrollTop = 0;
+  });
 }
+
+/* Contenu de la barre du haut (titre + budget) — partagé entre renderApp et la synchro du pager. */
+function topTitleInner(v, b) {
+  return [
+    el("h1", {}, v.label),
+    el("div", { class: "sub" }, `${b.emoji} ${b.name}`,
+      State.budgets.filter(x => !x.archived).length > 1
+        ? el("span", { class: "ico", html: I.chevD, style: "width:12px;height:12px;display:inline-grid;place-items:center;vertical-align:-1px;margin-left:3px;opacity:.6" })
+        : null,
+      ` · ${v.sub()}`),
+  ];
+}
+
+/* Met à jour la barre du haut + la barre du bas sans tout reconstruire (pendant/à la fin d'un swipe). */
+function syncChrome() {
+  const v = VIEWS[_view] || VIEWS.dashboard, b = curBudget();
+  const t = $(".topbar-title"); if (t && b) t.replaceChildren(...topTitleInner(v, b));
+  $$(".bottomnav .bn-tab").forEach(btn => btn.classList.toggle("active", btn.dataset.k === _view));
+  const meta = $('meta[name="theme-color"]'); // inchangé, conservé pour cohérence
+}
+
+/* ---- Pager mobile : les 4 onglets montés côte à côte, glissables au doigt ---- */
+const Pager = (() => {
+  const KEYS = TABS.map(t => t.k);
+  const N = KEYS.length;
+  let track = null, panes = [], rendered = [], idx = 0, frac = 0;
+  let raf = null, vel = 0, dragging = false, axis = null, x0 = 0, y0 = 0, f0 = 0, lastX = 0, lastT = 0;
+
+  const paneW = () => (track ? track.clientWidth : window.innerWidth) || 1;
+
+  function renderPane(i) {
+    if (rendered[i] || !panes[i]) return;
+    panes[i].innerHTML = "";
+    VIEWS[KEYS[i]].render(panes[i]);
+    Juice.view(panes[i]);
+    rendered[i] = true;
+  }
+  const ensureNear = i => [i - 1, i, i + 1].forEach(j => { if (j >= 0 && j < N) renderPane(j); });
+
+  function paint() {
+    if (!track || !track.isConnected) return;
+    track.style.transform = `translate3d(${-frac * paneW()}px,0,0)`; // un seul transform → composité, zéro repaint
+  }
+
+  function setActive(i) {
+    i = Math.max(0, Math.min(N - 1, i));
+    if (_view === KEYS[i]) return;
+    _view = KEYS[i];
+    syncChrome();
+  }
+
+  function spring() {
+    const k = 240, d = 28, dt = 1 / 60;
+    vel += (-k * (frac - idx) - d * vel) * dt;
+    frac += vel * dt;
+    paint(); setActive(Math.round(frac));
+    if (Math.abs(vel) > 0.002 || Math.abs(frac - idx) > 0.002) raf = requestAnimationFrame(spring);
+    else { frac = idx; paint(); setActive(idx); raf = null; }
+  }
+
+  function settle(target, v) {
+    const t = Math.max(0, Math.min(N - 1, target));
+    if (t !== idx) Juice.buzz(7);            // micro-retour haptique au changement d'onglet
+    idx = t; if (v) vel = v;
+    ensureNear(idx);
+    if (!raf) raf = requestAnimationFrame(spring);
+  }
+
+  function onDown(e) {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    dragging = true; axis = null; x0 = lastX = e.clientX; y0 = e.clientY; f0 = frac; lastT = performance.now();
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+  }
+  function onMove(e) {
+    if (!dragging) return;
+    const dx = e.clientX - x0, dy = e.clientY - y0;
+    if (axis === null) {
+      if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
+      axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+      if (axis === "x") track.setPointerCapture(e.pointerId);
+      else { dragging = false; return; }     // mouvement vertical → on laisse le scroll natif
+    }
+    let f = f0 - dx / paneW();
+    if (f < 0) f *= 0.35; else if (f > N - 1) f = (N - 1) + (f - (N - 1)) * 0.35; // rubberband
+    frac = f; paint(); setActive(Math.round(Math.max(0, Math.min(N - 1, frac))));
+    lastX = e.clientX; lastT = performance.now();
+    e.preventDefault();
+  }
+  function onUp(e) {
+    if (!dragging) return; dragging = false;
+    if (axis !== "x") return;
+    const v = (e.clientX - lastX) / (performance.now() - lastT + 1) / paneW() * 16; // vélocité normalisée
+    const moved = frac - f0;                                  // distance parcourue (fraction de page)
+    const dir = (Math.abs(moved) > 0.2 || Math.abs(v) > 0.4)  // 20 % de glissement OU un flick suffit
+      ? Math.sign(moved || -v) : 0;
+    settle(Math.round(f0) + dir, -v);
+  }
+
+  function mount(content, activeKey) {
+    idx = Math.max(0, KEYS.indexOf(activeKey)); frac = idx; rendered = new Array(N).fill(false);
+    content.classList.add("content--pager");
+    track = el("div", { class: "swipe-track" });
+    panes = KEYS.map(() => el("section", { class: "swipe-pane" }));
+    panes.forEach(p => track.appendChild(p));
+    content.appendChild(track);
+    ensureNear(idx); paint();
+    track.addEventListener("pointerdown", onDown);
+    track.addEventListener("pointermove", onMove);
+    track.addEventListener("pointerup", onUp);
+    track.addEventListener("pointercancel", onUp);
+  }
+
+  function goToTab(k) {
+    const i = KEYS.indexOf(k); if (i < 0) return false;
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    settle(i); return true;
+  }
+
+  window.addEventListener("resize", paint);
+  return { mount, goToTab, has: () => !!(track && track.isConnected), isTab: k => KEYS.includes(k) };
+})();
 
 function applyTheme() {
   const t = State.settings.theme;
@@ -7434,6 +7619,13 @@ function applyTheme() {
 window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => State.settings.theme === "auto" && applyTheme());
 
 function isDark() { return document.documentElement.getAttribute("data-theme") === "dark"; }
+
+/* Re-render au franchissement de la bascule mobile/desktop (montage/démontage du pager). */
+let _wasMobile = window.matchMedia("(max-width: 880px)").matches;
+window.addEventListener("resize", () => {
+  const m = window.matchMedia("(max-width: 880px)").matches;
+  if (m !== _wasMobile) { _wasMobile = m; if (curBudget()) renderApp(); }
+});
 
 function renderApp() {
   const app = $("#app");
@@ -7468,10 +7660,7 @@ function renderApp() {
   const gearBtn = el("button", { class: "btn btn-ghost btn-ico only-mobile", html: ico("gear", 18), title: "Réglages", onclick: () => go("settings") });
   const topbar = el("div", { class: "topbar" },
     el("button", { class: "topbar-title", onclick: openBudgetSwitcher, title: "Changer de budget" },
-      el("h1", {}, v.label),
-      el("div", { class: "sub" }, `${b.emoji} ${b.name}`,
-        State.budgets.filter(x => !x.archived).length > 1 ? el("span", { class: "ico", html: I.chevD, style: "width:12px;height:12px;display:inline-grid;place-items:center;vertical-align:-1px;margin-left:3px;opacity:.6" }) : null,
-        ` · ${v.sub()}`)),
+      ...topTitleInner(v, b)),
     el("div", { class: "topbar-actions" }, Sync.chipEl(), gearBtn, themeBtn));
 
   const content = el("div", { class: "content" });
@@ -7479,7 +7668,7 @@ function renderApp() {
 
   // ---- barre du bas (mobile) : 2 onglets · FAB central · 2 onglets ----
   const tabBtn = k => el("button", {
-    class: "bn-tab" + (_view === k ? " active" : ""), onclick: () => go(k)
+    class: "bn-tab" + (_view === k ? " active" : ""), "data-k": k, onclick: () => go(k)
   }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), VIEWS[k].label);
   const bottomnav = el("nav", { class: "bottomnav" },
     tabBtn("dashboard"), tabBtn("budget"),
@@ -7487,8 +7676,12 @@ function renderApp() {
     tabBtn("suivi"), tabBtn("avenir"));
 
   app.append(sidebar, main, bottomnav);
-  v.render(content);
-  Juice.view(content);
+  if (isMobile() && TABS.some(t => t.k === _view)) {
+    Pager.mount(content, _view);          // swipe horizontal entre les 4 onglets
+  } else {
+    v.render(content);
+    Juice.view(content);
+  }
 
   function navBtn(k, label, icon) {
     return el("button", { class: "nav-item" + (_view === k ? " active" : ""), title: label, onclick: () => go(k) },
