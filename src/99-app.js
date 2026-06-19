@@ -61,9 +61,18 @@ function navAnimate(dir, fn) {
   document.startViewTransition(fn);
 }
 
+/* Remonte en haut le conteneur scrollable actif (panneau du pager sur mobile, sinon .content). */
+function scrollActiveToTop() {
+  const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const sc = (isMobile() && Pager.has()) ? Pager.activePane() : $(".content");
+  if (sc) sc.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
+}
+
 function go(key) {
   const r = ROUTE[key] || ROUTE.dashboard;
   const targetView = r[0];
+  // Re-tap de l'onglet déjà actif → remonter en haut (réflexe iOS), pas de reconstruction.
+  if (targetView === _view && !r[1]) { scrollActiveToTop(); return; }
   // Phase 2 : sur mobile, naviguer entre deux onglets = swipe animé (pas de reconstruction).
   if (isMobile() && Pager.has() && Pager.isTab(_view) && Pager.isTab(targetView) && !r[1]) {
     Pager.goToTab(targetView);
@@ -205,7 +214,7 @@ const Pager = (() => {
   }
 
   window.addEventListener("resize", () => { measure(); paint(); });
-  return { mount, goToTab, has: () => !!(track && track.isConnected), isTab: k => KEYS.includes(k) };
+  return { mount, goToTab, has: () => !!(track && track.isConnected), isTab: k => KEYS.includes(k), activePane: () => panes[idx] };
 })();
 
 function applyTheme() {
