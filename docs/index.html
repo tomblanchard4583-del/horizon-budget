@@ -671,6 +671,10 @@ svg:has(.dslice:hover) .dslice:not(:hover){opacity:.45}
 
 /* Chrome interactif : pas de menu « copier » au long-press ni de sélection de texte (comme en natif) */
 .sidebar,.bottomnav,.topbar-actions,.nav-item,.bn-tab,.subtab,.seg button,.btn,.fab,.budget-pill,.nav-add{-webkit-touch-callout:none; -webkit-user-select:none; user-select:none}
+.btn,.bn-tab,.nav-item,.subtab,.fab,.nav-add,.budget-pill,.seg button,.item-row,.choice,.cal-cell{touch-action:manipulation}
+
+/* Retour tactile immédiat à l'appui : un tap allume la ligne (substitut visuel à l'haptique, façon cellule iOS) */
+.item-row:active,.ag-evt:active,.day-list .day-row.click:active,.choice:active,.cal-cell:active,.cal-wk-day:active,.ym-card:active,.mile[style*="pointer"]:active,.subtab:active{background:var(--panel2)}
 
 /* Accessibilité système : respecte « Réduire la transparence » et « Plus de contraste » (réglages iOS/macOS) */
 @media (prefers-reduced-transparency: reduce){
