@@ -7532,6 +7532,7 @@ const ROUTE = {
 
 let _view = "dashboard";
 const _sub = { suivi: "tracking", avenir: "projection" };
+let _lastRenderView = null, _lastRenderSub = "";   // pour préserver le scroll quand on re-rend la même vue
 
 /* Ordre des onglets : détermine le sens du slide (gauche/droite) entre vues. */
 const NAV_ORDER = { dashboard: 0, budget: 1, suivi: 2, avenir: 3, budgets: 4, settings: 5, help: 6 };
@@ -7545,11 +7546,15 @@ function navAnimate(dir, fn) {
   document.startViewTransition(fn);
 }
 
-/* Remonte en haut le conteneur scrollable actif (panneau du pager sur mobile, sinon .content). */
+/* Conteneur scrollable actif : panneau du pager sur mobile, sinon .content. */
+function activeScroller() {
+  return (isMobile() && Pager.has()) ? Pager.activePane() : $(".content");
+}
+
+/* Remonte en haut le conteneur scrollable actif, en douceur. */
 function scrollActiveToTop() {
-  const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const sc = (isMobile() && Pager.has()) ? Pager.activePane() : $(".content");
-  if (sc) sc.scrollTo({ top: 0, behavior: smooth ? "smooth" : "auto" });
+  const sc = activeScroller();
+  if (sc) sc.scrollTo({ top: 0, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
 }
 
 function go(key) {
@@ -7726,6 +7731,10 @@ function renderApp() {
   const b = curBudget();
   if (!b) { showOnboarding(); return; }
   const v = VIEWS[_view] || VIEWS.dashboard;
+  // Préserver le scroll quand on re-rend la MÊME vue (mise à jour de données, pas une navigation).
+  const curSub = _sub[_view] || "";
+  const sameView = _lastRenderView === _view && _lastRenderSub === curSub && app.childElementCount > 0;
+  const prevScroll = sameView ? (activeScroller()?.scrollTop || 0) : 0;
   app.innerHTML = "";
 
   // ---- barre latérale (desktop) ----
@@ -7783,6 +7792,14 @@ function renderApp() {
     v.render(content);
     Juice.view(content);
   }
+
+  // Restaurer la position de défilement si c'est la même vue (sinon, on reste en haut).
+  if (sameView && prevScroll) {
+    const sc = activeScroller();
+    if (sc) sc.scrollTop = prevScroll;
+  }
+  _lastRenderView = _view;
+  _lastRenderSub = curSub;
 
   function navBtn(k, label, icon) {
     return el("button", { class: "nav-item" + (_view === k ? " active" : ""), title: label, "aria-current": _view === k ? "page" : null, onclick: () => go(k) },
