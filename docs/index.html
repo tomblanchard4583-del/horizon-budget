@@ -2133,7 +2133,12 @@ function modal(opts) {
     }
   };
   m.addEventListener("keydown", trapTab);
-  if (first) first.focus();
+  // Focus initial : le premier champ (ou action) utile — jamais le bouton ✕ de l'en-tête,
+  // pour qu'on puisse saisir le montant/nom directement, comme dans un éditeur natif.
+  const autoFocus =
+    m.querySelector(".modal-body input:not([type=hidden]):not([type=checkbox]):not([type=radio]), .modal-body select, .modal-body textarea")
+    || m.querySelector(".modal-body button, .modal-foot button");
+  (autoFocus || first || m).focus();
 
   // Glisser pour fermer (feuille mobile) : tire la feuille vers le bas, lâche au-delà du seuil pour fermer.
   // La poignée (en-tête) déclenche toujours ; ailleurs, seulement si le contenu est déjà en haut.
