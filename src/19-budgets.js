@@ -14,9 +14,9 @@ function viewBudgets(root) {
     const parent = b.scenarioOf ? budgetById(b.scenarioOf) : null;
     return el("div", { class: "card card-pad", style: isCur ? "border-color:var(--accent); border-width:1.5px" : "" },
       el("div", { class: "flex mb8" },
-        el("span", { style: "font-size:24px" }, b.emoji),
+        el("span", { style: "font-size:1.5rem" }, b.emoji),
         el("div", { style: "flex:1; min-width:0" },
-          el("h3", { style: "font-size:15.5px" }, b.name, " ", parent ? el("span", { class: "tag-scen" }, "scénario") : null),
+          el("h3", { style: "font-size:0.9688rem" }, b.name, " ", parent ? el("span", { class: "tag-scen" }, "scénario") : null),
           el("div", { class: "xs muted" },
             (SITUATIONS.find(s => s.id === b.situation) || {}).t || "",
             parent ? ` · variante de « ${parent.name} »` : "",
@@ -123,7 +123,7 @@ function openBudgetCreator() {
     SITUATIONS.forEach(s => sitBox.append(el("button", {
       class: "choice" + (situation === s.id ? " on" : ""), style: "padding:9px 11px",
       onclick: () => { situation = s.id; renderSits(); }
-    }, el("span", { class: "ch-emoji", style: "font-size:19px" }, s.emoji), el("span", {}, el("div", { class: "ch-t", style: "font-size:13px" }, s.t)))));
+    }, el("span", { class: "ch-emoji", style: "font-size:1.1875rem" }, s.emoji), el("span", {}, el("div", { class: "ch-t", style: "font-size:0.8125rem" }, s.t)))));
   };
   renderSits();
   const m = modal({
@@ -158,7 +158,7 @@ function openBudgetCreator() {
 
 function openBudgetSettings(b) {
   const nameI = el("input", { class: "input", value: b.name });
-  const emojiI = el("input", { class: "input", value: b.emoji, style: "max-width:90px; text-align:center; font-size:18px" });
+  const emojiI = el("input", { class: "input", value: b.emoji, style: "max-width:90px; text-align:center; font-size:1.125rem" });
   const curI = selectInput(CURRENCIES.map(c => ({ value: c[0], label: `${c[1]} — ${c[2]}` })), b.currency);
   const balI = moneyInput({ value: b.initialBalance });
   const balDateI = el("input", { class: "input", type: "date", value: b.initialDate });

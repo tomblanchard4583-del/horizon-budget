@@ -23,9 +23,9 @@ function viewDebts(root) {
     const invalid = !rows.length && +d.principal > 0;
     return el("div", { class: "card card-pad" },
       el("div", { class: "flex mb8" },
-        el("span", { style: "font-size:22px" }, d.emoji || "💳"),
+        el("span", { style: "font-size:1.375rem" }, d.emoji || "💳"),
         el("div", { style: "flex:1; min-width:0" },
-          el("h3", { style: "font-size:15.5px" }, d.name),
+          el("h3", { style: "font-size:0.9688rem" }, d.name),
           el("div", { class: "xs muted" }, `${fmtMoney(d.principal, cur, { dec: 0 })} à ${d.rate || 0} %`)),
         el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 15), onclick: () => openDebtEditor(b, d) })),
       invalid
@@ -34,7 +34,7 @@ function viewDebts(root) {
           el("div", { class: "flex small mb8" },
             el("span", { class: "muted" }, "Restant dû"),
             el("span", { class: "spacer" }),
-            el("b", { class: "mono", style: "font-size:16px" }, fmtMoney(remaining, cur, { dec: 0 }))),
+            el("b", { class: "mono", style: "font-size:1rem" }, fmtMoney(remaining, cur, { dec: 0 }))),
           el("div", { class: "pbar" }, el("i", { style: `width:${paidPct * 100}%` })),
           el("div", { class: "small muted mt12", style: "line-height:1.7" },
             el("div", {}, `💸 Mensualité : ${fmtMoney((+d.payment || 0) + (+d.extra || 0), cur)}` + (d.extra ? ` (dont ${fmtMoney(d.extra, cur)} de remboursement anticipé)` : "")),

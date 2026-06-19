@@ -48,14 +48,14 @@ function viewGoals(root) {
 
     return el("div", { class: "card card-pad goal-card" },
       el("div", { class: "flex mb8", style: "align-items:flex-start" },
-        el("span", { style: "font-size:24px; line-height:1.2" }, g.emoji || "🎯"),
+        el("span", { style: "font-size:1.5rem; line-height:1.2" }, g.emoji || "🎯"),
         el("div", { style: "flex:1; min-width:0" },
-          el("h3", { style: "font-size:15.5px" }, g.name),
+          el("h3", { style: "font-size:0.9688rem" }, g.name),
           el("div", { class: "xs muted" }, g.targetDate ? "pour le " + fmtDate(g.targetDate) : "sans date limite")),
         badge,
         el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 15), title: "Modifier", onclick: () => openGoalEditor(b, g) })),
       el("div", { class: "flex small mb8", style: "align-items:baseline" },
-        el("b", { class: "mono", style: "font-size:18px" }, fmtMoney(current, cur, { dec: 0 })),
+        el("b", { class: "mono", style: "font-size:1.125rem" }, fmtMoney(current, cur, { dec: 0 })),
         el("span", { class: "muted" }, "sur " + fmtMoney(g.target, cur, { dec: 0 })),
         el("span", { class: "spacer" }),
         el("b", {}, Math.round(pct * 100) + " %")),
@@ -86,11 +86,11 @@ function viewGoals(root) {
     const linked = b.items.filter(i => i.savingTo === a.id).reduce((s, i) => s + monthlyEquivalent(i), 0);
     return el("div", { class: "card card-pad" },
       el("div", { class: "flex mb8" },
-        el("span", { style: "font-size:22px" }, "🏦"),
-        el("div", { style: "flex:1" }, el("h3", { style: "font-size:15.5px" }, a.name),
+        el("span", { style: "font-size:1.375rem" }, "🏦"),
+        el("div", { style: "flex:1" }, el("h3", { style: "font-size:0.9688rem" }, a.name),
           el("div", { class: "xs muted" }, `${a.rate || 0} % /an` + (a.ceiling ? ` · plafond ${fmtMoney(a.ceiling, cur, { dec: 0 })}` : ""))),
         el("button", { class: "btn btn-ghost btn-ico", html: ico("edit", 15), onclick: () => openAccountEditor(b, a) })),
-      el("div", { class: "mono", style: "font-size:21px; font-weight:750" }, fmtMoney(+a.balance || 0, cur)),
+      el("div", { class: "mono", style: "font-size:1.3125rem; font-weight:750" }, fmtMoney(+a.balance || 0, cur)),
       el("div", { class: "small muted mt8", style: "line-height:1.7" },
         linked ? el("div", {}, `💸 Versements liés : ${fmtMoney(linked, cur)} /mois`) : null,
         el("div", {}, `📈 Dans 1 an : ≈ ${fmtMoney(proj1, cur, { dec: 0 })} · dans 5 ans : ≈ ${fmtMoney(proj5, cur, { dec: 0 })}`))
@@ -153,7 +153,7 @@ function openGoalEditor(b, goal) {
   const isNew = !goal;
   const g = goal ? { ...goal } : { id: uid(), name: "", emoji: "🎯", color: "#10b981", target: "", current: 0, targetDate: null };
   const nameI = el("input", { class: "input", value: g.name, placeholder: "ex. Fonds d'urgence, Voyage au Japon…" });
-  const emojiI = el("input", { class: "input", value: g.emoji, style: "max-width:90px; text-align:center; font-size:18px" });
+  const emojiI = el("input", { class: "input", value: g.emoji, style: "max-width:90px; text-align:center; font-size:1.125rem" });
   const targetI = moneyInput({ value: g.target || "" });
   const currentI = moneyInput({ value: g.current || "" });
   const dateI = el("input", { class: "input", type: "date", value: g.targetDate || "" });

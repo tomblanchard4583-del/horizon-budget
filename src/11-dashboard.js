@@ -47,7 +47,7 @@ function viewDashboard(root) {
       el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("tracking") }, "Détail")),
     el("div", { class: "hc-pad home-prog" },
       el("div", { class: "hp-top" },
-        el("b", { class: "mono", style: "font-size:16px" }, fmtMoney(spent, cur)),
+        el("b", { class: "mono", style: "font-size:1rem" }, fmtMoney(spent, cur)),
         el("span", { class: "v" }, planned > 0 ? `sur ${fmtMoney(planned, cur)} prévus · ${Math.round(pct * 100)} %` : "aucun budget prévu")),
       el("div", { class: "pbar" + (over ? " over" : "") }, el("i", { style: `width:${Math.min(100, pct * 100)}%` })))
   );
@@ -149,7 +149,7 @@ function viewDashboard(root) {
   function upRow(b, u, cur) {
     const income = u.item.kind === "income";
     return el("div", { class: "item-row", style: "cursor:default" },
-      el("div", { class: "i-emoji", style: "font-size:12px; font-weight:700; flex-direction:column; line-height:1.1; display:flex; align-items:center; justify-content:center" },
+      el("div", { class: "i-emoji", style: "font-size:0.75rem; font-weight:700; flex-direction:column; line-height:1.1; display:flex; align-items:center; justify-content:center" },
         el("span", {}, String(+u.date.slice(8))), el("span", { class: "xs muted" }, MOIS[+u.date.slice(5, 7) - 1].slice(0, 4) + ".")),
       el("div", { class: "i-main" },
         el("div", { class: "i-name" }, u.item.name || "(sans nom)"),

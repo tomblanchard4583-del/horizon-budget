@@ -86,7 +86,7 @@ function showOnboarding() {
     card.append(
       el("h2", {}, "Tout est prêt " + (data.firstName ? data.firstName + " " : "") + "✨"),
       el("p", { class: "onb-sub" }, `Votre budget « ${sit.t} » va être créé avec des postes typiques et des montants indicatifs. Première étape : ajustez chaque montant à votre réalité.`),
-      el("div", { class: "card card-pad", style: "font-size:13.5px; line-height:1.8" },
+      el("div", { class: "card card-pad", style: "font-size:0.8438rem; line-height:1.8" },
         el("div", {}, "✅ Modifiez ou supprimez les postes proposés"),
         el("div", {}, "📅 Planifiez les changements futurs (nouvel emploi, déménagement…)"),
         el("div", {}, "📈 Projetez votre solde sur des mois ou des années"),

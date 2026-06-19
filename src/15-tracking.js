@@ -121,7 +121,7 @@ function viewTracking(root) {
             : catLabel(b, t.categoryId)))),
         el("div", { class: "i-amt " + (t.kind === "income" ? "pos" : "") },
           coupleOn && t.owner && t.owner !== "unset"
-            ? el("span", { class: "badge b-mut", style: "margin-right:6px; font-size:10px" }, t.owner === "me" ? myName : t.owner === "them" ? themName : "Commun")
+            ? el("span", { class: "badge b-mut", style: "margin-right:6px; font-size:0.625rem" }, t.owner === "me" ? myName : t.owner === "them" ? themName : "Commun")
             : null,
           fmtMoney(t.kind === "income" ? +t.amount : -t.amount, cur, { sign: true }))
       );
@@ -486,7 +486,7 @@ function openCsvImport(b) {
           const lst = el("div", { style: "display:flex; flex-direction:column; gap:6px" });
           p.splits.forEach((sp, i) => {
             const amtI = moneyInput({ value: sp.amount || "", oninput: e => { sp.amount = parseAmount(e.target.value); refresh(); } });
-            const cs2 = catSelect(b, "expense", sp.categoryId, { style: "flex:1; min-width:0; min-height:32px; padding:4px 28px 4px 9px; font-size:12.5px" });
+            const cs2 = catSelect(b, "expense", sp.categoryId, { style: "flex:1; min-width:0; min-height:32px; padding:4px 28px 4px 9px; font-size:0.7812rem" });
             cs2.addEventListener("change", () => sp.categoryId = cs2.value || null);
             lst.append(el("div", { class: "flex", style: "gap:6px" },
               el("div", { style: "width:110px; flex:none" }, amtI), cs2,
@@ -501,7 +501,7 @@ function openCsvImport(b) {
         renderZone();
         line.append(zone);
       } else {
-        const cs = catSelect(b, p.kind, p.categoryId, { style: "max-width:210px; min-height:32px; padding:4px 28px 4px 9px; font-size:12.5px" });
+        const cs = catSelect(b, p.kind, p.categoryId, { style: "max-width:210px; min-height:32px; padding:4px 28px 4px 9px; font-size:0.7812rem" });
         cs.addEventListener("change", () => { p.categoryId = cs.value || null; });
         p._sel = cs;
         main.append(cs);

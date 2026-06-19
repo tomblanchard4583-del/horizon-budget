@@ -66,7 +66,7 @@ function openEventEditor(b, ev) {
     }, `${p.emoji} ${p.name}`))) : null;
 
   const nameI = el("input", { class: "input", value: e.name, placeholder: "ex. Premier emploi" });
-  const emojiI = el("input", { class: "input", value: e.emoji, style: "max-width:90px; text-align:center; font-size:18px" });
+  const emojiI = el("input", { class: "input", value: e.emoji, style: "max-width:90px; text-align:center; font-size:1.125rem" });
   const dateI = el("input", { class: "input", type: "date", value: e.date });
   const notesI = el("textarea", { class: "input", value: e.notes, placeholder: "ex. CDI prévu après le master, salaire estimé 2 200 € net" });
 

@@ -370,6 +370,6 @@ function viewHelp(root) {
 function p(html) { return el("p", { class: "mb8", style: "line-height:1.7", html }); }
 function ul(items) { return el("ul", { class: "help-list" }, items.map(i => el("li", { html: i }))); }
 function ol(items) { return el("ol", { class: "help-list ol" }, items.map(i => el("li", { html: i }))); }
-function tip(html) { return el("div", { class: "alert a-ok mt8", style: "font-size:13px" }, el("span", { class: "a-ico", html: ico("info", 16) }), el("span", { html: "💡 " + html })); }
-function warn(html) { return el("div", { class: "alert a-warn mt8", style: "font-size:13px" }, el("span", { class: "a-ico", html: ico("alert", 16) }), el("span", { html })); }
+function tip(html) { return el("div", { class: "alert a-ok mt8", style: "font-size:0.8125rem" }, el("span", { class: "a-ico", html: ico("info", 16) }), el("span", { html: "💡 " + html })); }
+function warn(html) { return el("div", { class: "alert a-warn mt8", style: "font-size:0.8125rem" }, el("span", { class: "a-ico", html: ico("alert", 16) }), el("span", { html })); }
 function btn(label, onclick) { return el("button", { class: "btn btn-sm mt8", style: "margin-right:8px", onclick }, label); }

@@ -35,7 +35,7 @@ function viewBudget(root) {
 
   function sum(label, v, tone) {
     return el("div", {}, el("div", { class: "small muted", style: "font-weight:600" }, label),
-      el("div", { class: "mono " + tone, style: "font-size:21px; font-weight:750" }, fmtMoney(v, cur)));
+      el("div", { class: "mono " + tone, style: "font-size:1.3125rem; font-weight:750" }, fmtMoney(v, cur)));
   }
 
   function buildList() {
@@ -298,7 +298,7 @@ function openCategoryManager(b) {
     for (const r of roots) {
       const usedRoot = b.items.some(i => i.categoryId === r.id);
       body.append(el("div", { class: "flex", style: "padding:8px 2px 4px; border-top:1px solid var(--line)" },
-        el("span", { style: "font-size:17px" }, r.emoji),
+        el("span", { style: "font-size:1.0625rem" }, r.emoji),
         el("b", {}, r.name),
         el("span", { class: "cat-dot", style: "background:" + r.color }),
         el("span", { class: "spacer" }),
@@ -321,7 +321,7 @@ function openCategoryManager(b) {
     const isNew = !cat;
     const c = cat || { id: uid(), kind, name: "", emoji: parent ? parent.emoji : "🏷️", color: parent ? parent.color : BUDGET_COLORS[Math.floor(Math.random() * BUDGET_COLORS.length)], parentId: parent ? parent.id : null };
     const nameI = el("input", { class: "input", value: c.name, placeholder: "Nom de la catégorie" });
-    const emojiI = el("input", { class: "input", value: c.emoji, style: "max-width:90px; text-align:center; font-size:18px" });
+    const emojiI = el("input", { class: "input", value: c.emoji, style: "max-width:90px; text-align:center; font-size:1.125rem" });
     const colorI = el("input", { class: "input", type: "color", value: c.color, style: "max-width:90px; padding:4px; height:40px" });
     const mm = modal({
       title: isNew ? (parent ? `Sous-catégorie de ${parent.name}` : "Nouvelle catégorie") : "Modifier",

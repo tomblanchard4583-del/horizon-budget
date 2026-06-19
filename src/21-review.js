@@ -87,7 +87,7 @@ const MonthReview = (() => {
   function stat(label, value, sub, tone) {
     return el("div", { class: "card kpi", style: "padding:12px" },
       el("div", { class: "k-label" }, label),
-      el("div", { class: "k-value " + (tone || ""), style: "font-size:18px" }, value),
+      el("div", { class: "k-value " + (tone || ""), style: "font-size:1.125rem" }, value),
       el("div", { class: "k-sub" }, sub));
   }
 
