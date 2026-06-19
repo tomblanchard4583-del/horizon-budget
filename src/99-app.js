@@ -275,6 +275,11 @@ function renderApp() {
     tabBtn("suivi"), tabBtn("avenir"));
 
   app.append(sidebar, main, bottomnav);
+  // Séparateur de barre du haut façon iOS : n'apparaît que quand le contenu glisse dessous.
+  // Capture (3e arg true) : le scroll ne bouillonne pas, mais les panneaux du pager le déclenchent ainsi.
+  content.addEventListener("scroll", e => {
+    topbar.classList.toggle("scrolled", (e.target.scrollTop || 0) > 4);
+  }, true);
   if (isMobile() && TABS.some(t => t.k === _view)) {
     Pager.mount(content, _view);          // swipe horizontal entre les 4 onglets
   } else {
