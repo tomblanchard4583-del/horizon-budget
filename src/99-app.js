@@ -126,6 +126,7 @@ const Pager = (() => {
   function renderPane(i) {
     if (rendered[i] || !panes[i]) return;
     panes[i].innerHTML = "";
+    panes[i].appendChild(el("h1", { class: "large-title" }, VIEWS[KEYS[i]].label)); // grand titre iOS en tête de panneau
     VIEWS[KEYS[i]].render(panes[i]);
     Juice.view(panes[i]);
     rendered[i] = true;
@@ -287,9 +288,12 @@ function renderApp() {
   // Séparateur de barre du haut façon iOS : n'apparaît que quand le contenu glisse dessous.
   // Capture (3e arg true) : le scroll ne bouillonne pas, mais les panneaux du pager le déclenchent ainsi.
   content.addEventListener("scroll", e => {
-    topbar.classList.toggle("scrolled", (e.target.scrollTop || 0) > 4);
+    const st = e.target.scrollTop || 0;
+    topbar.classList.toggle("scrolled", st > 4);       // hairline
+    topbar.classList.toggle("past-title", st > 40);     // le grand titre est passé sous la barre → titre compact
   }, true);
   if (isMobile() && TABS.some(t => t.k === _view)) {
+    topbar.classList.add("has-large-title");            // mobile : grand titre en tête de panneau
     Pager.mount(content, _view);          // swipe horizontal entre les 4 onglets
   } else {
     v.render(content);

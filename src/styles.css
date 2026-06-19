@@ -108,6 +108,11 @@ h1,h2,h3,h4{font-weight:700; letter-spacing:-.015em}
 .topbar{display:flex; align-items:center; gap:12px; padding:14px 26px; border-bottom:1px solid transparent; background:var(--glass); backdrop-filter:blur(14px) saturate(1.4); -webkit-backdrop-filter:blur(14px) saturate(1.4); flex:none; min-height:62px; position:relative; z-index:20; transition:border-color .2s ease}
 /* hairline iOS : le séparateur n'apparaît que lorsque le contenu glisse sous la barre */
 .topbar.scrolled{border-bottom-color:var(--line)}
+/* grand titre iOS (mobile) : gros titre en tête de panneau ; le titre compact de la barre
+   apparaît en fondu seulement quand le grand titre est passé dessous (.past-title) */
+.large-title{font-size:2.05rem; font-weight:800; letter-spacing:-.03em; line-height:1.12; color:var(--tx); margin:0 0 14px}
+.topbar.has-large-title .topbar-title h1{transition:opacity .25s var(--ease), transform .25s var(--ease)}
+.topbar.has-large-title:not(.past-title) .topbar-title h1{opacity:0; transform:translateY(4px)}
 .topbar h1{font-size:1.1875rem}
 .topbar .sub{font-size:0.7812rem; color:var(--tx2); margin-top:1px}
 .topbar-title{text-align:left; border-radius:10px; padding:2px 8px; margin:-2px -8px; min-width:0; overflow:hidden}
