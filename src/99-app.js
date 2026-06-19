@@ -106,8 +106,13 @@ const Pager = (() => {
   const N = KEYS.length;
   let track = null, panes = [], rendered = [], idx = 0, frac = 0;
   let raf = null, vel = 0, dragging = false, axis = null, x0 = 0, y0 = 0, f0 = 0, lastX = 0, lastT = 0;
+  let W = 0; // largeur d'une page, mesurée une fois (éviter de lire clientWidth à chaque frame)
 
-  const paneW = () => (track ? track.clientWidth : window.innerWidth) || 1;
+  const paneW = () => W || (W = (track ? track.clientWidth : window.innerWidth) || 1);
+  const measure = () => { W = (track ? track.clientWidth : window.innerWidth) || 1; };
+  // Coupe le backdrop-filter (topbar/bottomnav) et les animations de fond pendant le geste :
+  // re-flouter du contenu qui glisse à chaque frame est le 1er tueur de FPS sur mobile.
+  const setSwiping = on => document.documentElement.toggleAttribute("data-swiping", on);
 
   function renderPane(i) {
     if (rendered[i] || !panes[i]) return;
@@ -136,7 +141,7 @@ const Pager = (() => {
     frac += vel * dt;
     paint(); setActive(Math.round(frac));
     if (Math.abs(vel) > 0.002 || Math.abs(frac - idx) > 0.002) raf = requestAnimationFrame(spring);
-    else { frac = idx; paint(); setActive(idx); raf = null; }
+    else { frac = idx; paint(); setActive(idx); raf = null; setSwiping(false); }
   }
 
   function settle(target, v) {
@@ -144,12 +149,14 @@ const Pager = (() => {
     if (t !== idx) Juice.buzz(7);            // micro-retour haptique au changement d'onglet
     idx = t; if (v) vel = v;
     ensureNear(idx);
+    if (t !== Math.round(frac)) setSwiping(true); // tab cliqué → coupe le flou pendant l'animation aussi
     if (!raf) raf = requestAnimationFrame(spring);
   }
 
   function onDown(e) {
     if (e.pointerType === "mouse" && e.button !== 0) return;
     dragging = true; axis = null; x0 = lastX = e.clientX; y0 = e.clientY; f0 = frac; lastT = performance.now();
+    measure();
     if (raf) { cancelAnimationFrame(raf); raf = null; }
   }
   function onMove(e) {
@@ -158,7 +165,7 @@ const Pager = (() => {
     if (axis === null) {
       if (Math.abs(dx) < 4 && Math.abs(dy) < 4) return;
       axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
-      if (axis === "x") track.setPointerCapture(e.pointerId);
+      if (axis === "x") { track.setPointerCapture(e.pointerId); setSwiping(true); }
       else { dragging = false; return; }     // mouvement vertical → on laisse le scroll natif
     }
     let f = f0 - dx / paneW();
@@ -184,7 +191,7 @@ const Pager = (() => {
     panes = KEYS.map(() => el("section", { class: "swipe-pane" }));
     panes.forEach(p => track.appendChild(p));
     content.appendChild(track);
-    ensureNear(idx); paint();
+    measure(); ensureNear(idx); paint();
     track.addEventListener("pointerdown", onDown);
     track.addEventListener("pointermove", onMove);
     track.addEventListener("pointerup", onUp);
@@ -197,7 +204,7 @@ const Pager = (() => {
     settle(i); return true;
   }
 
-  window.addEventListener("resize", paint);
+  window.addEventListener("resize", () => { measure(); paint(); });
   return { mount, goToTab, has: () => !!(track && track.isConnected), isTab: k => KEYS.includes(k) };
 })();
 
