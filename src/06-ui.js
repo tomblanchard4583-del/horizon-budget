@@ -46,6 +46,37 @@ function modal(opts) {
   };
   m.addEventListener("keydown", trapTab);
   if (first) first.focus();
+
+  // Glisser pour fermer (feuille mobile) : tire la feuille vers le bas, lâche au-delà du seuil pour fermer.
+  // La poignée (en-tête) déclenche toujours ; ailleurs, seulement si le contenu est déjà en haut.
+  if (window.matchMedia("(max-width: 620px)").matches) {
+    head.style.touchAction = "none";
+    let sy = 0, dy = 0, drag = false, fromHead = false;
+    m.addEventListener("pointerdown", e => {
+      if (e.pointerType === "mouse") return;
+      fromHead = head.contains(e.target);
+      if (!fromHead && body.scrollTop > 0) return;
+      drag = true; sy = e.clientY; dy = 0;
+      m.style.transition = "none";
+      try { m.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    m.addEventListener("pointermove", e => {
+      if (!drag) return;
+      dy = e.clientY - sy;
+      if (!fromHead && dy < 0) { drag = false; m.style.transform = ""; return; } // remonte → rend le scroll natif
+      m.style.transform = `translateY(${Math.max(0, dy < 0 ? dy * 0.25 : dy)}px)`;
+      if (dy > 0) e.preventDefault();
+    });
+    const settle = () => {
+      if (!drag) return; drag = false;
+      m.style.transition = "transform .3s cubic-bezier(.22,1,.36,1)";
+      if (dy > 110) { m.style.transform = "translateY(100%)"; setTimeout(close, 230); }
+      else m.style.transform = "";
+    };
+    m.addEventListener("pointerup", settle);
+    m.addEventListener("pointercancel", settle);
+  }
+
   _openModals.push({ close, trapTab, m });
   function close() {
     m.removeEventListener("keydown", trapTab);
