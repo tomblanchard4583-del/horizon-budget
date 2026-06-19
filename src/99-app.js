@@ -239,7 +239,7 @@ function renderApp() {
   const footBox = el("div", { class: "nav-foot-list" },
     navBtn("settings", "Réglages", "gear"),
     navBtn("help", "Aide", "info"));
-  const sidebar = el("aside", { class: "sidebar" },
+  const sidebar = el("aside", { class: "sidebar", "aria-label": "Navigation" },
     el("div", { class: "brand", html: I.logo + "<span>Horizon<br>Budget</span>" }),
     el("button", { class: "nav-add", onclick: openQuickAdd }, el("span", { class: "ico", html: I.plus }), "Ajouter"),
     navBox,
@@ -267,9 +267,9 @@ function renderApp() {
 
   // ---- barre du bas (mobile) : 2 onglets · FAB central · 2 onglets ----
   const tabBtn = k => el("button", {
-    class: "bn-tab" + (_view === k ? " active" : ""), "data-k": k, onclick: () => go(k)
+    class: "bn-tab" + (_view === k ? " active" : ""), "data-k": k, "aria-current": _view === k ? "page" : null, onclick: () => go(k)
   }, el("span", { class: "ico", html: I[VIEWS[k].icon] }), VIEWS[k].label);
-  const bottomnav = el("nav", { class: "bottomnav" },
+  const bottomnav = el("nav", { class: "bottomnav", "aria-label": "Navigation principale" },
     tabBtn("dashboard"), tabBtn("budget"),
     el("button", { class: "bn-fab", html: ico("plus", 26), title: "Ajout rapide", onclick: openQuickAdd }),
     tabBtn("suivi"), tabBtn("avenir"));
@@ -283,7 +283,7 @@ function renderApp() {
   }
 
   function navBtn(k, label, icon) {
-    return el("button", { class: "nav-item" + (_view === k ? " active" : ""), title: label, onclick: () => go(k) },
+    return el("button", { class: "nav-item" + (_view === k ? " active" : ""), title: label, "aria-current": _view === k ? "page" : null, onclick: () => go(k) },
       el("span", { class: "ico", html: I[icon] }), el("span", { class: "nav-label" }, label));
   }
 }
@@ -292,7 +292,7 @@ function renderApp() {
 function subTabBar(hub) {
   const cur = _sub[hub] || HUBS[hub].def;
   return el("div", { class: "subtabs" }, HUBS[hub].subs.map(s =>
-    el("button", { class: "subtab" + (s.k === cur ? " on" : ""), onclick: () => { _sub[hub] = s.k; renderApp(); $(".content") && ($(".content").scrollTop = 0); } }, s.label)));
+    el("button", { class: "subtab" + (s.k === cur ? " on" : ""), "aria-current": s.k === cur ? "page" : null, onclick: () => { _sub[hub] = s.k; renderApp(); $(".content") && ($(".content").scrollTop = 0); } }, s.label)));
 }
 
 function viewSuivi(root) {
