@@ -16,17 +16,16 @@ function viewDashboard(root) {
   // ---------- HÉROS : reste à vivre ce mois-ci ----------
   const heroVal = sts.dispo;
   const heroCls = heroVal < 0 ? "neg" : "pos";
-  const hero = el("div", { class: "hero" },
+  const hero = el("div", { class: "hero", role: "button", tabindex: "0", style: "cursor:pointer",
+    onclick: () => go("budget"),
+    onkeydown: e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go("budget"); } } },
     el("div", { class: "h-label" }, "Reste à vivre ce mois-ci"),
     el("div", { class: "h-value " + heroCls }, ...moneyHero(heroVal, cur)),
     el("div", { class: "h-sub" }, sts.daysLeft > 0
       ? `${fmtMoney(sts.perDay, cur)} par jour sur ${sts.daysLeft} jour${sts.daysLeft > 1 ? "s" : ""} restant${sts.daysLeft > 1 ? "s" : ""}`
       : "dernier jour du mois"),
-    el("div", { class: "h-spark" }, sparkline(proj.slice(0, 13).map(r => r.balance), heroVal < 0)),
     el("div", { class: "h-foot" }, `Solde prévu fin ${monthName} : `,
-      el("b", { class: endOfMonth < 0 ? "neg" : "pos" }, fmtMoney(endOfMonth, cur, { sign: true })),
-      el("span", { class: "spacer", style: "flex:1" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("projection") }, "Projection →"))
+      el("b", { class: endOfMonth < 0 ? "neg" : "pos" }, fmtMoney(endOfMonth, cur, { sign: true })))
   );
 
   // ---------- une seule analyse à la fois (la plus prioritaire) ----------
@@ -42,9 +41,10 @@ function viewDashboard(root) {
   const spent = real.expense, planned = m0.expense;
   const pct = planned > 0 ? spent / planned : 0;
   const over = planned > 0 && spent > planned;
-  const depCard = el("div", { class: "home-card" },
-    el("div", { class: "hc-head" }, el("h3", {}, "Dépensé ce mois"), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("tracking") }, "Détail")),
+  const depCard = el("div", { class: "home-card", role: "button", tabindex: "0", style: "cursor:pointer",
+    onclick: () => go("budget"),
+    onkeydown: e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go("budget"); } } },
+    el("div", { class: "hc-head" }, el("h3", {}, "Dépensé ce mois"), el("span", { class: "spacer" })),
     el("div", { class: "hc-pad home-prog" },
       el("div", { class: "hp-top" },
         el("b", { class: "mono", style: "font-size:1rem" }, fmtMoney(spent, cur)),
@@ -52,31 +52,14 @@ function viewDashboard(root) {
       el("div", { class: "pbar" + (over ? " over" : "") }, el("i", { style: `width:${Math.min(100, pct * 100)}%` })))
   );
 
-  // ---------- à venir (14 jours) ----------
-  const upcoming = [];
-  for (const ym of [ymNow, addMonths(ymNow, 1)]) {
-    const flows = dayFlows(b, ym);
-    for (const [date, list] of Object.entries(flows)) {
-      const diff = (toDate(date) - toDate(todayStr())) / 86400000;
-      if (diff < 0 || diff > 14) continue;
-      list.forEach(f => upcoming.push({ date, ...f }));
-    }
-  }
-  upcoming.sort((a, z) => a.date.localeCompare(z.date));
-  const upCard = el("div", { class: "home-card" },
-    el("div", { class: "hc-head" }, el("h3", {}, "À venir"), el("span", { class: "spacer" }),
-      el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("calendar") }, "Calendrier")),
-    upcoming.length
-      ? el("div", { class: "row-list", style: "padding-bottom:6px" }, upcoming.slice(0, 4).map(u => upRow(b, u, cur)))
-      : emptyState("📭", "Rien à l'horizon", "Aucune échéance sur les 14 prochains jours.")
-  );
 
   // ---------- objectifs (compact, si présents) ----------
   let goalCard = null;
   if (b.goals && b.goals.length) {
-    goalCard = el("div", { class: "home-card" },
-      el("div", { class: "hc-head" }, el("h3", {}, "Objectifs"), el("span", { class: "spacer" }),
-        el("button", { class: "btn btn-sm btn-ghost", onclick: () => go("goals") }, "Gérer")),
+    goalCard = el("div", { class: "home-card", role: "button", tabindex: "0", style: "cursor:pointer",
+      onclick: () => go("goals"),
+      onkeydown: e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); go("goals"); } } },
+      el("div", { class: "hc-head" }, el("h3", {}, "Objectifs"), el("span", { class: "spacer" })),
       el("div", { class: "hc-pad", style: "display:flex; flex-direction:column; gap:14px" },
         b.goals.slice(0, 3).map(g => {
           const current = +g.current || 0;
@@ -120,7 +103,7 @@ function viewDashboard(root) {
         aiResult));
   }
 
-  const stack = el("div", { class: "home-stack" }, hero, analysisCard, depCard, upCard, goalCard, aiCard);
+  const stack = el("div", { class: "home-stack" }, hero, depCard, analysisCard, goalCard, aiCard);
   root.append(el("div", { class: "content-inner" }, stack));
 
   // ---- helpers ----

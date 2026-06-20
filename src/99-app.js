@@ -3,7 +3,7 @@
 
 /* Vues de contenu (toutes conservées : les hubs réutilisent leurs render). */
 const VIEWS = {
-  dashboard:  { label: "Accueil",    icon: "home",    sub: () => {
+  dashboard:  { label: "Résumé",     icon: "home",    sub: () => {
     const h = new Date().getHours();
     const salut = h < 5 ? "Bonsoir" : h < 18 ? "Bonjour" : "Bonsoir";
     return State.settings.firstName ? `${salut} ${State.settings.firstName}` : "Votre mois en un coup d'œil";
@@ -25,7 +25,7 @@ const VIEWS = {
 
 /* Onglets principaux (barre du bas mobile + sidebar desktop). */
 const TABS = [
-  { k: "dashboard", label: "Accueil", icon: "home" },
+  { k: "dashboard", label: "Résumé", icon: "home" },
   { k: "budget",    label: "Budget",  icon: "list" },
   { k: "suivi",     label: "Suivi",   icon: "receipt" },
   { k: "avenir",    label: "Avenir",  icon: "trend" },
